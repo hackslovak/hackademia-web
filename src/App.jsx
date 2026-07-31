@@ -12,81 +12,61 @@ function playUiSound(type, isEnabled) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
     const now = audioCtx.currentTime;
     
     if (type === 'ding') {
-      // Приємний високий дзвіночок для правильної відповіді
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, now); 
-      osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1); 
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.4, now + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-      osc.start(now);
-      osc.stop(now + 0.5);
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // Ніжне арпеджіо
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const delay = i * 0.08;
+        osc.frequency.setValueAtTime(freq, now + delay);
+        gain.gain.setValueAtTime(0, now + delay);
+        gain.gain.linearRampToValueAtTime(0.15, now + delay + 0.05);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 1.5);
+        osc.start(now + delay);
+        osc.stop(now + delay + 1.5);
+      });
     } else if (type === 'buzz') {
-      // Низький звук для помилки
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      gainNode.gain.setValueAtTime(0.3, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'sine';
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(250, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.3);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.2, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
       osc.start(now);
       osc.stop(now + 0.3);
     } else if (type === 'whoosh') {
-      // Звук перевертання картки (вчух)
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-      gainNode.gain.setValueAtTime(0.2, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(800, now);
+      osc.frequency.exponentialRampToValueAtTime(100, now + 0.15);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.05, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
       osc.start(now);
-      osc.stop(now + 0.2);
+      osc.stop(now + 0.15);
     }
-  } catch (e) {
-    console.error("Audio API не підтримується", e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 // --- ПАЛІТРА ДЛЯ КАРТОК (Генератор унікальних кольорів) ---
 function getCardStyle(index, isDark, isBack = false) {
-  const gradientsLight = [
-    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
-    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
-    'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
-    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
-    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
-    'linear-gradient(135deg, #cd9cf2 0%, #f6f3ff 100%)',
-    'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
-    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
-  ];
-  
-  const gradientsDark = [
-    'linear-gradient(135deg, #2b5876 0%, #4e4376 100%)',
-    'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
-    'linear-gradient(135deg, #114357 0%, #f29492 100%)',
-    'linear-gradient(135deg, #4b1248 0%, #f0c27b 100%)',
-    'linear-gradient(135deg, #0f2027 0%, #203a43 100%)',
-    'linear-gradient(135deg, #3a1c71 0%, #d76d77 100%)',
-    'linear-gradient(135deg, #232526 0%, #414345 100%)',
-    'linear-gradient(135deg, #141e30 0%, #243b55 100%)'
-  ];
-
+  const gradientsLight = ['linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)', 'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)', 'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)', 'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)', 'linear-gradient(135deg, #f6d365 0%, #fda085 100%)', 'linear-gradient(135deg, #cd9cf2 0%, #f6f3ff 100%)', 'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)', 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'];
+  const gradientsDark = ['linear-gradient(135deg, #2b5876 0%, #4e4376 100%)', 'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)', 'linear-gradient(135deg, #114357 0%, #f29492 100%)', 'linear-gradient(135deg, #4b1248 0%, #f0c27b 100%)', 'linear-gradient(135deg, #0f2027 0%, #203a43 100%)', 'linear-gradient(135deg, #3a1c71 0%, #d76d77 100%)', 'linear-gradient(135deg, #232526 0%, #414345 100%)', 'linear-gradient(135deg, #141e30 0%, #243b55 100%)'];
   const palette = isDark ? gradientsDark : gradientsLight;
-  // Зворотна сторона використовує колір зі зсувом, щоб візуально відрізнятися
   const colorIndex = (index + (isBack ? 3 : 0)) % palette.length; 
-  
-  return {
-    background: palette[colorIndex],
-    color: isDark ? '#ffffff' : '#1a202c',
-    border: 'none',
-    boxShadow: isDark ? '0 4px 15px rgba(0,0,0,0.4)' : '0 4px 15px rgba(0,0,0,0.1)'
-  };
+  return { background: palette[colorIndex], color: isDark ? '#ffffff' : '#1a202c', border: 'none', boxShadow: isDark ? '0 4px 15px rgba(0,0,0,0.4)' : '0 4px 15px rgba(0,0,0,0.1)' };
 }
 
 function App() {
@@ -97,6 +77,48 @@ function App() {
   
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+ // ВЛАСНІ КАРТКИ СТУДЕНТІВ
+  const [myCards, setMyCards] = useState([]);
+
+  // Завантаження при стартовому useEffect (поруч із завантаженням прогресу):
+  const savedMyCards = localStorage.getItem('hack_my_cards_' + dbUserId);
+  if (savedMyCards) setMyCards(JSON.parse(savedMyCards));
+
+  // Функції додавання/видалення:
+  function handleAddMyCard() {
+    const front = prompt("Введіть слово або фразу (лицьова сторона):");
+    if (!front) return;
+    const back = prompt("Введіть переклад (зворотна сторона):");
+    if (!back) return;
+    
+    const newCard = {
+      id: 'my_' + Date.now(),
+      type: 'flashcard',
+      content: front.trim(),
+      correct_answer: back.trim(),
+      difficulty: 'medium',
+      isCustom: true,
+      module_id: activeModule.id
+    };
+    
+    const updated = [...myCards, newCard];
+    setMyCards(updated);
+    if (dbUserId) localStorage.setItem('hack_my_cards_' + dbUserId, JSON.stringify(updated));
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  }
+
+  function handleDeleteMyCard(cardId) {
+    if(!window.confirm("🗑 Ви впевнені, що хочете видалити свою картку?")) return;
+    const updated = myCards.filter(c => c.id !== cardId);
+    setMyCards(updated);
+    if (dbUserId) localStorage.setItem('hack_my_cards_' + dbUserId, JSON.stringify(updated));
+  }
+
+  // Об'єднання стандартних і власних карток для модуля:
+  const currentModuleMyCards = myCards.filter(c => c.module_id === activeModule?.id);
+  const flashcards = [...tasks.filter(t => t.type === 'flashcard'), ...currentModuleMyCards];
+  const allTasksToRender = [...tasks, ...currentModuleMyCards];
   
   const effectiveIsAdmin = isAdmin && !isPreviewMode;
 
@@ -877,7 +899,8 @@ function App() {
         {/* КНОПКИ ТРЕНУВАННЯ / ТЕСТУ */}
         {flashcards.length > 0 && !isTrainingMode && (
           <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button onClick={() => startTraining(false)} style={{ flex: 1, background: '#3182ce', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+            <button onClick={handleAddMyCard} style={{ flex: 1, background: '#00C853', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>➕ Своя картка</button>
+			<button onClick={() => startTraining(false)} style={{ flex: 1, background: '#3182ce', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
               🎴 Гортати картки ({flashcards.length})
             </button>
             <button onClick={() => startTraining(true)} style={{ flex: 1, background: '#805ad5', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
@@ -902,14 +925,14 @@ function App() {
                   <div>
                     <div className="card-3d-container" onClick={toggleTrainingFlashcard}>
                       <div className={`card-3d-inner ${isTrainingFlipped ? 'flipped' : ''}`}>
-                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
-                          <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова сторона (натисни для оберту)</span>
-                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
-                        </div>
-                        <div className="card-face card-back" style={getCardStyle(trainingIndex, isDarkMode, true)}>
-                          <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
-                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].correct_answer}</span>
-                        </div>
+                        <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
+  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>🔄 Натисни для оберту</span>
+  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.content}</span>
+</div>
+<div className="card-face card-back" style={getCardStyle(index, isDarkMode, true)}>
+  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
+  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.correct_answer}</span>
+</div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
