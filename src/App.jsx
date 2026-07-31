@@ -12,45 +12,55 @@ function playUiSound(type, isEnabled) {
       audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     }
     if (audioCtx.state === 'suspended') audioCtx.resume();
-    
-    const osc = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-    osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    
     const now = audioCtx.currentTime;
     
     if (type === 'ding') {
-      // Приємний високий дзвіночок для правильної відповіді
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(880, now); 
-      osc.frequency.exponentialRampToValueAtTime(1760, now + 0.1); 
-      gainNode.gain.setValueAtTime(0, now);
-      gainNode.gain.linearRampToValueAtTime(0.4, now + 0.05);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-      osc.start(now);
-      osc.stop(now + 0.5);
+      // Райські дзвіночки (Арфа)
+      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
+      notes.forEach((freq, i) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        const delay = i * 0.06;
+        osc.frequency.setValueAtTime(freq, now + delay);
+        gain.gain.setValueAtTime(0, now + delay);
+        gain.gain.linearRampToValueAtTime(0.12, now + delay + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 1.2);
+        osc.start(now + delay);
+        osc.stop(now + delay + 1.2);
+      });
     } else if (type === 'buzz') {
-      // Низький звук для помилки
-      osc.type = 'sawtooth';
-      osc.frequency.setValueAtTime(150, now);
-      gainNode.gain.setValueAtTime(0.3, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-      osc.start(now);
-      osc.stop(now + 0.3);
-    } else if (type === 'whoosh') {
-      // Звук перевертання картки (вчух)
+      // М'який глухий "буп" для помилки
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
       osc.type = 'sine';
-      osc.frequency.setValueAtTime(300, now);
-      osc.frequency.exponentialRampToValueAtTime(50, now + 0.2);
-      gainNode.gain.setValueAtTime(0.2, now);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(150, now);
+      osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
       osc.start(now);
-      osc.stop(now + 0.2);
+      osc.stop(now + 0.15);
+    } else if (type === 'whoosh') {
+      // Легкий вітерець для перегортання
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = 'triangle'; 
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.frequency.setValueAtTime(120, now);
+      osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(0.05, now + 0.05);
+      gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+      osc.start(now);
+      osc.stop(now + 0.15);
     }
-  } catch (e) {
-    console.error("Audio API не підтримується", e);
-  }
+  } catch (e) { console.error(e); }
 }
 
 // --- ПАЛІТРА ДЛЯ КАРТОК (Генератор унікальних кольорів) ---
@@ -1040,7 +1050,7 @@ function App() {
                 📂 У цьому розділі ще немає завдань.<br/>Ви можете додавати текстові матеріали, YouTube-відео, аудіофайли, записувати голос напряму з мікрофона, а також створювати інтерактивні тести та флешкартки!
               </div>
             ) : (
-              tasks.map((task, index) => {
+              allTasksToRender.map((task, index) => {
                 const diff = difficultyConfig[task.difficulty || 'medium'];
                 const isCompleted = completedTasks.includes(task.id);
                 const isEditing = editingTaskId === task.id;
@@ -1081,10 +1091,12 @@ function App() {
                           <div>
                             <div className="card-3d-container" onClick={() => toggleFlashcard(task.id)}>
                               <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`}>
-                                <div className="card-face card-front" style={getCardStyle(index, isDarkMode, false)}>
-                                  <span style={{ fontSize: '11px', opacity: 0.7, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>🔄 Натисни для оберту</span>
-                                  <span style={{ fontSize: '22px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{task.content}</span>
+                                {/* БІЛА ЛИЦЬОВА СТОРОНА */}
+                                <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
+                                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>🔄 Натисни для оберту</span>
+                                  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.content}</span>
                                 </div>
+                                {/* КОЛЬОРОВИЙ ГРАДІЄНТ НА ЗВОРОТІ */}
                                 <div className="card-face card-back" style={getCardStyle(index, isDarkMode, true)}>
                                   <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
                                   <span style={{ fontSize: '22px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{task.correct_answer}</span>
@@ -1092,11 +1104,18 @@ function App() {
                               </div>
                             </div>
                             
-                            <div style={{ marginTop: '15px' }}>
+                            <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
                               {isCompleted ? (
-                                <div style={{ background: isDarkMode ? '#22543D' : '#E8F5E9', color: isDarkMode ? '#9AE6B4' : '#2E7D32', padding: '10px', textAlign: 'center', fontWeight: 'bold', borderRadius: '8px' }}>✅ Вивчено (+{diff.points} балів)</div>
+                                <div style={{ flex: 1, background: isDarkMode ? '#22543D' : '#E8F5E9', color: isDarkMode ? '#9AE6B4' : '#2E7D32', padding: '10px', textAlign: 'center', fontWeight: 'bold', borderRadius: '8px' }}>✅ Вивчено (+{diff.points} балів)</div>
                               ) : (
-                                <button onClick={() => handleCompleteFlashcard(task)} style={{ width: '100%', background: '#00C853', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>✅ Я вивчив(ла) це слово</button>
+                                <button onClick={() => handleCompleteFlashcard(task)} style={{ flex: 1, background: '#00C853', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>✅ Я вивчив(ла) це слово</button>
+                              )}
+                              
+                              {/* КНОПКА ВИДАЛЕННЯ ДЛЯ ВЛАСНОЇ КАРТКИ УЧНЯ */}
+                              {task.isCustom && (
+                                <button onClick={() => handleDeleteMyCard(task.id)} style={{ background: '#ffebee', color: '#c62828', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
+                                  🗑 Видалити
+                                </button>
                               )}
                             </div>
                           </div>
