@@ -923,17 +923,15 @@ function App() {
                 {!isTestView ? (
                   <div>
                     <div className="card-3d-container" onClick={toggleTrainingFlashcard}>
-  <div className={`card-3d-inner ${isTrainingFlipped ? 'flipped' : ''}`}>
-    <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
-      <span style={{ fontSize: '11px', opacity: 0.7, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Лицьова сторона (натисни для оберту)</span>
-      <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
-    </div>
-    <div className="card-face card-back" style={getCardStyle(trainingIndex, isDarkMode, true)}>
-      <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
-      <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].correct_answer}</span>
-    </div>
-  </div>
-</div>
+                      <div className={`card-3d-inner ${isTrainingFlipped ? 'flipped' : ''}`}>
+                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
+                          <span style={{ fontSize: '11px', opacity: 0.7, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Лицьова сторона (натисни для оберту)</span>
+                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
+                        </div>
+                        <div className="card-face card-back" style={getCardStyle(trainingIndex, isDarkMode, true)}>
+                          <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
+                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].correct_answer}</span>
+                        </div>
                       </div>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
