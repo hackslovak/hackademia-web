@@ -152,6 +152,14 @@ function App() {
   const [userAnswers, setUserAnswers] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
+  const [myCards, setMyCards] = useState([]);
+  
+  useEffect(() => {
+    const savedCards = localStorage.getItem('hack_my_cards');
+    if (savedCards) {
+      try { setMyCards(JSON.parse(savedCards)); } catch(e){}
+    }
+  }, []);
 
   // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
   const [flippedCards, setFlippedCards] = useState({});
@@ -680,8 +688,37 @@ function App() {
     }
   }
 
-  // --- ЛОГІКА ТРЕНУВАННЯ / ТЕСТІВ ФЛЕШКАРТОК ---
-  const flashcards = tasks.filter(t => t.type === 'flashcard');
+// --- ЛОГІКА ТРЕНУВАННЯ / ТЕСТІВ ФЛЕШКАРТОК ---
+  const allTasksToRender = [...tasks, ...myCards];
+  const flashcards = allTasksToRender.filter(t => t.type === 'flashcard');
+
+  function handleAddMyCard() {
+    const word = prompt("Введи слово (лицьова сторона):");
+    if (!word) return;
+    const translation = prompt("Введи переклад (зворотна сторона):");
+    if (!translation) return;
+
+    const newCard = {
+      id: 'custom_' + Date.now(),
+      type: 'flashcard',
+      content: word.trim(),
+      correct_answer: translation.trim(),
+      difficulty: 'medium',
+      isCustom: true
+    };
+
+    const updated = [...myCards, newCard];
+    setMyCards(updated);
+    localStorage.setItem('hack_my_cards', JSON.stringify(updated));
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+  }
+
+  function handleDeleteMyCard(cardId) {
+    if (!window.confirm("🗑 Точно видалити цю власну картку?")) return;
+    const updated = myCards.filter(c => c.id !== cardId);
+    setMyCards(updated);
+    localStorage.setItem('hack_my_cards', JSON.stringify(updated));
+  }
   
   function startTraining(testMode = false) {
     if (flashcards.length === 0) return;
@@ -885,13 +922,20 @@ function App() {
         <h2 style={{ color: theme.text }}>{activeModule.title}</h2>
 
         {/* КНОПКИ ТРЕНУВАННЯ / ТЕСТУ */}
-        {flashcards.length > 0 && !isTrainingMode && (
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-            <button onClick={() => startTraining(false)} style={{ flex: 1, background: '#3182ce', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-              🎴 Гортати картки ({flashcards.length})
-            </button>
-            <button onClick={() => startTraining(true)} style={{ flex: 1, background: '#805ad5', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-              📝 Пройти тест
+        {!isTrainingMode && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
+            {flashcards.length > 0 && (
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button onClick={() => startTraining(false)} style={{ flex: 1, background: '#3182ce', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+                  🎴 Гортати ({flashcards.length})
+                </button>
+                <button onClick={() => startTraining(true)} style={{ flex: 1, background: '#805ad5', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
+                  📝 Тест
+                </button>
+              </div>
+            )}
+            <button onClick={handleAddMyCard} style={{ width: '100%', background: theme.inputBg, color: theme.text, padding: '12px', borderRadius: '10px', border: `1px dashed ${theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer' }}>
+              ➕ Додати свою картку
             </button>
           </div>
         )}
