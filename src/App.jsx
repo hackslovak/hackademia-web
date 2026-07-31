@@ -109,6 +109,22 @@ function App() {
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
   const effectiveIsAdmin = isAdmin && !isPreviewMode;
+  
+  // --- НОВІ СТАНИ ДЛЯ ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ТА СНАЙПЕРА ---
+  const [globalView, setGlobalView] = useState(null); // 'spaced' або 'sniper'
+  
+  // Стани для Інтервального повторення
+  const [spacedCards, setSpacedCards] = useState([]);
+  const [spacedIndex, setSpacedIndex] = useState(0);
+  const [isSpacedFlipped, setIsSpacedFlipped] = useState(false);
+
+  // Стани для міні-гри "Діакритичний снайпер"
+  const [sniperCards, setSniperCards] = useState([]);
+  const [sniperIndex, setSniperIndex] = useState(0);
+  const [sniperInput, setSniperInput] = useState('');
+  const [sniperScore, setSniperScore] = useState(0);
+  const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
+  const [isSniperOver, setIsSniperOver] = useState(false);
 
   // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -187,6 +203,25 @@ function App() {
     hard: { color: '#F44336', label: '🔴 Складно', points: 30 }
   };
 
+  useEffect(() => {
+    if (globalView !== 'sniper' || isSniperOver) return;
+    
+    const timer = setInterval(() => {
+      setSniperTimeLeft(prev => {
+        if (prev <= 1) {
+          // Час вийшов — зараховуємо помилку і йдемо далі
+          playUiSound('buzz', isSoundEnabled);
+          handleSniperNext(false);
+          return 5;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [globalView, sniperIndex, isSniperOver]);
+ 
+  
   useEffect(() => {
     try {
       const tg = window.Telegram?.WebApp;
@@ -298,6 +333,101 @@ function App() {
     fetchTasks();
     setIsTrainingMode(false); // скидаємо режим тренування при зміні модуля
   }, [activeModule]);
+  
+  // --- ЛОГІКА ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
+  async function startSpacedRepetition() {
+    // Збираємо всі флешкартки з бази через прогрес користувача
+    const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
+    const { data: progressData } = await supabase.from('progress').select('*').eq('user_id', dbUserId);
+    
+    if (!allTasks || allTasks.length === 0) {
+      alert("У базі поки немає жодної картки для повторення!");
+      return;
+    }
+
+    const now = new Date();
+    // Фільтруємо картки, які пора повторювати за алгоритмом (1, 3, 7, 30 днів)
+    const dueCards = allTasks.filter(task => {
+      const prog = progressData?.find(p => p.task_id === task.id);
+      if (!prog || prog.status !== 'completed') return false;
+      
+      const completedDate = new Date(prog.updated_at || prog.created_at);
+      const diffDays = (now - completedDate) / (1000 * 60 * 60 * 24);
+      
+      // Інтервали: 1 день, 3 дні, 7 днів, 30 днів
+      return diffDays >= 1 || diffDays >= 3 || diffDays >= 7 || diffDays >= 30;
+    });
+
+    // Якщо немає протермінованих, беремо просто всі вивчені для тренування
+    const targetCards = dueCards.length > 0 ? dueCards : allTasks;
+
+    setSpacedCards(targetCards);
+    setSpacedIndex(0);
+    setIsSpacedFlipped(false);
+    setGlobalView('spaced');
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+
+  // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
+  async function startDiacriticalSniper() {
+    const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
+    if (!allTasks || allTasks.length < 3) {
+      alert("Для гри потрібно хоча б 3 картки у словнику!");
+      return;
+    }
+	
+	function handleSniperSubmit(e) {
+    e.preventDefault();
+    const currentCard = sniperCards[sniperIndex];
+    // Порівнюємо введене учнем слово з правильною відповіддю (ігноруючи регістр)
+    const isCorrect = sniperInput.trim().toLowerCase() === currentCard.correct_answer.trim().toLowerCase();
+    
+    if (isCorrect) {
+      playUiSound('ding', isSoundEnabled);
+      setSniperScore(prev => prev + 10);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } else {
+      playUiSound('buzz', isSoundEnabled);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
+    handleSniperNext(isCorrect);
+  }
+
+  function handleSniperNext(wasCorrect) {
+    if (sniperIndex + 1 < sniperCards.length) {
+      setSniperIndex(prev => prev + 1);
+      setSniperInput('');
+      setSniperTimeLeft(5);
+    } else {
+      setIsSniperOver(true);
+    }
+  }
+    
+    // Беремо випадкові картки для гри
+    const shuffled = [...allTasks].sort(() => 0.5 - Math.random()).slice(0, 10);
+    setSniperCards(shuffled);
+    setSniperIndex(0);
+    setSniperScore(0);
+    setSniperInput('');
+    setIsSniperOver(false);
+    setGlobalView('sniper');
+    startSniperTimer();
+  }
+
+  // Проста мапа для перетворення звичайної букви у словацьку з діакритикою для підказки/перевірки
+  function addDiacritics(text) {
+    return text
+      .replace(/c/g, 'č').replace(/s/g, 'š').replace(/z/g, 'ž')
+      .replace(/a/g, 'á').replace(/e/g, 'é').replace(/i/g, 'í')
+      .replace(/o/g, 'ó').replace(/u/g, 'ú').replace(/y/g, 'ý')
+      .replace(/l/g, 'ľ').replace(/t/g, 'ť').replace(/d/g, 'ď').replace(/n/g, 'ň');
+  }
+
+  function startSniperTimer() {
+    setSniperTimeLeft(5);
+  }
+
+  // Таймер для снайпера реалізуємо через useEffect нижче
 
   // Функції перемикання теми та звуку
   const toggleTheme = () => {
@@ -900,6 +1030,104 @@ function App() {
     `}</style>
   );
 
+  // --- ЕКРАН ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
+  if (globalView === 'spaced') {
+    const currentCard = spacedCards[spacedIndex];
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
+        <GlobalStyles />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            ← Назад на головну
+          </button>
+        </div>
+        <h2 style={{ color: theme.text }}>🔄 Інтервальне повторення</h2>
+        <p style={{ color: theme.textSecondary, fontSize: '13px', marginBottom: '20px' }}>Картка {spacedIndex + 1} із {spacedCards.length}</p>
+
+        {spacedCards.length > 0 && currentCard ? (
+          <div style={{ maxWidth: '400px', margin: '0 auto' }}>
+            <div className="card-3d-container" onClick={() => { playUiSound('whoosh', isSoundEnabled); setIsSpacedFlipped(!isSpacedFlipped); }}>
+              <div className={`card-3d-inner ${isSpacedFlipped ? 'flipped' : ''}`}>
+                <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
+                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>Натисни для перевороту</span>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>{currentCard.content}</span>
+                </div>
+                <div className="card-face card-back" style={getCardStyle(spacedIndex, isDarkMode, true)}>
+                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
+                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>{currentCard.correct_answer}</span>
+                </div>
+              </div>
+            </div>
+
+            <button 
+              onClick={() => {
+                setIsSpacedFlipped(false);
+                if (spacedIndex + 1 < spacedCards.length) setSpacedIndex(prev => prev + 1);
+                else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
+              }} 
+              style={{ width: '100%', marginTop: '20px', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
+            >
+              Далі →
+            </button>
+          </div>
+        ) : (
+          <p style={{ color: theme.text }}>Немає карток для повторення.</p>
+        )}
+      </div>
+    );
+  }
+
+  // --- ЕКРАН МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
+  if (globalView === 'sniper') {
+    const currentCard = sniperCards[sniperIndex];
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
+        <GlobalStyles />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            ← Назад на головну
+          </button>
+          <span style={{ fontWeight: 'bold', color: theme.text }}>🏆 Бали: {sniperScore}</span>
+        </div>
+
+        <h2 style={{ color: theme.text }}>🎯 Діакритичний снайпер</h2>
+
+        {isSniperOver ? (
+          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}` }}>
+            <h3>🏁 Гра завершена!</h3>
+            <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій результат: <b>{sniperScore} балів</b></p>
+            <button onClick={() => setGlobalView(null)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
+          </div>
+        ) : currentCard && (
+          <div style={{ maxWidth: '400px', margin: '30px auto', background: theme.cardBg, padding: '25px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
+              <span>Слово {sniperIndex + 1} з {sniperCards.length}</span>
+              <span style={{ color: sniperTimeLeft <= 2 ? '#F44336' : theme.text, fontWeight: 'bold' }}>⏱ {sniperTimeLeft} сек</span>
+            </div>
+
+            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '5px' }}>Переклади словацькою (згадай діакритику):</p>
+            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '20px' }}>{currentCard.content}</h3>
+
+            <form onSubmit={handleSniperSubmit}>
+              <input 
+                type="text" 
+                placeholder="Введи з діакритикою..." 
+                value={sniperInput} 
+                onChange={e => setSniperInput(e.target.value)} 
+                autoFocus 
+                autoComplete="off"
+                style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px', marginBottom: '15px', boxSizing: 'border-box' }} 
+              />
+              <button type="submit" style={{ width: '100%', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>
+                Постріл! 🎯
+              </button>
+            </form>
+          </div>
+        )}
+      </div>
+    );
+  }
+  
   // ЕКРАН 3: Завдання розділу
   if (activeModule) {
     return (
@@ -1382,6 +1610,23 @@ function App() {
             </div>
           ))
         )}
+      </div>
+	  
+	  {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
+      <div style={{ maxWidth: '400px', margin: '25px auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <button 
+          onClick={startSpacedRepetition}
+          style={{ background: 'linear-gradient(135deg, #3182ce 0%, #63b3ed 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(49,130,206,0.3)' }}
+        >
+          <span>🔄 Повторити сьогодні (Інтервальне)</span>
+        </button>
+
+        <button 
+          onClick={startDiacriticalSniper}
+          style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(128,90,213,0.3)' }}
+        >
+          <span>🎯 Міні-гра: Діакритичний снайпер</span>
+        </button>
       </div>
 
       {isAdmin && (
