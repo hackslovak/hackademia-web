@@ -53,6 +53,42 @@ function playUiSound(type, isEnabled) {
   }
 }
 
+// --- ПАЛІТРА ДЛЯ КАРТОК (Генератор унікальних кольорів) ---
+function getCardStyle(index, isDark, isBack = false) {
+  const gradientsLight = [
+    'linear-gradient(135deg, #ff9a9e 0%, #fecfef 100%)',
+    'linear-gradient(135deg, #a1c4fd 0%, #c2e9fb 100%)',
+    'linear-gradient(135deg, #d4fc79 0%, #96e6a1 100%)',
+    'linear-gradient(135deg, #e0c3fc 0%, #8ec5fc 100%)',
+    'linear-gradient(135deg, #f6d365 0%, #fda085 100%)',
+    'linear-gradient(135deg, #cd9cf2 0%, #f6f3ff 100%)',
+    'linear-gradient(135deg, #84fab0 0%, #8fd3f4 100%)',
+    'linear-gradient(135deg, #ffecd2 0%, #fcb69f 100%)'
+  ];
+  
+  const gradientsDark = [
+    'linear-gradient(135deg, #2b5876 0%, #4e4376 100%)',
+    'linear-gradient(135deg, #1e3c72 0%, #2a5298 100%)',
+    'linear-gradient(135deg, #114357 0%, #f29492 100%)',
+    'linear-gradient(135deg, #4b1248 0%, #f0c27b 100%)',
+    'linear-gradient(135deg, #0f2027 0%, #203a43 100%)',
+    'linear-gradient(135deg, #3a1c71 0%, #d76d77 100%)',
+    'linear-gradient(135deg, #232526 0%, #414345 100%)',
+    'linear-gradient(135deg, #141e30 0%, #243b55 100%)'
+  ];
+
+  const palette = isDark ? gradientsDark : gradientsLight;
+  // Зворотна сторона використовує колір зі зсувом, щоб візуально відрізнятися
+  const colorIndex = (index + (isBack ? 3 : 0)) % palette.length; 
+  
+  return {
+    background: palette[colorIndex],
+    color: isDark ? '#ffffff' : '#1a202c',
+    border: 'none',
+    boxShadow: isDark ? '0 4px 15px rgba(0,0,0,0.4)' : '0 4px 15px rgba(0,0,0,0.1)'
+  };
+}
+
 function App() {
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
@@ -811,10 +847,9 @@ function App() {
         position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
         display: flex; flex-direction: column; justify-content: center; align-items: center; 
         border-radius: 12px; padding: 25px; box-sizing: border-box; 
-        box-shadow: 0 4px 15px rgba(0,0,0,0.08); 
       }
-      .card-front { background: ${theme.cardBg}; color: ${theme.text}; border: 1px solid ${theme.inputBorder}; }
-      .card-back { background: #3182ce; color: white; transform: rotateY(180deg); border: 1px solid #2b6cb0; }
+      .card-front { }
+      .card-back { transform: rotateY(180deg); }
     `}</style>
   );
 
@@ -825,7 +860,7 @@ function App() {
         <GlobalStyles />
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => { if (isTrainingMode) setIsTrainingMode(false); else setActiveModule(null); }} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', padding: '0' }}>
-            ← Назад
+            ← Назад 
           </button>
           <div style={{ display: 'flex', gap: '15px' }}>
             <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
@@ -867,13 +902,13 @@ function App() {
                   <div>
                     <div className="card-3d-container" onClick={toggleTrainingFlashcard}>
                       <div className={`card-3d-inner ${isTrainingFlipped ? 'flipped' : ''}`}>
-                        <div className="card-face card-front">
+                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
                           <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова сторона (натисни для оберту)</span>
-                          <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{flashcards[trainingIndex].content}</span>
+                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
                         </div>
-                        <div className="card-face card-back">
+                        <div className="card-face card-back" style={getCardStyle(trainingIndex, isDarkMode, true)}>
                           <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
-                          <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{flashcards[trainingIndex].correct_answer}</span>
+                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].correct_answer}</span>
                         </div>
                       </div>
                     </div>
@@ -1046,13 +1081,13 @@ function App() {
                           <div>
                             <div className="card-3d-container" onClick={() => toggleFlashcard(task.id)}>
                               <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`}>
-                                <div className="card-face card-front">
-                                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>🔄 Натисни для оберту</span>
-                                  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.content}</span>
+                                <div className="card-face card-front" style={getCardStyle(index, isDarkMode, false)}>
+                                  <span style={{ fontSize: '11px', opacity: 0.7, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>🔄 Натисни для оберту</span>
+                                  <span style={{ fontSize: '22px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{task.content}</span>
                                 </div>
-                                <div className="card-face card-back">
-                                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
-                                  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.correct_answer}</span>
+                                <div className="card-face card-back" style={getCardStyle(index, isDarkMode, true)}>
+                                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
+                                  <span style={{ fontSize: '22px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{task.correct_answer}</span>
                                 </div>
                               </div>
                             </div>
