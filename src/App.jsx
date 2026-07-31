@@ -399,25 +399,22 @@ function App() {
   ];
 
   async function startDiacriticalSniper() {
-    // Збираємо кастомні слова адміна з localStorage або використовуємо дефолтні
     let customSniper = [];
     try {
       const saved = localStorage.getItem('hack_sniper_custom');
       if (saved) customSniper = JSON.parse(saved);
     } catch(e) {}
 
-    // Також підтягуємо флешкартки з бази, якщо вони є
     let dbCards = [];
     try {
       const response = await supabase.from('tasks').select('*').eq('type', 'flashcard');
       if (response && response.data) {
-        dbCards = response.data;
+        dbCards = response.data.filter(c => c && c.content && c.correct_answer);
       }
     } catch(e) {
       console.log("Supabase fetch note:", e);
     }
 
-    // Об'єднуємо все в єдиний пул слів
     const combinedPool = [...defaultSniperWords, ...customSniper, ...dbCards];
 
     if (combinedPool.length === 0) {
@@ -463,11 +460,42 @@ function App() {
   
   // МАПА ДЛЯ АВТО-ДІАКРИТИКИ
   function addDiacritics(text) {
-    return text
+    return String(text || '')
       .replace(/c/g, 'č').replace(/s/g, 'š').replace(/z/g, 'ž')
       .replace(/a/g, 'á').replace(/e/g, 'é').replace(/i/g, 'í')
       .replace(/o/g, 'ó').replace(/u/g, 'ú').replace(/y/g, 'ý')
       .replace(/l/g, 'ľ').replace(/t/g, 'ť').replace(/d/g, 'ď').replace(/n/g, 'ň');
+  }
+
+  // --- ВСТАВЦЯ СЮДИ ---
+  function handleSniperSubmit(e) {
+    e.preventDefault();
+    const currentCard = sniperCards[sniperIndex];
+    if (!currentCard || !currentCard.correct_answer) {
+      handleSniperNext(false);
+      return;
+    }
+    const isCorrect = sniperInput.trim().toLowerCase() === currentCard.correct_answer.trim().toLowerCase();
+    
+    if (isCorrect) {
+      playUiSound('ding', isSoundEnabled);
+      setSniperScore(prev => prev + 10);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } else {
+      playUiSound('buzz', isSoundEnabled);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
+    handleSniperNext(isCorrect);
+  }
+
+  function handleSniperNext(wasCorrect) {
+    if (sniperIndex + 1 < sniperCards.length) {
+      setSniperIndex(prev => prev + 1);
+      setSniperInput('');
+      setSniperTimeLeft(5);
+    } else {
+      setIsSniperOver(true);
+    }
   }
 
 
