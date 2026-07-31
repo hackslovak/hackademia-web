@@ -693,7 +693,6 @@ function App() {
   }
 
   // --- ЛОГІКА ТРЕНУВАННЯ / ТЕСТІВ ФЛЕШКАРТОК ---
-  const flashcards = tasks.filter(t => t.type === 'flashcard');
   
   function startTraining(testMode = false) {
     if (flashcards.length === 0) return;
