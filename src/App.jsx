@@ -409,9 +409,13 @@ function App() {
     // Також підтягуємо флешкартки з бази, якщо вони є
     let dbCards = [];
     try {
-      const { data } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
-      if (data) dbCards = data;
-    } catch(e) {}
+      const response = await supabase.from('tasks').select('*').eq('type', 'flashcard');
+      if (response && response.data) {
+        dbCards = response.data;
+      }
+    } catch(e) {
+      console.log("Supabase fetch note:", e);
+    }
 
     // Об'єднуємо все в єдиний пул слів
     const combinedPool = [...defaultSniperWords, ...customSniper, ...dbCards];
