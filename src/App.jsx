@@ -369,52 +369,95 @@ function App() {
   }
 
   // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
+ // --- БАЗОВИЙ СПИСОК ТОП-100 СЛІВ З ДІАКРИТИКОЮ ТА СВОЇ СЛОВА ДЛЯ СНАЙПЕРА ---
+  const defaultSniperWords = [
+    { id: 's1', content: 'Людина', correct_answer: 'človek' },
+    { id: 's2', content: 'Дякую', correct_answer: 'ďakujem' },
+    { id: 's3', content: 'Жити', correct_answer: 'žiť' },
+    { id: 's4', content: 'Можу / я можу', correct_answer: 'môžem' },
+    { id: 's5', content: 'Щастя', correct_answer: 'šťastie' },
+    { id: 's6', content: 'Важкий / складний', correct_answer: 'ťažký' },
+    { id: 's7', content: 'Всюди', correct_answer: 'všade' },
+    { id: 's8', content: 'Чотири', correct_answer: 'štyri' },
+    { id: 's9', content: 'Читати', correct_answer: 'čítať' },
+    { id: 's10', content: 'Вчитися', correct_answer: 'učiť sa' },
+    { id: 's11', content: 'Більше', correct_answer: 'viac' },
+    { id: 's12', content: 'Менше', correct_answer: 'menej' },
+    { id: 's13', content: 'Часто', correct_answer: 'často' },
+    { id: 's14', content: 'Вчора', correct_answer: 'včera' },
+    { id: 's15', content: 'Школа', correct_answer: 'škola' },
+    { id: 's16', content: 'Щось', correct_answer: 'niečo' },
+    { id: 's17', content: 'Все', correct_answer: 'všetko' },
+    { id: 's18', content: 'Ніхто', correct_answer: 'nikto' },
+    { id: 's19', content: 'Завжди', correct_answer: 'vždy' },
+    { id: 's20', content: 'Година', correct_answer: 'hodina' },
+    { id: 's21', content: 'Пташка / птиця', correct_answer: 'vtáčik' },
+    { id: 's22', content: 'Чашка', correct_answer: 'šálka' },
+    { id: 's23', content: 'Ложка', correct_answer: 'lyžica' },
+    { id: 's24', content: 'Ніж', correct_answer: 'nôž' },
+    { id: 's25', content: 'Яблуко', correct_answer: 'jablko' }
+  ];
+
   async function startDiacriticalSniper() {
-    const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
-    if (!allTasks || allTasks.length < 3) {
-      alert("Для гри потрібно хоча б 3 картки у словнику!");
+    // Збираємо кастомні слова адміна з localStorage або використовуємо дефолтні
+    let customSniper = [];
+    try {
+      const saved = localStorage.getItem('hack_sniper_custom');
+      if (saved) customSniper = JSON.parse(saved);
+    } catch(e) {}
+
+    // Також підтягуємо флешкартки з бази, якщо вони є
+    let dbCards = [];
+    try {
+      const { data } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
+      if (data) dbCards = data;
+    } catch(e) {}
+
+    // Об'єднуємо все в єдиний пул слів
+    const combinedPool = [...defaultSniperWords, ...customSniper, ...dbCards];
+
+    if (combinedPool.length === 0) {
+      alert("Немає слів для гри!");
       return;
     }
-	
-	function handleSniperSubmit(e) {
-    e.preventDefault();
-    const currentCard = sniperCards[sniperIndex];
-    // Порівнюємо введене учнем слово з правильною відповіддю (ігноруючи регістр)
-    const isCorrect = sniperInput.trim().toLowerCase() === currentCard.correct_answer.trim().toLowerCase();
     
-    if (isCorrect) {
-      playUiSound('ding', isSoundEnabled);
-      setSniperScore(prev => prev + 10);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } else {
-      playUiSound('buzz', isSoundEnabled);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-    }
-    handleSniperNext(isCorrect);
-  }
-
-  function handleSniperNext(wasCorrect) {
-    if (sniperIndex + 1 < sniperCards.length) {
-      setSniperIndex(prev => prev + 1);
-      setSniperInput('');
-      setSniperTimeLeft(5);
-    } else {
-      setIsSniperOver(true);
-    }
-  }
-    
-    // Беремо випадкові картки для гри
-    const shuffled = [...allTasks].sort(() => 0.5 - Math.random()).slice(0, 10);
+    const shuffled = [...combinedPool].sort(() => 0.5 - Math.random()).slice(0, 10);
     setSniperCards(shuffled);
     setSniperIndex(0);
     setSniperScore(0);
     setSniperInput('');
     setIsSniperOver(false);
     setGlobalView('sniper');
-    startSniperTimer();
+    setSniperTimeLeft(5);
   }
 
-  // Проста мапа для перетворення звичайної букви у словацьку з діакритикою для підказки/перевірки
+  // Функція для адміна: додати нове слово у снайпер
+  function handleAddSniperWord() {
+    const wordUA = prompt("Введи значення українською (наприклад: 'Дівчина'):");
+    if (!wordUA) return;
+    const wordSK = prompt("Введи слово словацькою з діакритикою (наприклад: 'dievča'):");
+    if (!wordSK) return;
+
+    const newItem = {
+      id: 'custom_snp_' + Date.now(),
+      content: wordUA.trim(),
+      correct_answer: wordSK.trim()
+    };
+
+    try {
+      let customSniper = [];
+      const saved = localStorage.getItem('hack_sniper_custom');
+      if (saved) customSniper = JSON.parse(saved);
+      
+      customSniper.push(newItem);
+      localStorage.setItem('hack_sniper_custom', JSON.stringify(customSniper));
+      alert("✅ Слово успішно додано до бази снайпера!");
+    } catch(err) {
+      alert("Помилка збереження: " + err.message);
+    }
+  }
+  
+  // МАПА ДЛЯ АВТО-ДІАКРИТИКИ
   function addDiacritics(text) {
     return text
       .replace(/c/g, 'č').replace(/s/g, 'š').replace(/z/g, 'ž')
@@ -423,11 +466,6 @@ function App() {
       .replace(/l/g, 'ľ').replace(/t/g, 'ť').replace(/d/g, 'ď').replace(/n/g, 'ň');
   }
 
-  function startSniperTimer() {
-    setSniperTimeLeft(5);
-  }
-
-  // Таймер для снайпера реалізуємо через useEffect нижче
 
   // Функції перемикання теми та звуку
   const toggleTheme = () => {
@@ -1092,6 +1130,15 @@ function App() {
 
         <h2 style={{ color: theme.text }}>🎯 Діакритичний снайпер</h2>
 
+        {/* КНОПКА ПОПОВНЕННЯ ДЛЯ АДМІНІВ */}
+        {isAdmin && (
+          <div style={{ margin: '10px auto', maxWidth: '400px' }}>
+            <button onClick={handleAddSniperWord} style={{ background: theme.adminBg, color: theme.adminBorder, border: `1px dashed ${theme.adminBorder}`, padding: '8px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
+              ➕ Додати нове слово у снайпер
+            </button>
+          </div>
+        )}
+
         {isSniperOver ? (
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}` }}>
             <h3>🏁 Гра завершена!</h3>
@@ -1116,8 +1163,18 @@ function App() {
                 onChange={e => setSniperInput(e.target.value)} 
                 autoFocus 
                 autoComplete="off"
-                style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px', marginBottom: '15px', boxSizing: 'border-box' }} 
+                style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px', marginBottom: '10px', boxSizing: 'border-box' }} 
               />
+              
+              {/* КНОПКА ШВИДКОЇ ДІАКРИТИКИ ДЛЯ МОБІЛОК */}
+              <button 
+                type="button" 
+                onClick={() => setSniperInput(addDiacritics(sniperInput))}
+                style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '8px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}
+              >
+                🪄 Авто-діакритика (натисни, щоб виправити букви)
+              </button>
+
               <button type="submit" style={{ width: '100%', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>
                 Постріл! 🎯
               </button>
