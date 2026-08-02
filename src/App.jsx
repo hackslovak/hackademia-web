@@ -441,29 +441,6 @@ function App() {
     else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
   }
 
-    const now = new Date();
-    // Фільтруємо картки, які пора повторювати за алгоритмом (1, 3, 7, 30 днів)
-    const dueCards = allTasks.filter(task => {
-      const prog = progressData?.find(p => p.task_id === task.id);
-      if (!prog || prog.status !== 'completed') return false;
-      
-      const completedDate = new Date(prog.updated_at || prog.created_at);
-      const diffDays = (now - completedDate) / (1000 * 60 * 60 * 24);
-      
-      // Інтервали: 1 день, 3 дні, 7 днів, 30 днів
-      return diffDays >= 1 || diffDays >= 3 || diffDays >= 7 || diffDays >= 30;
-    });
-
-    // Якщо немає протермінованих, беремо просто всі вивчені для тренування
-    const targetCards = dueCards.length > 0 ? dueCards : allTasks;
-
-    setSpacedCards(targetCards);
-    setSpacedIndex(0);
-    setIsSpacedFlipped(false);
-    setGlobalView('spaced');
-    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-  }
-
   // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
  // --- БАЗОВИЙ СПИСОК ТОП-100 СЛІВ З ДІАКРИТИКОЮ ТА СВОЇ СЛОВА ДЛЯ СНАЙПЕРА ---
   // --- РОЗШИРЕНА БАЗА СЛІВ ДЛЯ СНАЙПЕРА (80+ слів) ---
