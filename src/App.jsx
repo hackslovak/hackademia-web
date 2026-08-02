@@ -2317,9 +2317,11 @@ function App() {
                           <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова сторона (натисни для оберту)</span>
                           <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
                         </div>
-                        <div className="card-face card-back" style={getCardStyle(trainingIndex, isDarkMode, true)}>
-                          <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
-                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].correct_answer}</span>
+                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
+                          <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова (натисни)</span>
+                          <span style={{ fontSize: '26px', fontWeight: 'bold' }}>{flashcards[trainingIndex].content}</span>
+                          {/* КНОПКА ОЗВУЧКИ */}
+                          <button onClick={(e) => { e.stopPropagation(); speakSlovak(flashcards[trainingIndex].content); }} style={{ background: 'transparent', border: 'none', fontSize: '30px', marginTop: '15px', cursor: 'pointer' }}>🔊</button>
                         </div>
                       </div>
                     </div>
@@ -2331,8 +2333,11 @@ function App() {
                 ) : (
                   <div>
                     <div style={{ background: theme.inputBg, padding: '20px', borderRadius: '12px', marginBottom: '20px', border: `1px solid ${theme.inputBorder}` }}>
-                      <span style={{ fontSize: '13px', color: theme.textSecondary }}>Як правильно перекладається:</span>
-                      <h3 style={{ fontSize: '24px', margin: '10px 0 0 0', color: theme.text }}>{flashcards[trainingIndex].content}</h3>
+                      <h3 style={{ fontSize: '24px', margin: '0', color: theme.text }}>
+                        {/* КНОПКА ОЗВУЧКИ */}
+                        <button onClick={(e) => { e.stopPropagation(); speakSlovak(flashcards[trainingIndex].content); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
+                        {flashcards[trainingIndex].content}
+                      </h3>
                     </div>
 
                     {selectedQuizAnswer !== null && (
@@ -2494,8 +2499,10 @@ function App() {
                               <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`}>
                                 {/* БІЛА ЛИЦЬОВА СТОРОНА */}
                                 <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
-                                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>🔄 Натисни для оберту</span>
+                                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>🔄 Натисни</span>
                                   <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.content}</span>
+                                  {/* КНОПКА ОЗВУЧКИ */}
+                                  <button onClick={(e) => { e.stopPropagation(); speakSlovak(task.content); }} style={{ background: 'transparent', border: 'none', fontSize: '26px', marginTop: '10px', cursor: 'pointer' }}>🔊</button>
                                 </div>
                                 {/* КОЛЬОРОВИЙ ГРАДІЄНТ НА ЗВОРОТІ */}
                                 <div className="card-face card-back" style={getCardStyle(index, isDarkMode, true)}>
