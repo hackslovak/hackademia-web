@@ -124,7 +124,10 @@ function App() {
   const [sniperInput, setSniperInput] = useState('');
   const [sniperScore, setSniperScore] = useState(0);
   const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
-  const [isSniperOver, setIsSniperOver] = useState(false);
+  
+  // НОВІ СТАНИ: Статус гри (меню, гра, кінець) та Життя (ХП)
+  const [sniperStatus, setSniperStatus] = useState('menu'); 
+  const [sniperHp, setSniperHp] = useState(5);
   
   // Стани для міні-гри "Фальшиві друзі"
   const [ffCards, setFfCards] = useState([]);
@@ -212,22 +215,27 @@ function App() {
   };
 
   useEffect(() => {
-    if (globalView !== 'sniper' || isSniperOver) return;
+    // Таймер працює ТІЛЬКИ коли статус 'playing'
+    if (globalView !== 'sniper' || sniperStatus !== 'playing') return;
     
     const timer = setInterval(() => {
       setSniperTimeLeft(prev => {
         if (prev <= 1) {
-          // Час вийшов — зараховуємо помилку і йдемо далі
           playUiSound('buzz', isSoundEnabled);
-          handleSniperNext(false);
-          return 5;
+          setSniperHp(hp => {
+            const newHp = hp - 1;
+            if (newHp <= 0) setSniperStatus('over'); // ХП закінчились = кінець
+            else setSniperIndex(idx => idx + 1); // Йдемо далі, якщо ще є ХП
+            return newHp;
+          });
+          return 5; // Відновлюємо час для наступного слова
         }
         return prev - 1;
       });
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [globalView, sniperIndex, isSniperOver]);
+  }, [globalView, sniperStatus, isSoundEnabled]);
  
   
   useEffect(() => {
@@ -378,13 +386,14 @@ function App() {
 
   // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
  // --- БАЗОВИЙ СПИСОК ТОП-100 СЛІВ З ДІАКРИТИКОЮ ТА СВОЇ СЛОВА ДЛЯ СНАЙПЕРА ---
+  // --- РОЗШИРЕНА БАЗА СЛІВ ДЛЯ СНАЙПЕРА (80+ слів) ---
   const defaultSniperWords = [
     { id: 's1', content: 'Людина', correct_answer: 'človek' },
     { id: 's2', content: 'Дякую', correct_answer: 'ďakujem' },
     { id: 's3', content: 'Жити', correct_answer: 'žiť' },
-    { id: 's4', content: 'Можу / я можу', correct_answer: 'môžem' },
+    { id: 's4', content: 'Можу', correct_answer: 'môžem' },
     { id: 's5', content: 'Щастя', correct_answer: 'šťastie' },
-    { id: 's6', content: 'Важкий / складний', correct_answer: 'ťažký' },
+    { id: 's6', content: 'Важкий', correct_answer: 'ťažký' },
     { id: 's7', content: 'Всюди', correct_answer: 'všade' },
     { id: 's8', content: 'Чотири', correct_answer: 'štyri' },
     { id: 's9', content: 'Читати', correct_answer: 'čítať' },
@@ -396,14 +405,60 @@ function App() {
     { id: 's15', content: 'Школа', correct_answer: 'škola' },
     { id: 's16', content: 'Щось', correct_answer: 'niečo' },
     { id: 's17', content: 'Все', correct_answer: 'všetko' },
-    { id: 's18', content: 'Ніхто', correct_answer: 'nikto' },
-    { id: 's19', content: 'Завжди', correct_answer: 'vždy' },
-    { id: 's20', content: 'Година', correct_answer: 'hodina' },
-    { id: 's21', content: 'Пташка / птиця', correct_answer: 'vtáčik' },
-    { id: 's22', content: 'Чашка', correct_answer: 'šálka' },
-    { id: 's23', content: 'Ложка', correct_answer: 'lyžica' },
-    { id: 's24', content: 'Ніж', correct_answer: 'nôž' },
-    { id: 's25', content: 'Яблуко', correct_answer: 'jablko' }
+    { id: 's18', content: 'Завжди', correct_answer: 'vždy' },
+    { id: 's19', content: 'Пташка', correct_answer: 'vtáčik' },
+    { id: 's20', content: 'Чашка', correct_answer: 'šálka' },
+    { id: 's21', content: 'Ложка', correct_answer: 'lyžica' },
+    { id: 's22', content: 'Ніж', correct_answer: 'nôž' },
+    { id: 's23', content: 'Стіл', correct_answer: 'stôl' },
+    { id: 's24', content: 'Кінь', correct_answer: 'kôň' },
+    { id: 's25', content: 'Дощ', correct_answer: 'dážď' },
+    { id: 's26', content: 'Кішка', correct_answer: 'mačka' },
+    { id: 's27', content: 'Миша', correct_answer: 'myš' },
+    { id: 's28', content: 'Жаба', correct_answer: 'žaba' },
+    { id: 's29', content: 'Пляшка', correct_answer: 'fľaša' },
+    { id: 's30', content: 'Ключ', correct_answer: 'kľúč' },
+    { id: 's31', content: 'Кулак', correct_answer: 'päsť' },
+    { id: 's32', content: 'П\'ять', correct_answer: 'päť' },
+    { id: 's33', content: 'М\'ясо', correct_answer: 'mäso' },
+    { id: 's34', content: 'Пам\'ять', correct_answer: 'pamäť' },
+    { id: 's35', content: 'Кора', correct_answer: 'kôra' },
+    { id: 's36', content: 'Біль', correct_answer: 'bolesť' },
+    { id: 's37', content: 'Ліжко', correct_answer: 'posteľ' },
+    { id: 's38', content: 'Сорочка', correct_answer: 'košeľa' },
+    { id: 's39', content: 'Склянка', correct_answer: 'pohár' },
+    { id: 's40', content: 'Довжина', correct_answer: 'dĺžka' },
+    { id: 's41', content: 'Ширина', correct_answer: 'šírka' },
+    { id: 's42', content: 'Висота', correct_answer: 'výška' },
+    { id: 's43', content: 'Глибина', correct_answer: 'hĺbka' },
+    { id: 's44', content: 'Черешня', correct_answer: 'čerešňa' },
+    { id: 's45', content: 'Вишня', correct_answer: 'višňa' },
+    { id: 's46', content: 'Верба', correct_answer: 'vŕba' },
+    { id: 's47', content: 'Годувати', correct_answer: 'kŕmiť' },
+    { id: 's48', content: 'Колючка', correct_answer: 'tŕň' },
+    { id: 's49', content: 'Стовп', correct_answer: 'stĺp' },
+    { id: 's50', content: 'Жовтий', correct_answer: 'žltý' },
+    { id: 's51', content: 'Чорний', correct_answer: 'čierny' },
+    { id: 's52', content: 'Важливий', correct_answer: 'dôležitý' },
+    { id: 's53', content: 'Особливий', correct_answer: 'zvláštny' },
+    { id: 's54', content: 'Більший', correct_answer: 'väčší' },
+    { id: 's55', content: 'Менший', correct_answer: 'menší' },
+    { id: 's56', content: 'Надія', correct_answer: 'nádej' },
+    { id: 's57', content: 'Кохання', correct_answer: 'láska' },
+    { id: 's58', content: 'Радість', correct_answer: 'radosť' },
+    { id: 's59', content: 'Смуток', correct_answer: 'smútok' },
+    { id: 's60', content: 'Ворог', correct_answer: 'nepriateľ' },
+    { id: 's61', content: 'Початок', correct_answer: 'začiatok' },
+    { id: 's62', content: 'М\'який', correct_answer: 'mäkký' },
+    { id: 's63', content: 'Чистий', correct_answer: 'čistý' },
+    { id: 's64', content: 'Шукати', correct_answer: 'hľadať' },
+    { id: 's65', content: 'Питати', correct_answer: 'pýtať sa' },
+    { id: 's66', content: 'Площа', correct_answer: 'námestie' },
+    { id: 's67', content: 'Кав\'ярня', correct_answer: 'kaviareň' },
+    { id: 's68', content: 'Пошта', correct_answer: 'pošta' },
+    { id: 's69', content: 'Пекарня', correct_answer: 'pekáreň' },
+    { id: 's70', content: 'Тиждень', correct_answer: 'týždeň' },
+    { id: 's71', content: 'Місяць', correct_answer: 'mesiac' }
   ];
   
   const falseFriendsDatabase = [
@@ -488,7 +543,8 @@ function App() {
   { id: "ff_combo_7", slovak_phrase: "Makal som celý deň a kúpil som si čerstvú buchtu.", option_correct: "Важко працював цілий день і купив собі свіжу булочку", option_wrong: "Макав я цілий день і купив собі черству бухту", explanation: "«Makať» = важко працювати, «čerstvý» = свіжий, «buchta» = булочка." }
 ];
 
-  async function startDiacriticalSniper() {
+// --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
+  async function startDiacriticalSniperGame() {
     let customSniper = [];
     try {
       const saved = localStorage.getItem('hack_sniper_custom');
@@ -501,25 +557,25 @@ function App() {
       if (response && response.data) {
         dbCards = response.data.filter(c => c && c.content && c.correct_answer);
       }
-    } catch(e) {
-      console.log("Supabase fetch note:", e);
-    }
+    } catch(e) {}
 
     const combinedPool = [...defaultSniperWords, ...customSniper, ...dbCards];
 
-    if (combinedPool.length === 0) {
-      alert("Немає слів для гри!");
-      return;
-    }
+    if (combinedPool.length === 0) return;
     
-    const shuffled = [...combinedPool].sort(() => 0.5 - Math.random()).slice(0, 10);
-    setSniperCards(shuffled);
+    // ПРОГРЕСІЯ СКЛАДНОСТІ: Сортуємо слова за довжиною і перемішуємо всередині груп
+    const short = combinedPool.filter(c => c.correct_answer.length <= 5).sort(() => 0.5 - Math.random());
+    const med = combinedPool.filter(c => c.correct_answer.length > 5 && c.correct_answer.length <= 7).sort(() => 0.5 - Math.random());
+    const long = combinedPool.filter(c => c.correct_answer.length > 7).sort(() => 0.5 - Math.random());
+    
+    // Спочатку легкі, потім середні, потім складні
+    setSniperCards([...short, ...med, ...long]);
     setSniperIndex(0);
     setSniperScore(0);
+    setSniperHp(5); // 5 життів
     setSniperInput('');
-    setIsSniperOver(false);
-    setGlobalView('sniper');
     setSniperTimeLeft(5);
+    setSniperStatus('playing');
   }
 
   // Функція для адміна: додати нове слово у снайпер
@@ -557,25 +613,31 @@ function App() {
       .replace(/l/g, 'ľ').replace(/t/g, 'ť').replace(/d/g, 'ď').replace(/n/g, 'ň');
   }
 
-  // --- ВСТАВЦЯ СЮДИ ---
   function handleSniperSubmit(e) {
     e.preventDefault();
-    const currentCard = sniperCards[sniperIndex];
-    if (!currentCard || !currentCard.correct_answer) {
-      handleSniperNext(false);
-      return;
-    }
+    // БЕЗКІНЕЧНИЙ ЦИКЛ: коли слова закінчуються, індекс йде по колу!
+    const currentCard = sniperCards[sniperIndex % sniperCards.length]; 
+    if (!currentCard || !currentCard.correct_answer) return;
+
     const isCorrect = sniperInput.trim().toLowerCase() === currentCard.correct_answer.trim().toLowerCase();
     
     if (isCorrect) {
       playUiSound('ding', isSoundEnabled);
       setSniperScore(prev => prev + 10);
+      setSniperTimeLeft(prev => Math.min(prev + 3, 10)); // ДАЄМО +3 сек (макс 10)
+      setSniperIndex(prev => prev + 1); // Наступне слово
+      setSniperInput('');
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } else {
       playUiSound('buzz', isSoundEnabled);
+      setSniperInput(''); // Очищаємо поле для нової спроби
+      setSniperHp(hp => {
+        const newHp = hp - 1;
+        if (newHp <= 0) setSniperStatus('over'); // Якщо 0 ХП - кінець
+        return newHp;
+      });
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
     }
-    handleSniperNext(isCorrect);
   }
 
   function handleSniperNext(wasCorrect) {
@@ -1281,7 +1343,8 @@ function App() {
 
   // --- ЕКРАН МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
   if (globalView === 'sniper') {
-    const currentCard = sniperCards[sniperIndex];
+    const currentCard = sniperCards[sniperIndex % sniperCards.length]; 
+    
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
         <GlobalStyles />
@@ -1289,59 +1352,75 @@ function App() {
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
           </button>
-          <span style={{ fontWeight: 'bold', color: theme.text }}>🏆 Бали: {sniperScore}</span>
+          {sniperStatus === 'playing' && (
+            <div style={{ textAlign: 'right' }}>
+              <span style={{ fontWeight: 'bold', color: theme.text, display: 'block' }}>🏆 Бали: {sniperScore}</span>
+              <span style={{ fontSize: '14px', letterSpacing: '2px' }}>
+                {"❤️".repeat(sniperHp)}{"🖤".repeat(5 - sniperHp)}
+              </span>
+            </div>
+          )}
         </div>
 
-        <h2 style={{ color: theme.text }}>🎯 Діакритичний снайпер</h2>
+        {/* СТАРТОВЕ МЕНЮ */}
+        {sniperStatus === 'menu' && (
+          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 8px 25px rgba(0,0,0,0.1)' }}>
+            <h2 style={{ fontSize: '28px', margin: '0 0 15px 0' }}>🎯<br/>Діакритичний снайпер</h2>
+            <p style={{ color: theme.textSecondary, fontSize: '15px', lineHeight: '1.5', textAlign: 'left', marginBottom: '25px' }}>
+              <b>Правила гри:</b><br/><br/>
+              ⏱ Тобі дається <b>5 секунд</b> на слово.<br/>
+              ✅ Кожна правильна відповідь дає <b>+3 сек</b> до часу.<br/>
+              ❤️ Ти маєш <b>5 життів</b>. Помилка або кінець часу забирають 1 життя.<br/>
+              🔥 Чим далі, тим довші слова. Гра триває, поки ти виживаєш!
+            </p>
+            
+            {isAdmin && (
+              <button onClick={handleAddSniperWord} style={{ width: '100%', marginBottom: '15px', background: theme.adminBg, color: theme.adminBorder, border: `1px dashed ${theme.adminBorder}`, padding: '10px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                ➕ Адмін: Додати нове слово
+              </button>
+            )}
 
-        {/* КНОПКА ПОПОВНЕННЯ ДЛЯ АДМІНІВ */}
-        {isAdmin && (
-          <div style={{ margin: '10px auto', maxWidth: '400px' }}>
-            <button onClick={handleAddSniperWord} style={{ background: theme.adminBg, color: theme.adminBorder, border: `1px dashed ${theme.adminBorder}`, padding: '8px 15px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
-              ➕ Додати нове слово у снайпер
+            <button onClick={startDiacriticalSniperGame} style={{ width: '100%', background: '#00C853', color: 'white', padding: '16px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '18px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,200,83,0.4)' }}>
+              СТАРТ! 🚀
             </button>
           </div>
         )}
 
-        {isSniperOver ? (
-          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}` }}>
-            <h3>🏁 Гра завершена!</h3>
-            <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій результат: <b>{sniperScore} балів</b></p>
-            <button onClick={() => setGlobalView(null)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
+        {/* ЕКРАН ПРОГРАШУ */}
+        {sniperStatus === 'over' && (
+          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 8px 25px rgba(244,67,54,0.2)' }}>
+            <h3 style={{ fontSize: '24px', margin: '0 0 10px 0' }}>💀 Гра завершена!</h3>
+            <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій рахунок: <b style={{ color: '#00C853', fontSize: '28px' }}>{sniperScore}</b></p>
+            <button onClick={startDiacriticalSniperGame} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginBottom: '10px' }}>Спробувати ще раз 🔄</button>
+            <button onClick={() => setGlobalView(null)} style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>На головну</button>
           </div>
-        ) : currentCard && (
+        )}
+
+        {/* АКТИВНА ГРА */}
+        {sniperStatus === 'playing' && currentCard && (
           <div style={{ maxWidth: '400px', margin: '30px auto', background: theme.cardBg, padding: '25px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
-              <span>Слово {sniperIndex + 1} з {sniperCards.length}</span>
-              <span style={{ color: sniperTimeLeft <= 2 ? '#F44336' : theme.text, fontWeight: 'bold' }}>⏱ {sniperTimeLeft} сек</span>
+              <span>Слово {sniperIndex + 1}</span>
+              <span style={{ color: sniperTimeLeft <= 2 ? '#F44336' : theme.text, fontWeight: 'bold', fontSize: '18px' }}>⏱ {sniperTimeLeft} сек</span>
             </div>
 
-            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '5px' }}>Переклади словацькою (згадай діакритику):</p>
-            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '20px' }}>{currentCard.content}</h3>
+            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '5px' }}>Введи словацькою:</p>
+            <h3 style={{ fontSize: '24px', color: theme.text, marginBottom: '20px' }}>{currentCard.content}</h3>
 
             <form onSubmit={handleSniperSubmit}>
               <input 
                 type="text" 
-                placeholder="Введи з діакритикою..." 
+                placeholder="Пиши сюди..." 
                 value={sniperInput} 
                 onChange={e => setSniperInput(e.target.value)} 
                 autoFocus 
                 autoComplete="off"
-                style={{ width: '100%', padding: '14px', fontSize: '16px', borderRadius: '10px', marginBottom: '10px', boxSizing: 'border-box' }} 
+                style={{ width: '100%', padding: '14px', fontSize: '18px', borderRadius: '10px', marginBottom: '10px', boxSizing: 'border-box', textAlign: 'center' }} 
               />
-              
-              {/* КНОПКА ШВИДКОЇ ДІАКРИТИКИ ДЛЯ МОБІЛОК */}
-              <button 
-                type="button" 
-                onClick={() => setSniperInput(addDiacritics(sniperInput))}
-                style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '8px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}
-              >
-                🪄 Авто-діакритика (натисни, щоб виправити букви)
+              <button type="button" onClick={() => setSniperInput(addDiacritics(sniperInput))} style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px', borderRadius: '8px', fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}>
+                🪄 Авто-діакритика
               </button>
-
-              <button type="submit" style={{ width: '100%', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>
-                Постріл! 🎯
-              </button>
+              <button type="submit" style={{ width: '100%', background: '#00C853', color: 'white', padding: '16px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>Постріл! 🎯</button>
             </form>
           </div>
         )}
@@ -1924,7 +2003,7 @@ function App() {
         </button>
 
         <button 
-          onClick={startDiacriticalSniper}
+          onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
           style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(128,90,213,0.3)' }}
         >
           <span>🎯 Міні-гра: Діакритичний снайпер</span>
