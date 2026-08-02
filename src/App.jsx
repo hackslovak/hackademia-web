@@ -99,6 +99,29 @@ function getCardStyle(index, isDark, isBack = false) {
   };
 }
 
+// --- АВТО-КОНВЕРТЕР ФАЛЬШИВИХ ДРУЗІВ У ФЛЕШКАРТКИ ---
+const ffFlashcards = falseFriendsDatabase.map(ff => ({
+  id: ff.id,
+  type: 'flashcard',
+  content: ff.slovak_phrase,
+  correct_answer: ff.full_translation || ff.option_correct,
+  difficulty: 'medium',
+  isFfConverted: true
+}));
+
+// --- ГОЛОСОВИЙ ДВИЖОК (Web Speech API) ---
+function speakSlovak(text) {
+  if (!window.speechSynthesis) {
+    alert("Ваш браузер не підтримує озвучку 😔");
+    return;
+  }
+  window.speechSynthesis.cancel(); // Зупиняємо попереднє озвучення
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'sk-SK'; // Словацька мова
+  utterance.rate = 0.85; // Трохи повільніше для чіткості вимови
+  window.speechSynthesis.speak(utterance);
+}
+
 function App() {
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
@@ -353,14 +376,69 @@ function App() {
   
   // --- ЛОГІКА ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
   async function startSpacedRepetition() {
-    // Збираємо всі флешкартки з бази через прогрес користувача
     const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
     const { data: progressData } = await supabase.from('progress').select('*').eq('user_id', dbUserId);
     
-    if (!allTasks || allTasks.length === 0) {
-      alert("У базі поки немає жодної картки для повторення!");
+    // Об'єднуємо: картки з бази + власні картки учня + фальшиві друзі
+    const combinedAllTasks = [...(allTasks || []), ...myCards, ...ffFlashcards];
+    
+    if (combinedAllTasks.length === 0) {
+      alert("Немає карток для повторення!");
       return;
     }
+
+    const now = new Date();
+    // Локальний прогрес для фальшивих друзів та власних карток
+    let localFfProgress = {};
+    try { localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {}; } catch(e){}
+
+    const dueCards = combinedAllTasks.filter(task => {
+      let isCompleted = false;
+      let completedDate = null;
+
+      if (task.isFfConverted || task.isCustom) {
+        const prog = localFfProgress[task.id];
+        if (prog && prog.status === 'completed') {
+          isCompleted = true;
+          completedDate = new Date(prog.updated_at);
+        }
+      } else {
+        const prog = progressData?.find(p => p.task_id === task.id);
+        if (prog && prog.status === 'completed') {
+          isCompleted = true;
+          completedDate = new Date(prog.updated_at || prog.created_at);
+        }
+      }
+      
+      if (!isCompleted) return false;
+      const diffDays = (now - completedDate) / (1000 * 60 * 60 * 24);
+      return diffDays >= 1; // Все, що вивчено день тому і більше
+    });
+
+    // Якщо старих слів для повторення немає, беремо всі (щоб завжди було що тренувати)
+    const targetCards = dueCards.length > 0 ? dueCards : combinedAllTasks;
+    
+    setSpacedCards(targetCards.sort(() => 0.5 - Math.random()));
+    setSpacedIndex(0);
+    setIsSpacedFlipped(false);
+    setGlobalView('spaced');
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+
+  function handleSpacedNext(card) {
+    // Зберігаємо прогрес, щоб інтервал відліковувався заново
+    if (card.isFfConverted || card.isCustom) {
+      let localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {};
+      localFfProgress[card.id] = { status: 'completed', updated_at: new Date().toISOString() };
+      localStorage.setItem('hack_ff_progress', JSON.stringify(localFfProgress));
+    } else {
+      supabase.from('progress').upsert({ user_id: dbUserId, task_id: card.id, status: 'completed', updated_at: new Date().toISOString() }, { onConflict: 'user_id, task_id' }).then();
+    }
+
+    setIsSpacedFlipped(false);
+    if (spacedIndex + 1 < spacedCards.length) setSpacedIndex(prev => prev + 1);
+    else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
+  }
 
     const now = new Date();
     // Фільтруємо картки, які пора повторювати за алгоритмом (1, 3, 7, 30 днів)
@@ -1948,6 +2026,8 @@ function App() {
                 <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
                   <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>Натисни для перевороту</span>
                   <span style={{ fontSize: '24px', fontWeight: 'bold' }}>{currentCard.content}</span>
+                  {/* КНОПКА ОЗВУЧКИ */}
+                  <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.content); }} style={{ background: 'transparent', border: 'none', fontSize: '32px', marginTop: '15px', cursor: 'pointer' }}>🔊</button>
                 </div>
                 <div className="card-face card-back" style={getCardStyle(spacedIndex, isDarkMode, true)}>
                   <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
@@ -1957,11 +2037,7 @@ function App() {
             </div>
 
             <button 
-              onClick={() => {
-                setIsSpacedFlipped(false);
-                if (spacedIndex + 1 < spacedCards.length) setSpacedIndex(prev => prev + 1);
-                else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
-              }} 
+              onClick={() => handleSpacedNext(currentCard)} 
               style={{ width: '100%', marginTop: '20px', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
             >
               Далі →
@@ -2090,8 +2166,9 @@ function App() {
 
             <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як перекласти виділене слово?</p>
             
-            {/* 1. ВИДІЛЕННЯ СЛОВА-ПАСТКИ КОЛЬОРОМ ТА ПІДКРЕСЛЕННЯМ */}
+            {/* 1. ВИДІЛЕННЯ СЛОВА-ПАСТКИ КОЛЬОРОМ ТА ПІДКРЕСЛЕННЯМ + ОЗВУЧКА */}
             <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '25px', lineHeight: '1.4' }}>
+              <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
               {currentCard.trap_word === "Комбо-пастка!" ? (
                 <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#FF007F'}}><br/>(🔥 Комбо-пастка!)</span></span>
               ) : (
