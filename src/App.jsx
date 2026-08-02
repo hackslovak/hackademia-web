@@ -900,21 +900,15 @@ const ffFlashcards = falseFriendsDatabase.map(ff => ({
   isFfConverted: true
 }));
 
-// --- ГОЛОСОВИЙ ДВИЖОК (Telegram-Safe Гібрид) ---
-// Створюємо єдиний глобальний плеєр один раз, щоб Android не блокував автовідтворення
+// --- ГОЛОСОВИЙ ДВИЖОК (Telegram-Safe Гібрид + Magic Link) ---
 const globalAudioPlayer = new Audio();
 
 function speakSlovak(text) {
-  // Використовуємо googleapis + client=gtx (це API не блокує Telegram WebView)
   const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=sk&q=${encodeURIComponent(text)}`;
-  
   globalAudioPlayer.src = audioUrl;
   
-  // Запускаємо аудіо
   globalAudioPlayer.play().catch(err => {
     console.warn("Мережеве аудіо не спрацювало:", err);
-    
-    // Якщо раптом немає інтернету або запит впав, пробуємо нативний рушій (працює на ПК та iOS)
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
@@ -922,9 +916,28 @@ function speakSlovak(text) {
       utterance.rate = 0.85;
       window.speechSynthesis.speak(utterance);
     } else {
-      // Якщо пристрій блокує ВСЕ (і аудіофайл, і синтезатор)
+      // Викликаємо нативний Popup Телеграму з кнопкою "Відкрити в браузері"
       if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("На жаль, налаштування вашого телефону жорстко блокують звук усередині Telegram 😔");
+        window.Telegram.WebApp.showPopup({
+          title: "Блокування звуку 🔇",
+          message: "Ваш пристрій жорстко блокує аудіо всередині Telegram.\n\nВідкрийте платформу у звичайному браузері (Chrome/Safari), щоб звук працював ідеально. Ваш прогрес буде автоматично збережено!",
+          buttons: [
+            { id: "open_web", type: "default", text: "🌐 Відкрити в браузері" },
+            { type: "cancel", text: "Закрити" }
+          ]
+        }, (btnId) => {
+          if (btnId === "open_web") {
+            const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+            let url = "https://hackademia-web.vercel.app/";
+            if (tgUser) {
+              // Шифруємо дані юзера у Base64 для тимчасової передачі сесії (Magic Link)
+              const authData = JSON.stringify({ id: tgUser.id, first_name: tgUser.first_name });
+              const authStr = btoa(encodeURIComponent(authData));
+              url += "?auth=" + authStr;
+            }
+            window.Telegram.WebApp.openLink(url);
+          }
+        });
       }
     }
   });
@@ -1072,51 +1085,84 @@ function App() {
  
   
   useEffect(() => {
+    // Функція реєстрації/перевірки юзера в базі
+    async function registerUser(user) {
+      const savedAdmin = localStorage.getItem('hack_is_admin');
+      if (savedAdmin === 'true') {
+        setIsAdmin(true);
+      }
+
+      const { data } = await supabase
+        .from('users')
+        .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
+        .select()
+        .single();
+        
+      if (data) {
+        setDbUserId(data.id);
+        if (data.role === 'admin' || savedAdmin === 'true') {
+          setIsAdmin(true);
+          localStorage.setItem('hack_is_admin', 'true');
+        }
+      }
+    }
+
+    // --- 1. ПЕРЕВІРКА MAGIC LINK (ПЕРЕХІД ІЗ TELEGRAM В БРАУЗЕР) ---
+    const urlParams = new URLSearchParams(window.location.search);
+    const authParam = urlParams.get('auth');
+    
+    if (authParam) {
+      try {
+        const decodedStr = decodeURIComponent(atob(authParam));
+        const user = JSON.parse(decodedStr);
+        
+        // Зберігаємо сесію локально в браузері (id беремо з Телеграму, а не 999999)
+        localStorage.setItem('hack_browser_user', user.first_name);
+        localStorage.setItem('hack_browser_id', user.id); 
+        
+        // 🔥 МАГІЯ: стираємо токен з адресного рядка, щоб його не скопіювали
+        window.history.replaceState({}, document.title, window.location.pathname);
+        
+        setUserName(user.first_name);
+        registerUser(user);
+        
+        const savedTheme = localStorage.getItem('hack_theme');
+        if (savedTheme === 'dark') setIsDarkMode(true);
+        const savedSound = localStorage.getItem('hack_sound');
+        if (savedSound === 'false') setIsSoundEnabled(false);
+        
+        fetchCourses();
+        return; // Зупиняємо подальшу ініціалізацію, бо ми вже успішно зайшли
+      } catch (e) { console.error("Помилка Magic Link", e); }
+    }
+
+    // --- 2. ЗВИЧАЙНА ІНІЦІАЛІЗАЦІЯ (TELEGRAM АБО СТАРА БРАУЗЕРНА СЕСІЯ) ---
     try {
       const tg = window.Telegram?.WebApp;
       if (tg) { 
         tg.ready(); 
         tg.expand();
-        // Автоматично підтягуємо тему з Telegram
         if (tg.colorScheme === 'dark') setIsDarkMode(true);
       } else {
         const savedTheme = localStorage.getItem('hack_theme');
         if (savedTheme === 'dark') setIsDarkMode(true);
       }
 
-      // Завантажуємо налаштування звуку
       const savedSound = localStorage.getItem('hack_sound');
       if (savedSound === 'false') setIsSoundEnabled(false);
-
-      async function registerUser(user) {
-        const savedAdmin = localStorage.getItem('hack_is_admin');
-        if (savedAdmin === 'true') {
-          setIsAdmin(true);
-        }
-
-        const { data } = await supabase
-          .from('users')
-          .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
-          .select()
-          .single();
-          
-        if (data) {
-          setDbUserId(data.id);
-          if (data.role === 'admin' || savedAdmin === 'true') {
-            setIsAdmin(true);
-            localStorage.setItem('hack_is_admin', 'true');
-          }
-        }
-      }
 
       if (tg?.initDataUnsafe?.user) {
         setUserName(tg.initDataUnsafe.user.first_name);
         registerUser(tg.initDataUnsafe.user);
       } else {
+        // Відновлена 100% оригінальна логіка для веб-версії
         const browserUser = localStorage.getItem('hack_browser_user') || 'Web Guest';
+        // Якщо зайшли через Magic Link раніше - беремо справжній ID, інакше 999999
+        const browserId = localStorage.getItem('hack_browser_id') || 999999; 
+        
         setUserName(browserUser);
         
-        supabase.from('users').upsert({ telegram_id: 999999, first_name: browserUser }, { onConflict: 'telegram_id' }).select().single().then(({data}) => {
+        supabase.from('users').upsert({ telegram_id: browserId, first_name: browserUser }, { onConflict: 'telegram_id' }).select().single().then(({data}) => {
           if (data) setDbUserId(data.id);
         });
 
