@@ -125,6 +125,14 @@ function App() {
   const [sniperScore, setSniperScore] = useState(0);
   const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
   const [isSniperOver, setIsSniperOver] = useState(false);
+  
+  // Стани для міні-гри "Фальшиві друзі"
+  const [ffCards, setFfCards] = useState([]);
+  const [ffIndex, setFfIndex] = useState(0);
+  const [ffScore, setFfScore] = useState(0);
+  const [ffSelected, setFfSelected] = useState(null);
+  const [ffCurrentOptions, setFfCurrentOptions] = useState([]);
+  const [isFfOver, setIsFfOver] = useState(false);
 
   // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -397,6 +405,88 @@ function App() {
     { id: 's24', content: 'Ніж', correct_answer: 'nôž' },
     { id: 's25', content: 'Яблуко', correct_answer: 'jablko' }
   ];
+  
+  const falseFriendsDatabase = [
+  { id: "ff_1", slovak_phrase: "Kúpil som si čerstvý chlieb.", option_correct: "свіжий", option_wrong: "черствий", explanation: "Словацькою «čerstvý» означає «свіжий». Черствий буде «tvrdý»." },
+  { id: "ff_2", slovak_phrase: "Na stole leží sladké ovocie.", option_correct: "фрукти", option_wrong: "овочі", explanation: "Словацькою «ovocie» означає «фрукти». Овочі будуть «zelenina»." },
+  { id: "ff_3", slovak_phrase: "Idem do lekárne kúpiť lieky.", option_correct: "аптека", option_wrong: "лікарня", explanation: "«Lekáreň» — це аптека. Лікарня словацькою буде «nemocnica»." },
+  { id: "ff_4", slovak_phrase: "Náš zákazník bol veľmi spokojný.", option_correct: "задоволений", option_wrong: "спокійний", explanation: "«Spokojný» означає «задоволений». Спокійний буде «pokojný»." },
+  { id: "ff_5", slovak_phrase: "To bol úžasný film!", option_correct: "прекрасний", option_wrong: "жахливий", explanation: "«Úžasný» перекладається як «прекрасний» або «чудовий»." },
+  { id: "ff_6", slovak_phrase: "Z kuchyne ide úžasná vôňa.", option_correct: "аромат", option_wrong: "сморід", explanation: "«Vôňa» означає приємний «аромат»." },
+  { id: "ff_7", slovak_phrase: "V pivnici bol hrozný zápach.", option_correct: "сморід", option_wrong: "запах (приємний)", explanation: "«Zápach» — це дурний запах або «сморід»." },
+  { id: "ff_8", slovak_phrase: "Doma je ticho a pohoda.", option_correct: "затишок", option_wrong: "погода", explanation: "«Pohoda» означає «затишок» або «душевний спокій». Погода буде «počasie»." },
+  { id: "ff_9", slovak_phrase: "V zime musíme veľa kúriť.", option_correct: "топити", option_wrong: "курити", explanation: "«Kúriť» означає «топити» або «обігрівати». Курити буде «fajčiť»." },
+  { id: "ff_10", slovak_phrase: "Buď chytrý a bež tam!", option_correct: "швидкий", option_wrong: "хитрий", explanation: "«Chytrý» означає «швидкий» або «розумний»." },
+  { id: "ff_11", slovak_phrase: "Lietadlo má veľký trup.", option_correct: "тулуб/корпус", option_wrong: "труп", explanation: "«Trup» — це «тулуб» або «корпус» (наприклад, літака)." },
+  { id: "ff_12", slovak_phrase: "Banka mi dala vysoký úrok.", option_correct: "відсоток", option_wrong: "урок", explanation: "«Úrok» — це банківський «відсоток». Урок буде «hodina» або «lekcia»." },
+  { id: "ff_13", slovak_phrase: "Polícia chytila vraha.", option_correct: "вбивця", option_wrong: "ворог", explanation: "«Vrah» означає «вбивця». Ворог буде «nepriateľ»." },
+  { id: "ff_14", slovak_phrase: "Toto je môj najlepší život.", option_correct: "життя", option_wrong: "живіт", explanation: "«Život» — це «життя». Живіт словацькою буде «brucho»." },
+  { id: "ff_15", slovak_phrase: "Každé ráno pijem kávu.", option_correct: "ранок", option_wrong: "рано", explanation: "«Ráno» перекладається як «ранок» або «вранці»." },
+  { id: "ff_16", slovak_phrase: "Pacient mal tvrdú stolicu.", option_correct: "стілець (медичний)", option_wrong: "столиця", explanation: "«Stolica» в цьому контексті — це медичний «стілець». Столиця буде «hlavné mesto»." },
+  { id: "ff_17", slovak_phrase: "Som skoro hotový.", option_correct: "майже", option_wrong: "швидко", explanation: "«Skoro» означає «майже»." },
+  { id: "ff_18", slovak_phrase: "Musím umyť riad.", option_correct: "посуд", option_wrong: "ряд", explanation: "«Riad» — це «посуд»." },
+  { id: "ff_19", slovak_phrase: "To je môj nový frajer.", option_correct: "коханий/хлопець", option_wrong: "випендрювач", explanation: "«Frajer» словацькою — це «коханий хлопець» або «кавалер»." },
+  { id: "ff_20", slovak_phrase: "Pobozkal ju na líce.", option_correct: "щока", option_wrong: "лице", explanation: "«Líce» означає «щока». Обличчя буде «tvár»." },
+  { id: "ff_21", slovak_phrase: "V lese sme si postavili stan.", option_correct: "намет", option_wrong: "стан", explanation: "«Stan» — це «намет». Стан словацькою буде «stav»." },
+  { id: "ff_22", slovak_phrase: "Dostal som pokutu za rýchlosť.", option_correct: "штраф", option_wrong: "покута", explanation: "«Pokuta» — це «штраф»." },
+  { id: "ff_23", slovak_phrase: "Tento rok bol veľmi úrodný.", option_correct: "урожайний", option_wrong: "уродливий", explanation: "«Úrodný» означає «урожайний»." },
+  { id: "ff_24", slovak_phrase: "Dnes večer pozerám zápas.", option_correct: "матч/змагання", option_wrong: "запас", explanation: "«Zápas» — це «матч» або «змагання». Запас буде «zásoba»." },
+  { id: "ff_25", slovak_phrase: "Náš zákazník je náš pán.", option_correct: "покупець", option_wrong: "заказник", explanation: "«Zákazník» означає «покупець» або «клієнт»." },
+  { id: "ff_26", slovak_phrase: "Včera sme boli na pohrebe.", option_correct: "похорон", option_wrong: "погріб", explanation: "«Pohreb» — це «похорон». Погріб словацькою буде «pivnica»." },
+  { id: "ff_27", slovak_phrase: "Napísal ponosu na riaditeľa.", option_correct: "скарга", option_wrong: "понос", explanation: "«Ponosa» означає «скарга»." },
+  { id: "ff_28", slovak_phrase: "Poprava sa konala na námestí.", option_correct: "страта", option_wrong: "поправа", explanation: "«Poprava» перекладається як смертна «страта»." },
+  { id: "ff_29", slovak_phrase: "Má dobré vedomosti z histórie.", option_correct: "знання", option_wrong: "відомість", explanation: "«Vedomosť» означає «знання»." },
+  { id: "ff_30", slovak_phrase: "Pracuje vo výskumnom ústave.", option_correct: "інститут/установа", option_wrong: "устав", explanation: "«Ústav» — це наукова «установа» або «інститут»." },
+  { id: "ff_31", slovak_phrase: "V tej krajine je veľká bieda.", option_correct: "бідність", option_wrong: "біда (горе)", explanation: "«Bieda» означає «бідність»." },
+  { id: "ff_32", slovak_phrase: "Konečne sme sa dohádali.", option_correct: "закінчити суперечку", option_wrong: "догадатися", explanation: "«Dohádať sa» означає «закінчити суперечку». Догадатися буде «domyslieť si»." },
+  { id: "ff_33", slovak_phrase: "Bolí ho slepé črevo.", option_correct: "кишка", option_wrong: "черево", explanation: "«Črevo» — це «кишка»." },
+  { id: "ff_34", slovak_phrase: "Porazil svojho soka.", option_correct: "суперник", option_wrong: "сік", explanation: "«Sok» означає «суперник». Сік словацькою буде «džús» або «šťava»." },
+  { id: "ff_35", slovak_phrase: "Tento stroj je veľmi drahý.", option_correct: "машина", option_wrong: "стрій", explanation: "«Stroj» — це «машина» або «механізм»." },
+  { id: "ff_36", slovak_phrase: "Kúpil som sladké jahody.", option_correct: "полуниця", option_wrong: "ягода (будь-яка)", explanation: "«Jahoda» означає саме «полуниця» або «суниця»." },
+  { id: "ff_37", slovak_phrase: "Dnes mám naozaj smolu.", option_correct: "невезіння", option_wrong: "смола", explanation: "«Smola» в цьому контексті означає «невезіння»." },
+  { id: "ff_38", slovak_phrase: "Do kávy si dávam smotanu.", option_correct: "вершки", option_wrong: "сметана", explanation: "«Smotana» (sladká) — це «вершки». Кисла сметана буде «kyslá smotana»." },
+  { id: "ff_39", slovak_phrase: "Idem si vložiť peniaze do banky.", option_correct: "банк", option_wrong: "банка (скляна)", explanation: "«Banka» — це фінансова установа («банк»). Скляна банка буде «pohár»." },
+  { id: "ff_40", slovak_phrase: "Kúpil som dcére novú bábku.", option_correct: "лялька", option_wrong: "бабка", explanation: "«Bábka» означає «лялька» або «маріонетка»." },
+  { id: "ff_41", slovak_phrase: "Zasadil som kvetinu do črepu.", option_correct: "горщик", option_wrong: "череп", explanation: "«Črep» — це квітковий «горщик» або «уламок»." },
+  { id: "ff_42", slovak_phrase: "Lekár mi predpísal dennú dávku.", option_correct: "порція/доза", option_wrong: "давка (натовп)", explanation: "«Dávka» означає «порція» або «доза»." },
+  { id: "ff_43", slovak_phrase: "Na stole leží veľmi sladké hrozno.", option_correct: "виноград", option_wrong: "грізно", explanation: "«Hrozno» перекладається як «виноград»." },
+  { id: "ff_44", slovak_phrase: "Čakám na teba na chodbe.", option_correct: "коридор", option_wrong: "ходьба", explanation: "«Chodba» — це «коридор»." },
+  { id: "ff_45", slovak_phrase: "Hľadám za neho dobrú náhradu.", option_correct: "заміна", option_wrong: "нагорода", explanation: "«Náhrada» означає «заміна» або «відшкодування». Нагорода буде «odmena»." },
+  { id: "ff_46", slovak_phrase: "Hudobník ladí svoj nástroj.", option_correct: "інструмент", option_wrong: "настрій", explanation: "«Nástroj» — це «інструмент». Настрій словацькою буде «nálada»." },
+  { id: "ff_47", slovak_phrase: "Idem nakupovať do obchodu.", option_correct: "магазин", option_wrong: "обхід", explanation: "«Obchod» означає «магазин» або «торгівля»." },
+  { id: "ff_48", slovak_phrase: "Nechal som ti na stole odkaz.", option_correct: "повідомлення", option_wrong: "відмова", explanation: "«Odkaz» — це «повідомлення» або «посилання»." },
+  { id: "ff_49", slovak_phrase: "Za svoju prácu dostal veľkú odmenu.", option_correct: "нагорода", option_wrong: "відміна", explanation: "«Odmena» означає «нагорода»." },
+  { id: "ff_50", slovak_phrase: "Udrel do stola päsťou.", option_correct: "кулак", option_wrong: "паща", explanation: "«Päsť» — це «кулак»." },
+  { id: "ff_51", slovak_phrase: "Aký je presný počet študentov?", option_correct: "кількість", option_wrong: "почесть", explanation: "«Počet» означає «кількість» або «число»." },
+  { id: "ff_52", slovak_phrase: "Vzdali mu veľkú poctu.", option_correct: "пошана", option_wrong: "пошта", explanation: "«Pocta» — це «пошана» або «почесть». Пошта буде «pošta»." },
+  { id: "ff_53", slovak_phrase: "Máme v pivnici plný sud vína.", option_correct: "бочка", option_wrong: "суд", explanation: "«Sud» означає «бочка»." },
+  { id: "ff_54", slovak_phrase: "Tento koláč má pekný tvar.", option_correct: "форма", option_wrong: "твар (пика)", explanation: "«Tvar» перекладається як «форма»." },
+  { id: "ff_55", slovak_phrase: "Prepáčte, kde je tu záchod?", option_correct: "туалет", option_wrong: "захід", explanation: "«Záchod» — це «туалет». Захід (сонця) буде «západ»." },
+  { id: "ff_56", slovak_phrase: "Je tu prísny zákaz fajčiť.", option_correct: "заборона", option_wrong: "заказ (замовлення)", explanation: "«Zákaz» означає «заборона». Замовлення буде «objednávka»." },
+  { id: "ff_57", slovak_phrase: "Na budove veje naša zástava.", option_correct: "прапор", option_wrong: "застава", explanation: "«Zástava» — це «прапор» або «стяг»." },
+  { id: "ff_58", slovak_phrase: "Včera som vyhral bežecký závod.", option_correct: "перегони", option_wrong: "завод", explanation: "«Závod» означає «перегони» або «змагання». Завод (фабрика) буде «továreň»." },
+  { id: "ff_59", slovak_phrase: "Učíme sa novú báseň naspamäť.", option_correct: "вірш", option_wrong: "байка", explanation: "«Báseň» означає «вірш»." },
+  { id: "ff_60", slovak_phrase: "Musíme brániť naše mesto.", option_correct: "захищати", option_wrong: "бранити (сварити)", explanation: "«Brániť» — це «захищати». Сварити буде «hrešiť»." },
+  { id: "ff_61", slovak_phrase: "Kúpil som si sladkú buchtu.", option_correct: "булочка", option_wrong: "бухта (морська)", explanation: "«Buchta» — це «булочка» або «пиріжок»." },
+  { id: "ff_62", slovak_phrase: "Boli sme na prehliadke hradu.", option_correct: "замок/фортеця", option_wrong: "град", explanation: "«Hrad» означає «замок» або «фортеця»." },
+  { id: "ff_63", slovak_phrase: "Našiel som v lese veľkú hubu.", option_correct: "гриб", option_wrong: "губа", explanation: "«Huba» — це «гриб». Губа словацькою буде «pera»." },
+  { id: "ff_64", slovak_phrase: "Ja túto úlohu vôbec nechápem.", option_correct: "розуміти", option_wrong: "хапати", explanation: "«Chápať» означає «розуміти». Хапати буде «chytať»." },
+  { id: "ff_65", slovak_phrase: "Dnes som v práci makal celý deň.", option_correct: "важко працювати", option_wrong: "макати (вмочати)", explanation: "«Makať» — це «важко працювати» (гарувати). Вмочати буде «namáčať»." },
+  { id: "ff_66", slovak_phrase: "Som na teba veľmi pyšný.", option_correct: "гордий", option_wrong: "пишний", explanation: "«Pyšný» означає «гордий»." },
+  { id: "ff_67", slovak_phrase: "Podpísal som ten dôležitý spis.", option_correct: "документ", option_wrong: "спис/список", explanation: "«Spis» — це «документ»." },
+  { id: "ff_68", slovak_phrase: "Veľmi ma zaujíma moderné umenie.", option_correct: "мистецтво", option_wrong: "уміння", explanation: "«Umenie» перекладається як «мистецтво»." },
+  { id: "ff_69", slovak_phrase: "Slovensko je moja nová vlasť.", option_correct: "батьківщина", option_wrong: "влада", explanation: "«Vlasť» — це «батьківщина». Влада буде «vláda» або «moc»." },
+  { id: "ff_70", slovak_phrase: "Zasadil som kvety na záhon.", option_correct: "грядка", option_wrong: "загін (військовий)", explanation: "«Záhon» означає «грядка»." },
+  { id: "ff_71", slovak_phrase: "Pacient dostal záchvat kašľa.", option_correct: "напад/приступ", option_wrong: "захват (захоплення)", explanation: "«Záchvat» — це медичний «напад» або «приступ»." },
+  { id: "ff_72", slovak_phrase: "Lekár povedal, že mám zápal pľúc.", option_correct: "запалення", option_wrong: "запал", explanation: "«Zápal» означає медичне «запалення» (наприклад, легенів)." },
+  { id: "ff_combo_1", slovak_phrase: "V obchode je zákaz fotenia.", option_correct: "У магазині є заборона на фотографування", option_wrong: "В обході є заказ фотографування", explanation: "«Obchod» = магазин, «zákaz» = заборона." },
+  { id: "ff_combo_2", slovak_phrase: "Nechal mi odkaz, že potrebuje nový nástroj.", option_correct: "Залишив мені повідомлення, що йому потрібен новий інструмент", option_wrong: "Лишив мені відмову, що потребує новий настрій", explanation: "«Odkaz» = повідомлення, «nástroj» = інструмент." },
+  { id: "ff_combo_3", slovak_phrase: "Na chodbe stojí obrovský sud.", option_correct: "У коридорі стоїть величезна бочка", option_wrong: "На ходьбі стоїть величезний суд", explanation: "«Chodba» = коридор, «sud» = бочка." },
+  { id: "ff_combo_4", slovak_phrase: "Vôbec nechápem moderné umenie.", option_correct: "Взагалі не розумію сучасного мистецтва", option_wrong: "Взагалі не хапаю сучасне уміння", explanation: "«Chápať» = розуміти, «umenie» = мистецтво." },
+  { id: "ff_combo_5", slovak_phrase: "Každý vojak musí brániť svoju vlasť.", option_correct: "Кожен солдат мусить захищати свою батьківщину", option_wrong: "Кожен солдат мусить сварити свою владу", explanation: "«Brániť» = захищати, «vlasť» = батьківщина." },
+  { id: "ff_combo_6", slovak_phrase: "Mám silný zápal, musím ísť do lekárne.", option_correct: "Маю сильне запалення, мушу йти в аптеку", option_wrong: "Маю сильний запал, мушу йти в лікарню", explanation: "«Zápal» = запалення, «lekáreň» = аптека." },
+  { id: "ff_combo_7", slovak_phrase: "Makal som celý deň a kúpil som si čerstvú buchtu.", option_correct: "Важко працював цілий день і купив собі свіжу булочку", option_wrong: "Макав я цілий день і купив собі черству бухту", explanation: "«Makať» = важко працювати, «čerstvý» = свіжий, «buchta» = булочка." }
+];
 
   async function startDiacriticalSniper() {
     let customSniper = [];
@@ -495,6 +585,48 @@ function App() {
       setSniperTimeLeft(5);
     } else {
       setIsSniperOver(true);
+    }
+  }
+  
+  // --- ЛОГІКА МІНІ-ГРИ "ФАЛЬШИВІ ДРУЗІ" ---
+  function startFalseFriends() {
+    const shuffled = [...falseFriendsDatabase].sort(() => 0.5 - Math.random()).slice(0, 10);
+    setFfCards(shuffled);
+    setFfIndex(0);
+    setFfScore(0);
+    setFfSelected(null);
+    
+    const firstCard = shuffled[0];
+    setFfCurrentOptions([firstCard.option_correct, firstCard.option_wrong].sort(() => Math.random() - 0.5));
+    
+    setIsFfOver(false);
+    setGlobalView('false_friends');
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+
+  function handleFfAnswer(selectedOption, isCorrectOption) {
+    if (ffSelected !== null) return; 
+    setFfSelected(selectedOption);
+    
+    if (isCorrectOption) {
+      playUiSound('ding', isSoundEnabled);
+      setFfScore(prev => prev + 10);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } else {
+      playUiSound('buzz', isSoundEnabled);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+    }
+  }
+
+  function handleFfNext() {
+    if (ffIndex + 1 < ffCards.length) {
+      const nextIndex = ffIndex + 1;
+      const nextCard = ffCards[nextIndex];
+      setFfIndex(nextIndex);
+      setFfSelected(null);
+      setFfCurrentOptions([nextCard.option_correct, nextCard.option_wrong].sort(() => Math.random() - 0.5));
+    } else {
+      setIsFfOver(true);
     }
   }
 
@@ -1217,6 +1349,87 @@ function App() {
     );
   }
   
+  // --- ЕКРАН "ФАЛЬШИВІ ДРУЗІ" ---
+  if (globalView === 'false_friends') {
+    const currentCard = ffCards[ffIndex];
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
+        <GlobalStyles />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            ← Назад на головну
+          </button>
+          <span style={{ fontWeight: 'bold', color: theme.text }}>🏆 Бали: {ffScore}</span>
+        </div>
+
+        <h2 style={{ color: theme.text }}>🎭 Фальшиві друзі</h2>
+
+        {isFfOver ? (
+          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}` }}>
+            <h3>🏁 Гра завершена!</h3>
+            <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій результат: <b>{ffScore} балів</b></p>
+            <button onClick={() => setGlobalView(null)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
+          </div>
+        ) : currentCard && (
+          <div style={{ maxWidth: '400px', margin: '30px auto', background: theme.cardBg, padding: '25px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
+              <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
+            </div>
+
+            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як це правильно перекласти?</p>
+            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '25px', lineHeight: '1.4' }}>"{currentCard.slovak_phrase}"</h3>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+              {ffCurrentOptions.map((opt, idx) => {
+                const isCorrectOption = opt === currentCard.option_correct;
+                const isSelected = ffSelected === opt;
+                
+                let bg = theme.inputBg;
+                let borderColor = theme.inputBorder;
+                let color = theme.text;
+                
+                if (ffSelected !== null) {
+                  if (isCorrectOption) {
+                    bg = '#00C853'; borderColor = '#00C853'; color = 'white';
+                  } else if (isSelected) {
+                    bg = '#F44336'; borderColor = '#F44336'; color = 'white';
+                  } else {
+                    bg = isDarkMode ? '#2d3748' : '#f8fafc';
+                    borderColor = isDarkMode ? '#4a5568' : '#e2e8f0';
+                    color = isDarkMode ? '#718096' : '#a0aec0';
+                  }
+                }
+
+                return (
+                  <button 
+                    key={idx}
+                    onClick={() => handleFfAnswer(opt, isCorrectOption)}
+                    disabled={ffSelected !== null}
+                    style={{ padding: '15px', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: ffSelected === null ? 'pointer' : 'default', border: `2px solid ${borderColor}`, background: bg, color: color, transition: '0.2s', opacity: (ffSelected !== null && !isCorrectOption && !isSelected) ? 0.6 : 1 }}
+                  >
+                    {opt}
+                  </button>
+                )
+              })}
+            </div>
+
+            {ffSelected !== null && (
+              <div style={{ padding: '15px', borderRadius: '10px', background: ffSelected === currentCard.option_correct ? (isDarkMode ? '#22543D' : '#E8F5E9') : (isDarkMode ? '#742A2A' : '#FFEBEE'), textAlign: 'left', marginTop: '20px' }}>
+                <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: ffSelected === currentCard.option_correct ? (isDarkMode ? '#9AE6B4' : '#2E7D32') : (isDarkMode ? '#FEB2B2' : '#C62828') }}>
+                  {ffSelected === currentCard.option_correct ? '✅ Точно!' : '❌ Обережно, пастка!'}
+                </p>
+                <p style={{ margin: 0, fontSize: '14px', color: theme.text, lineHeight: '1.4' }}>
+                  {currentCard.explanation}
+                </p>
+                <button onClick={handleFfNext} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', marginTop: '15px', cursor: 'pointer' }}>Далі →</button>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
   // ЕКРАН 3: Завдання розділу
   if (activeModule) {
     return (
@@ -1715,6 +1928,12 @@ function App() {
           style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(128,90,213,0.3)' }}
         >
           <span>🎯 Міні-гра: Діакритичний снайпер</span>
+        </button>
+		<button 
+          onClick={startFalseFriends} 
+          style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(237,137,54,0.3)' }}
+        >
+          <span>🎭 Міні-гра: Фальшиві слова</span>
         </button>
       </div>
 
