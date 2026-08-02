@@ -152,6 +152,7 @@ function App() {
   const [sniperStatus, setSniperStatus] = useState('menu'); 
   const [sniperHp, setSniperHp] = useState(5);
   
+  
   // Стани для міні-гри "Фальшиві друзі"
   const [ffCards, setFfCards] = useState([]);
   const [ffIndex, setFfIndex] = useState(0);
