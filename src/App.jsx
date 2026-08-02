@@ -900,16 +900,39 @@ const ffFlashcards = falseFriendsDatabase.map(ff => ({
   isFfConverted: true
 }));
 
-// --- ГОЛОСОВИЙ ДВИЖОК (Web Speech API) ---
+// --- ГОЛОСОВИЙ ДВИЖОК (Гібридний: Google TTS + Web Speech API) ---
 function speakSlovak(text) {
+  // 1. Метод для Telegram: формуємо прямий запит до серверів Google Translate.
+  // Він повертає звичайний аудіофайл, який Mini App відтворює без проблем.
+  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=sk&client=tw-ob&q=${encodeURIComponent(text)}`;
+  const audio = new Audio(audioUrl);
+  
+  audio.play().catch(err => {
+    console.warn("Аудіо заблоковано браузером, пробуємо нативний рушій:", err);
+    // 2. Якщо раптом немає інтернету або браузер блокує автовідтворення, 
+    // запускаємо резервний старий метод (нативний синтезатор).
+    fallbackNativeSpeech(text);
+  });
+}
+
+function fallbackNativeSpeech(text) {
   if (!window.speechSynthesis) {
-    alert("Ваш браузер не підтримує озвучку 😔");
+    // 3. Якщо і нативний синтезатор вирізано (як у твоєму скріншоті),
+    // даємо користувачу чітку інструкцію, як це обійти.
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.showAlert(
+        "Внутрішній браузер Telegram блокує голос 😔\n\nНатисніть на три крапки (⋮) у верхньому правому куті та виберіть «Відкрити в браузері» 🌐"
+      );
+    } else {
+      alert("Ваш браузер не підтримує озвучку 😔");
+    }
     return;
   }
-  window.speechSynthesis.cancel(); // Зупиняємо попереднє озвучення
+  
+  window.speechSynthesis.cancel();
   const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'sk-SK'; // Словацька мова
-  utterance.rate = 0.85; // Трохи повільніше для чіткості вимови
+  utterance.lang = 'sk-SK';
+  utterance.rate = 0.85;
   window.speechSynthesis.speak(utterance);
 }
 
