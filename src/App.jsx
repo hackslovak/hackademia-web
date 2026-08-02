@@ -136,6 +136,7 @@ function App() {
   const [ffSelected, setFfSelected] = useState(null);
   const [ffCurrentOptions, setFfCurrentOptions] = useState([]);
   const [isFfOver, setIsFfOver] = useState(false);
+  const [ffShowTranslation, setFfShowTranslation] = useState(false); // НОВИЙ СТАН ДЛЯ СПОЙЛЕРА
 
   // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -462,85 +463,717 @@ function App() {
   ];
   
   const falseFriendsDatabase = [
-  { id: "ff_1", slovak_phrase: "Kúpil som si čerstvý chlieb.", option_correct: "свіжий", option_wrong: "черствий", explanation: "Словацькою «čerstvý» означає «свіжий». Черствий буде «tvrdý»." },
-  { id: "ff_2", slovak_phrase: "Na stole leží sladké ovocie.", option_correct: "фрукти", option_wrong: "овочі", explanation: "Словацькою «ovocie» означає «фрукти». Овочі будуть «zelenina»." },
-  { id: "ff_3", slovak_phrase: "Idem do lekárne kúpiť lieky.", option_correct: "аптека", option_wrong: "лікарня", explanation: "«Lekáreň» — це аптека. Лікарня словацькою буде «nemocnica»." },
-  { id: "ff_4", slovak_phrase: "Náš zákazník bol veľmi spokojný.", option_correct: "задоволений", option_wrong: "спокійний", explanation: "«Spokojný» означає «задоволений». Спокійний буде «pokojný»." },
-  { id: "ff_5", slovak_phrase: "To bol úžasný film!", option_correct: "прекрасний", option_wrong: "жахливий", explanation: "«Úžasný» перекладається як «прекрасний» або «чудовий»." },
-  { id: "ff_6", slovak_phrase: "Z kuchyne ide úžasná vôňa.", option_correct: "аромат", option_wrong: "сморід", explanation: "«Vôňa» означає приємний «аромат»." },
-  { id: "ff_7", slovak_phrase: "V pivnici bol hrozný zápach.", option_correct: "сморід", option_wrong: "запах (приємний)", explanation: "«Zápach» — це дурний запах або «сморід»." },
-  { id: "ff_8", slovak_phrase: "Doma je ticho a pohoda.", option_correct: "затишок", option_wrong: "погода", explanation: "«Pohoda» означає «затишок» або «душевний спокій». Погода буде «počasie»." },
-  { id: "ff_9", slovak_phrase: "V zime musíme veľa kúriť.", option_correct: "топити", option_wrong: "курити", explanation: "«Kúriť» означає «топити» або «обігрівати». Курити буде «fajčiť»." },
-  { id: "ff_10", slovak_phrase: "Buď chytrý a bež tam!", option_correct: "швидкий", option_wrong: "хитрий", explanation: "«Chytrý» означає «швидкий» або «розумний»." },
-  { id: "ff_11", slovak_phrase: "Lietadlo má veľký trup.", option_correct: "тулуб/корпус", option_wrong: "труп", explanation: "«Trup» — це «тулуб» або «корпус» (наприклад, літака)." },
-  { id: "ff_12", slovak_phrase: "Banka mi dala vysoký úrok.", option_correct: "відсоток", option_wrong: "урок", explanation: "«Úrok» — це банківський «відсоток». Урок буде «hodina» або «lekcia»." },
-  { id: "ff_13", slovak_phrase: "Polícia chytila vraha.", option_correct: "вбивця", option_wrong: "ворог", explanation: "«Vrah» означає «вбивця». Ворог буде «nepriateľ»." },
-  { id: "ff_14", slovak_phrase: "Toto je môj najlepší život.", option_correct: "життя", option_wrong: "живіт", explanation: "«Život» — це «життя». Живіт словацькою буде «brucho»." },
-  { id: "ff_15", slovak_phrase: "Každé ráno pijem kávu.", option_correct: "ранок", option_wrong: "рано", explanation: "«Ráno» перекладається як «ранок» або «вранці»." },
-  { id: "ff_16", slovak_phrase: "Pacient mal tvrdú stolicu.", option_correct: "стілець (медичний)", option_wrong: "столиця", explanation: "«Stolica» в цьому контексті — це медичний «стілець». Столиця буде «hlavné mesto»." },
-  { id: "ff_17", slovak_phrase: "Som skoro hotový.", option_correct: "майже", option_wrong: "швидко", explanation: "«Skoro» означає «майже»." },
-  { id: "ff_18", slovak_phrase: "Musím umyť riad.", option_correct: "посуд", option_wrong: "ряд", explanation: "«Riad» — це «посуд»." },
-  { id: "ff_19", slovak_phrase: "To je môj nový frajer.", option_correct: "коханий/хлопець", option_wrong: "випендрювач", explanation: "«Frajer» словацькою — це «коханий хлопець» або «кавалер»." },
-  { id: "ff_20", slovak_phrase: "Pobozkal ju na líce.", option_correct: "щока", option_wrong: "лице", explanation: "«Líce» означає «щока». Обличчя буде «tvár»." },
-  { id: "ff_21", slovak_phrase: "V lese sme si postavili stan.", option_correct: "намет", option_wrong: "стан", explanation: "«Stan» — це «намет». Стан словацькою буде «stav»." },
-  { id: "ff_22", slovak_phrase: "Dostal som pokutu za rýchlosť.", option_correct: "штраф", option_wrong: "покута", explanation: "«Pokuta» — це «штраф»." },
-  { id: "ff_23", slovak_phrase: "Tento rok bol veľmi úrodný.", option_correct: "урожайний", option_wrong: "уродливий", explanation: "«Úrodný» означає «урожайний»." },
-  { id: "ff_24", slovak_phrase: "Dnes večer pozerám zápas.", option_correct: "матч/змагання", option_wrong: "запас", explanation: "«Zápas» — це «матч» або «змагання». Запас буде «zásoba»." },
-  { id: "ff_25", slovak_phrase: "Náš zákazník je náš pán.", option_correct: "покупець", option_wrong: "заказник", explanation: "«Zákazník» означає «покупець» або «клієнт»." },
-  { id: "ff_26", slovak_phrase: "Včera sme boli na pohrebe.", option_correct: "похорон", option_wrong: "погріб", explanation: "«Pohreb» — це «похорон». Погріб словацькою буде «pivnica»." },
-  { id: "ff_27", slovak_phrase: "Napísal ponosu na riaditeľa.", option_correct: "скарга", option_wrong: "понос", explanation: "«Ponosa» означає «скарга»." },
-  { id: "ff_28", slovak_phrase: "Poprava sa konala na námestí.", option_correct: "страта", option_wrong: "поправа", explanation: "«Poprava» перекладається як смертна «страта»." },
-  { id: "ff_29", slovak_phrase: "Má dobré vedomosti z histórie.", option_correct: "знання", option_wrong: "відомість", explanation: "«Vedomosť» означає «знання»." },
-  { id: "ff_30", slovak_phrase: "Pracuje vo výskumnom ústave.", option_correct: "інститут/установа", option_wrong: "устав", explanation: "«Ústav» — це наукова «установа» або «інститут»." },
-  { id: "ff_31", slovak_phrase: "V tej krajine je veľká bieda.", option_correct: "бідність", option_wrong: "біда (горе)", explanation: "«Bieda» означає «бідність»." },
-  { id: "ff_32", slovak_phrase: "Konečne sme sa dohádali.", option_correct: "закінчити суперечку", option_wrong: "догадатися", explanation: "«Dohádať sa» означає «закінчити суперечку». Догадатися буде «domyslieť si»." },
-  { id: "ff_33", slovak_phrase: "Bolí ho slepé črevo.", option_correct: "кишка", option_wrong: "черево", explanation: "«Črevo» — це «кишка»." },
-  { id: "ff_34", slovak_phrase: "Porazil svojho soka.", option_correct: "суперник", option_wrong: "сік", explanation: "«Sok» означає «суперник». Сік словацькою буде «džús» або «šťava»." },
-  { id: "ff_35", slovak_phrase: "Tento stroj je veľmi drahý.", option_correct: "машина", option_wrong: "стрій", explanation: "«Stroj» — це «машина» або «механізм»." },
-  { id: "ff_36", slovak_phrase: "Kúpil som sladké jahody.", option_correct: "полуниця", option_wrong: "ягода (будь-яка)", explanation: "«Jahoda» означає саме «полуниця» або «суниця»." },
-  { id: "ff_37", slovak_phrase: "Dnes mám naozaj smolu.", option_correct: "невезіння", option_wrong: "смола", explanation: "«Smola» в цьому контексті означає «невезіння»." },
-  { id: "ff_38", slovak_phrase: "Do kávy si dávam smotanu.", option_correct: "вершки", option_wrong: "сметана", explanation: "«Smotana» (sladká) — це «вершки». Кисла сметана буде «kyslá smotana»." },
-  { id: "ff_39", slovak_phrase: "Idem si vložiť peniaze do banky.", option_correct: "банк", option_wrong: "банка (скляна)", explanation: "«Banka» — це фінансова установа («банк»). Скляна банка буде «pohár»." },
-  { id: "ff_40", slovak_phrase: "Kúpil som dcére novú bábku.", option_correct: "лялька", option_wrong: "бабка", explanation: "«Bábka» означає «лялька» або «маріонетка»." },
-  { id: "ff_41", slovak_phrase: "Zasadil som kvetinu do črepu.", option_correct: "горщик", option_wrong: "череп", explanation: "«Črep» — це квітковий «горщик» або «уламок»." },
-  { id: "ff_42", slovak_phrase: "Lekár mi predpísal dennú dávku.", option_correct: "порція/доза", option_wrong: "давка (натовп)", explanation: "«Dávka» означає «порція» або «доза»." },
-  { id: "ff_43", slovak_phrase: "Na stole leží veľmi sladké hrozno.", option_correct: "виноград", option_wrong: "грізно", explanation: "«Hrozno» перекладається як «виноград»." },
-  { id: "ff_44", slovak_phrase: "Čakám na teba na chodbe.", option_correct: "коридор", option_wrong: "ходьба", explanation: "«Chodba» — це «коридор»." },
-  { id: "ff_45", slovak_phrase: "Hľadám za neho dobrú náhradu.", option_correct: "заміна", option_wrong: "нагорода", explanation: "«Náhrada» означає «заміна» або «відшкодування». Нагорода буде «odmena»." },
-  { id: "ff_46", slovak_phrase: "Hudobník ladí svoj nástroj.", option_correct: "інструмент", option_wrong: "настрій", explanation: "«Nástroj» — це «інструмент». Настрій словацькою буде «nálada»." },
-  { id: "ff_47", slovak_phrase: "Idem nakupovať do obchodu.", option_correct: "магазин", option_wrong: "обхід", explanation: "«Obchod» означає «магазин» або «торгівля»." },
-  { id: "ff_48", slovak_phrase: "Nechal som ti na stole odkaz.", option_correct: "повідомлення", option_wrong: "відмова", explanation: "«Odkaz» — це «повідомлення» або «посилання»." },
-  { id: "ff_49", slovak_phrase: "Za svoju prácu dostal veľkú odmenu.", option_correct: "нагорода", option_wrong: "відміна", explanation: "«Odmena» означає «нагорода»." },
-  { id: "ff_50", slovak_phrase: "Udrel do stola päsťou.", option_correct: "кулак", option_wrong: "паща", explanation: "«Päsť» — це «кулак»." },
-  { id: "ff_51", slovak_phrase: "Aký je presný počet študentov?", option_correct: "кількість", option_wrong: "почесть", explanation: "«Počet» означає «кількість» або «число»." },
-  { id: "ff_52", slovak_phrase: "Vzdali mu veľkú poctu.", option_correct: "пошана", option_wrong: "пошта", explanation: "«Pocta» — це «пошана» або «почесть». Пошта буде «pošta»." },
-  { id: "ff_53", slovak_phrase: "Máme v pivnici plný sud vína.", option_correct: "бочка", option_wrong: "суд", explanation: "«Sud» означає «бочка»." },
-  { id: "ff_54", slovak_phrase: "Tento koláč má pekný tvar.", option_correct: "форма", option_wrong: "твар (пика)", explanation: "«Tvar» перекладається як «форма»." },
-  { id: "ff_55", slovak_phrase: "Prepáčte, kde je tu záchod?", option_correct: "туалет", option_wrong: "захід", explanation: "«Záchod» — це «туалет». Захід (сонця) буде «západ»." },
-  { id: "ff_56", slovak_phrase: "Je tu prísny zákaz fajčiť.", option_correct: "заборона", option_wrong: "заказ (замовлення)", explanation: "«Zákaz» означає «заборона». Замовлення буде «objednávka»." },
-  { id: "ff_57", slovak_phrase: "Na budove veje naša zástava.", option_correct: "прапор", option_wrong: "застава", explanation: "«Zástava» — це «прапор» або «стяг»." },
-  { id: "ff_58", slovak_phrase: "Včera som vyhral bežecký závod.", option_correct: "перегони", option_wrong: "завод", explanation: "«Závod» означає «перегони» або «змагання». Завод (фабрика) буде «továreň»." },
-  { id: "ff_59", slovak_phrase: "Učíme sa novú báseň naspamäť.", option_correct: "вірш", option_wrong: "байка", explanation: "«Báseň» означає «вірш»." },
-  { id: "ff_60", slovak_phrase: "Musíme brániť naše mesto.", option_correct: "захищати", option_wrong: "бранити (сварити)", explanation: "«Brániť» — це «захищати». Сварити буде «hrešiť»." },
-  { id: "ff_61", slovak_phrase: "Kúpil som si sladkú buchtu.", option_correct: "булочка", option_wrong: "бухта (морська)", explanation: "«Buchta» — це «булочка» або «пиріжок»." },
-  { id: "ff_62", slovak_phrase: "Boli sme na prehliadke hradu.", option_correct: "замок/фортеця", option_wrong: "град", explanation: "«Hrad» означає «замок» або «фортеця»." },
-  { id: "ff_63", slovak_phrase: "Našiel som v lese veľkú hubu.", option_correct: "гриб", option_wrong: "губа", explanation: "«Huba» — це «гриб». Губа словацькою буде «pera»." },
-  { id: "ff_64", slovak_phrase: "Ja túto úlohu vôbec nechápem.", option_correct: "розуміти", option_wrong: "хапати", explanation: "«Chápať» означає «розуміти». Хапати буде «chytať»." },
-  { id: "ff_65", slovak_phrase: "Dnes som v práci makal celý deň.", option_correct: "важко працювати", option_wrong: "макати (вмочати)", explanation: "«Makať» — це «важко працювати» (гарувати). Вмочати буде «namáčať»." },
-  { id: "ff_66", slovak_phrase: "Som na teba veľmi pyšný.", option_correct: "гордий", option_wrong: "пишний", explanation: "«Pyšný» означає «гордий»." },
-  { id: "ff_67", slovak_phrase: "Podpísal som ten dôležitý spis.", option_correct: "документ", option_wrong: "спис/список", explanation: "«Spis» — це «документ»." },
-  { id: "ff_68", slovak_phrase: "Veľmi ma zaujíma moderné umenie.", option_correct: "мистецтво", option_wrong: "уміння", explanation: "«Umenie» перекладається як «мистецтво»." },
-  { id: "ff_69", slovak_phrase: "Slovensko je moja nová vlasť.", option_correct: "батьківщина", option_wrong: "влада", explanation: "«Vlasť» — це «батьківщина». Влада буде «vláda» або «moc»." },
-  { id: "ff_70", slovak_phrase: "Zasadil som kvety na záhon.", option_correct: "грядка", option_wrong: "загін (військовий)", explanation: "«Záhon» означає «грядка»." },
-  { id: "ff_71", slovak_phrase: "Pacient dostal záchvat kašľa.", option_correct: "напад/приступ", option_wrong: "захват (захоплення)", explanation: "«Záchvat» — це медичний «напад» або «приступ»." },
-  { id: "ff_72", slovak_phrase: "Lekár povedal, že mám zápal pľúc.", option_correct: "запалення", option_wrong: "запал", explanation: "«Zápal» означає медичне «запалення» (наприклад, легенів)." },
-  { id: "ff_combo_1", slovak_phrase: "V obchode je zákaz fotenia.", option_correct: "У магазині є заборона на фотографування", option_wrong: "В обході є заказ фотографування", explanation: "«Obchod» = магазин, «zákaz» = заборона." },
-  { id: "ff_combo_2", slovak_phrase: "Nechal mi odkaz, že potrebuje nový nástroj.", option_correct: "Залишив мені повідомлення, що йому потрібен новий інструмент", option_wrong: "Лишив мені відмову, що потребує новий настрій", explanation: "«Odkaz» = повідомлення, «nástroj» = інструмент." },
-  { id: "ff_combo_3", slovak_phrase: "Na chodbe stojí obrovský sud.", option_correct: "У коридорі стоїть величезна бочка", option_wrong: "На ходьбі стоїть величезний суд", explanation: "«Chodba» = коридор, «sud» = бочка." },
-  { id: "ff_combo_4", slovak_phrase: "Vôbec nechápem moderné umenie.", option_correct: "Взагалі не розумію сучасного мистецтва", option_wrong: "Взагалі не хапаю сучасне уміння", explanation: "«Chápať» = розуміти, «umenie» = мистецтво." },
-  { id: "ff_combo_5", slovak_phrase: "Každý vojak musí brániť svoju vlasť.", option_correct: "Кожен солдат мусить захищати свою батьківщину", option_wrong: "Кожен солдат мусить сварити свою владу", explanation: "«Brániť» = захищати, «vlasť» = батьківщина." },
-  { id: "ff_combo_6", slovak_phrase: "Mám silný zápal, musím ísť do lekárne.", option_correct: "Маю сильне запалення, мушу йти в аптеку", option_wrong: "Маю сильний запал, мушу йти в лікарню", explanation: "«Zápal» = запалення, «lekáreň» = аптека." },
-  { id: "ff_combo_7", slovak_phrase: "Makal som celý deň a kúpil som si čerstvú buchtu.", option_correct: "Важко працював цілий день і купив собі свіжу булочку", option_wrong: "Макав я цілий день і купив собі черству бухту", explanation: "«Makať» = важко працювати, «čerstvý» = свіжий, «buchta» = булочка." }
+  { 
+    id: "ff_1", 
+    slovak_phrase: "Kúpil som si čerstvý chlieb.", 
+    trap_word: "čerstvý", 
+    option_correct: "свіжий", 
+    option_wrong: "черствий", 
+    explanation: "Словацькою «čerstvý» означає «свіжий»[cite: 5].",
+    full_translation: "Я купив собі свіжий хліб."
+  },
+  { 
+    id: "ff_2", 
+    slovak_phrase: "Na stole leží sladké ovocie.", 
+    trap_word: "ovocie", 
+    option_correct: "фрукти", 
+    option_wrong: "овочі", 
+    explanation: "Словацькою «ovocie» означає «фрукти»[cite: 5].",
+    full_translation: "На столі лежать солодкі фрукти."
+  },
+  { 
+    id: "ff_3", 
+    slovak_phrase: "Idem do lekárne kúpiť lieky.", 
+    trap_word: "lekáreň", 
+    option_correct: "аптека", 
+    option_wrong: "лікарня", 
+    explanation: "«Lekáreň» — це аптека. Лікарня словацькою буде «nemocnica»[cite: 5].",
+    full_translation: "Йду в аптеку купити ліки."
+  },
+  { 
+    id: "ff_4", 
+    slovak_phrase: "Náš zákazník bol veľmi spokojný.", 
+    trap_word: "spokojný", 
+    option_correct: "задоволений", 
+    option_wrong: "спокійний", 
+    explanation: "«Spokojný» означає «задоволений». Спокійний буде «pokojný»[cite: 5].",
+    full_translation: "Наш клієнт був дуже задоволений."
+  },
+  { 
+    id: "ff_5", 
+    slovak_phrase: "To bol úžasný film!", 
+    trap_word: "úžasný", 
+    option_correct: "прекрасний", 
+    option_wrong: "жахливий", 
+    explanation: "«Úžasný» перекладається як «прекрасний» або «чудовий»[cite: 5].",
+    full_translation: "Це був чудовий фільм!"
+  },
+  { 
+    id: "ff_6", 
+    slovak_phrase: "Z kuchyne ide úžasná vôňa.", 
+    trap_word: "vôňa", 
+    option_correct: "аромат", 
+    option_wrong: "сморід", 
+    explanation: "«Vôňa» означає приємний «аромат»[cite: 5].",
+    full_translation: "З кухні йде прекрасний аромат."
+  },
+  { 
+    id: "ff_7", 
+    slovak_phrase: "V pivnici bol hrozný zápach.", 
+    trap_word: "zápach", 
+    option_correct: "сморід", 
+    option_wrong: "запах (приємний)", 
+    explanation: "«Zápach» — це дурний запах або «сморід»[cite: 5].",
+    full_translation: "У підвалі був жахливий сморід."
+  },
+  { 
+    id: "ff_8", 
+    slovak_phrase: "Doma je ticho a pohoda.", 
+    trap_word: "pohoda", 
+    option_correct: "затишок", 
+    option_wrong: "погода", 
+    explanation: "«Pohoda» означає «затишок» або «душевний спокій». Погода буде «počasie»[cite: 5].",
+    full_translation: "Вдома тихо і затишно."
+  },
+  { 
+    id: "ff_9", 
+    slovak_phrase: "V zime musíme veľa kúriť.", 
+    trap_word: "kúriť", 
+    option_correct: "топити", 
+    option_wrong: "курити", 
+    explanation: "«Kúriť» означає «топити» або «обігрівати». Курити буде «fajčiť»[cite: 5].",
+    full_translation: "Взимку ми мусимо багато топити (обігрівати)."
+  },
+  { 
+    id: "ff_10", 
+    slovak_phrase: "Buď chytrý a bež tam!", 
+    trap_word: "chytrý", 
+    option_correct: "швидкий", 
+    option_wrong: "хитрий", 
+    explanation: "«Chytrý» означає «швидкий» або «розумний»[cite: 5].",
+    full_translation: "Будь швидким і біжи туди!"
+  },
+  { 
+    id: "ff_11", 
+    slovak_phrase: "Lietadlo má veľký trup.", 
+    trap_word: "trup", 
+    option_correct: "тулуб/корпус", 
+    option_wrong: "труп", 
+    explanation: "«Trup» — це «тулуб» або «корпус» (наприклад, літака)[cite: 5].",
+    full_translation: "Літак має великий фюзеляж (корпус)."
+  },
+  { 
+    id: "ff_12", 
+    slovak_phrase: "Banka mi dala vysoký úrok.", 
+    trap_word: "úrok", 
+    option_correct: "відсоток", 
+    option_wrong: "урок", 
+    explanation: "«Úrok» — це банківський «відсоток». Урок буде «hodina» або «lekcia»[cite: 5].",
+    full_translation: "Банк дав мені високий відсоток."
+  },
+  { 
+    id: "ff_13", 
+    slovak_phrase: "Polícia chytila vraha.", 
+    trap_word: "vrah", 
+    option_correct: "вбивця", 
+    option_wrong: "ворог", 
+    explanation: "«Vrah» означає «вбивця». Ворог буде «nepriateľ»[cite: 5].",
+    full_translation: "Поліція спіймала вбивцю."
+  },
+  { 
+    id: "ff_14", 
+    slovak_phrase: "Toto je môj najlepší život.", 
+    trap_word: "život", 
+    option_correct: "життя", 
+    option_wrong: "живіт", 
+    explanation: "«Život» — це «життя». Живіт словацькою буде «brucho»[cite: 5].",
+    full_translation: "Це моє найкраще життя."
+  },
+  { 
+    id: "ff_15", 
+    slovak_phrase: "Každé ráno pijem kávu.", 
+    trap_word: "ráno", 
+    option_correct: "ранок", 
+    option_wrong: "рано", 
+    explanation: "«Ráno» перекладається як «ранок» або «вранці»[cite: 5].",
+    full_translation: "Щоранку я п'ю каву."
+  },
+  { 
+    id: "ff_16", 
+    slovak_phrase: "Pacient mal tvrdú stolicu.", 
+    trap_word: "stolica", 
+    option_correct: "стілець (медичний)", 
+    option_wrong: "столиця", 
+    explanation: "«Stolica» в цьому контексті — це медичний «стілець». Столиця буде «hlavné mesto»[cite: 5].",
+    full_translation: "У пацієнта був твердий стілець (кал)."
+  },
+  { 
+    id: "ff_17", 
+    slovak_phrase: "Som skoro hotový.", 
+    trap_word: "skoro", 
+    option_correct: "майже", 
+    option_wrong: "швидко", 
+    explanation: "«Skoro» означає «майже»[cite: 5].",
+    full_translation: "Я майже готовий."
+  },
+  { 
+    id: "ff_18", 
+    slovak_phrase: "Musím umyť riad.", 
+    trap_word: "riad", 
+    option_correct: "посуд", 
+    option_wrong: "ряд", 
+    explanation: "«Riad» — це «посуд»[cite: 5].",
+    full_translation: "Я мушу помити посуд."
+  },
+  { 
+    id: "ff_19", 
+    slovak_phrase: "To je môj nový frajer.", 
+    trap_word: "frajer", 
+    option_correct: "коханий", 
+    option_wrong: "випендрювач", 
+    explanation: "«Frajer» словацькою — це «коханий» або «кавалер»[cite: 5].",
+    full_translation: "Це мій новий хлопець (коханий)."
+  },
+  { 
+    id: "ff_20", 
+    slovak_phrase: "Pobozkal ju na líce.", 
+    trap_word: "líce", 
+    option_correct: "щока", 
+    option_wrong: "лице", 
+    explanation: "«Líce» означає «щока». Обличчя буде «tvár»[cite: 5].",
+    full_translation: "Він поцілував її в щоку."
+  },
+  { 
+    id: "ff_21", 
+    slovak_phrase: "V lese sme si postavili stan.", 
+    trap_word: "stan", 
+    option_correct: "намет", 
+    option_wrong: "стан", 
+    explanation: "«Stan» — це «намет». Стан словацькою буде «stav»[cite: 5].",
+    full_translation: "У лісі ми поставили намет."
+  },
+  { 
+    id: "ff_22", 
+    slovak_phrase: "Dostal som pokutu za rýchlosť.", 
+    trap_word: "pokuta", 
+    option_correct: "штраф", 
+    option_wrong: "покута", 
+    explanation: "«Pokuta» — це «штраф»[cite: 5].",
+    full_translation: "Я отримав штраф за швидкість."
+  },
+  { 
+    id: "ff_23", 
+    slovak_phrase: "Tento rok bol veľmi úrodný.", 
+    trap_word: "úrodný", 
+    option_correct: "урожайний", 
+    option_wrong: "уродливий", 
+    explanation: "«Úrodný» означає «урожайний»[cite: 5].",
+    full_translation: "Цей рік був дуже врожайним."
+  },
+  { 
+    id: "ff_24", 
+    slovak_phrase: "Dnes večer pozerám zápas.", 
+    trap_word: "zápas", 
+    option_correct: "матч", 
+    option_wrong: "запас", 
+    explanation: "«Zápas» — це «матч» або «змагання». Запас буде «zásoba»[cite: 5].",
+    full_translation: "Сьогодні ввечері я дивлюся матч."
+  },
+  { 
+    id: "ff_25", 
+    slovak_phrase: "Náš zákazník je náš pán.", 
+    trap_word: "zákazník", 
+    option_correct: "покупець", 
+    option_wrong: "заказник", 
+    explanation: "«Zákazník» означає «покупець» або «клієнт»[cite: 5].",
+    full_translation: "Наш клієнт – наш пан."
+  },
+  { 
+    id: "ff_26", 
+    slovak_phrase: "Včera sme boli na pohrebe.", 
+    trap_word: "pohreb", 
+    option_correct: "похорон", 
+    option_wrong: "погріб", 
+    explanation: "«Pohreb» — це «похорон». Погріб словацькою буде «pivnica»[cite: 5].",
+    full_translation: "Вчора ми були на похороні."
+  },
+  { 
+    id: "ff_27", 
+    slovak_phrase: "Napísal ponosu na riaditeľa.", 
+    trap_word: "ponosa", 
+    option_correct: "скарга", 
+    option_wrong: "понос", 
+    explanation: "«Ponosa» означає «скарга»[cite: 5].",
+    full_translation: "Він написав скаргу на директора."
+  },
+  { 
+    id: "ff_28", 
+    slovak_phrase: "Poprava sa konala na námestí.", 
+    trap_word: "poprava", 
+    option_correct: "страта", 
+    option_wrong: "поправа", 
+    explanation: "«Poprava» перекладається як смертна «страта»[cite: 5].",
+    full_translation: "Страта відбулася на площі."
+  },
+  { 
+    id: "ff_29", 
+    slovak_phrase: "Má dobré vedomosti z histórie.", 
+    trap_word: "vedomosť", 
+    option_correct: "знання", 
+    option_wrong: "відомість", 
+    explanation: "«Vedomosť» означає «знання»[cite: 5].",
+    full_translation: "Він має хороші знання з історії."
+  },
+  { 
+    id: "ff_30", 
+    slovak_phrase: "Pracuje vo výskumnom ústave.", 
+    trap_word: "ústav", 
+    option_correct: "інститут/установа", 
+    option_wrong: "устав", 
+    explanation: "«Ústav» — це наукова «установа» або «інститут»[cite: 5].",
+    full_translation: "Він працює в дослідному інституті."
+  },
+  { 
+    id: "ff_31", 
+    slovak_phrase: "V tej krajine je veľká bieda.", 
+    trap_word: "bieda", 
+    option_correct: "бідність", 
+    option_wrong: "біда (горе)", 
+    explanation: "«Bieda» означає «бідність»[cite: 5].",
+    full_translation: "У тій країні велика бідність."
+  },
+  { 
+    id: "ff_32", 
+    slovak_phrase: "Konečne sme sa dohádali.", 
+    trap_word: "dohádať sa", 
+    option_correct: "закінчити суперечку", 
+    option_wrong: "догадатися", 
+    explanation: "«Dohádať sa» означає «закінчити суперечку». Догадатися буде «domyslieť si»[cite: 5].",
+    full_translation: "Нарешті ми закінчили суперечку."
+  },
+  { 
+    id: "ff_33", 
+    slovak_phrase: "Bolí ho slepé črevo.", 
+    trap_word: "črevo", 
+    option_correct: "кишка", 
+    option_wrong: "черево", 
+    explanation: "«Črevo» — це «кишка»[cite: 5].",
+    full_translation: "У нього болить сліпа кишка (апендикс)."
+  },
+  { 
+    id: "ff_34", 
+    slovak_phrase: "Porazil svojho soka.", 
+    trap_word: "sok", 
+    option_correct: "суперник", 
+    option_wrong: "сік", 
+    explanation: "«Sok» означає «суперник». Сік словацькою буде «džús» або «šťava»[cite: 5].",
+    full_translation: "Він переміг свого суперника."
+  },
+  { 
+    id: "ff_35", 
+    slovak_phrase: "Tento stroj je veľmi drahý.", 
+    trap_word: "stroj", 
+    option_correct: "машина", 
+    option_wrong: "стрій", 
+    explanation: "«Stroj» — це «машина» або «механізм»[cite: 5].",
+    full_translation: "Ця машина (механізм) дуже дорога."
+  },
+  { 
+    id: "ff_36", 
+    slovak_phrase: "Kúpil som sladké jahody.", 
+    trap_word: "jahoda", 
+    option_correct: "полуниця", 
+    option_wrong: "ягода (будь-яка)", 
+    explanation: "«Jahoda» означає саме «полуниця» або «суниця»[cite: 5].",
+    full_translation: "Я купив солодку полуницю."
+  },
+  { 
+    id: "ff_37", 
+    slovak_phrase: "Dnes mám naozaj smolu.", 
+    trap_word: "smola", 
+    option_correct: "невезіння", 
+    option_wrong: "смола", 
+    explanation: "«Smola» в цьому контексті означає «невезіння»[cite: 5].",
+    full_translation: "Сьогодні мені справді не щастить."
+  },
+  { 
+    id: "ff_38", 
+    slovak_phrase: "Do kávy si dávam smotanu.", 
+    trap_word: "smotana", 
+    option_correct: "вершки", 
+    option_wrong: "сметана", 
+    explanation: "«Smotana» (sladká) — це «вершки». Кисла сметана буде «kyslá smotana»[cite: 5].",
+    full_translation: "У каву я додаю вершки."
+  },
+  { 
+    id: "ff_39", 
+    slovak_phrase: "Idem si vložiť peniaze do banky.", 
+    trap_word: "banka", 
+    option_correct: "банк", 
+    option_wrong: "банка (скляна)", 
+    explanation: "«Banka» — це фінансова установа («банк»). Скляна банка буде «pohár»[cite: 4].",
+    full_translation: "Йду покласти гроші в банк."
+  },
+  { 
+    id: "ff_40", 
+    slovak_phrase: "Kúpil som dcére novú bábku.", 
+    trap_word: "bábka", 
+    option_correct: "лялька", 
+    option_wrong: "бабка", 
+    explanation: "«Bábka» означає «лялька» або «маріонетка»[cite: 4].",
+    full_translation: "Я купив доньці нову ляльку."
+  },
+  { 
+    id: "ff_41", 
+    slovak_phrase: "Zasadil som kvetinu do črepu.", 
+    trap_word: "črep", 
+    option_correct: "горщик", 
+    option_wrong: "череп", 
+    explanation: "«Črep» — це квітковий «горщик» або «уламок»[cite: 4].",
+    full_translation: "Я посадив квітку в горщик."
+  },
+  { 
+    id: "ff_42", 
+    slovak_phrase: "Lekár mi predpísal dennú dávku.", 
+    trap_word: "dávka", 
+    option_correct: "порція/доза", 
+    option_wrong: "давка (натовп)", 
+    explanation: "«Dávka» означає «порція» або «доза»[cite: 4].",
+    full_translation: "Лікар приписав мені денну дозу."
+  },
+  { 
+    id: "ff_43", 
+    slovak_phrase: "Na stole leží veľmi sladké hrozno.", 
+    trap_word: "hrozno", 
+    option_correct: "виноград", 
+    option_wrong: "грізно", 
+    explanation: "«Hrozno» перекладається як «виноград»[cite: 4].",
+    full_translation: "На столі лежить дуже солодкий виноград."
+  },
+  { 
+    id: "ff_44", 
+    slovak_phrase: "Čakám na teba na chodbe.", 
+    trap_word: "chodba", 
+    option_correct: "коридор", 
+    option_wrong: "ходьба", 
+    explanation: "«Chodba» — це «коридор»[cite: 4].",
+    full_translation: "Я чекаю на тебе в коридорі."
+  },
+  { 
+    id: "ff_45", 
+    slovak_phrase: "Hľadám za neho dobrú náhradu.", 
+    trap_word: "náhrada", 
+    option_correct: "заміна", 
+    option_wrong: "нагорода", 
+    explanation: "«Náhrada» означає «заміна» або «відшкодування». Нагорода буде «odmena»[cite: 4].",
+    full_translation: "Шукаю йому хорошу заміну."
+  },
+  { 
+    id: "ff_46", 
+    slovak_phrase: "Hudobník ladí svoj nástroj.", 
+    trap_word: "nástroj", 
+    option_correct: "інструмент", 
+    option_wrong: "настрій", 
+    explanation: "«Nástroj» — це «інструмент». Настрій словацькою буде «nálada»[cite: 4].",
+    full_translation: "Музикант налаштовує свій інструмент."
+  },
+  { 
+    id: "ff_47", 
+    slovak_phrase: "Idem nakupovať do obchodu.", 
+    trap_word: "obchod", 
+    option_correct: "магазин", 
+    option_wrong: "обхід", 
+    explanation: "«Obchod» означає «магазин» або «торгівля»[cite: 4].",
+    full_translation: "Йду робити покупки в магазин."
+  },
+  { 
+    id: "ff_48", 
+    slovak_phrase: "Nechal som ti na stole odkaz.", 
+    trap_word: "odkaz", 
+    option_correct: "повідомлення", 
+    option_wrong: "відмова", 
+    explanation: "«Odkaz» — це «повідомлення» або «посилання»[cite: 4].",
+    full_translation: "Я залишив тобі на столі повідомлення."
+  },
+  { 
+    id: "ff_49", 
+    slovak_phrase: "Za svoju prácu dostal veľkú odmenu.", 
+    trap_word: "odmena", 
+    option_correct: "нагорода", 
+    option_wrong: "відміна", 
+    explanation: "«Odmena» означає «нагорода»[cite: 4].",
+    full_translation: "За свою роботу він отримав велику нагороду."
+  },
+  { 
+    id: "ff_50", 
+    slovak_phrase: "Udrel do stola päsťou.", 
+    trap_word: "päsť", 
+    option_correct: "кулак", 
+    option_wrong: "паща", 
+    explanation: "«Päsť» — це «кулак»[cite: 4].",
+    full_translation: "Він вдарив кулаком по столу."
+  },
+  { 
+    id: "ff_51", 
+    slovak_phrase: "Aký je presný počet študentov?", 
+    trap_word: "počet", 
+    option_correct: "кількість", 
+    option_wrong: "почесть", 
+    explanation: "«Počet» означає «кількість» або «число»[cite: 4].",
+    full_translation: "Яка точна кількість студентів?"
+  },
+  { 
+    id: "ff_52", 
+    slovak_phrase: "Vzdali mu veľkú poctu.", 
+    trap_word: "pocta", 
+    option_correct: "пошана", 
+    option_wrong: "пошта", 
+    explanation: "«Pocta» — це «пошана» або «почесть». Пошта буде «pošta»[cite: 4].",
+    full_translation: "Йому віддали велику шану."
+  },
+  { 
+    id: "ff_53", 
+    slovak_phrase: "Máme v pivnici plný sud vína.", 
+    trap_word: "sud", 
+    option_correct: "бочка", 
+    option_wrong: "суд", 
+    explanation: "«Sud» означає «бочка»[cite: 4].",
+    full_translation: "У нас у підвалі повна бочка вина."
+  },
+  { 
+    id: "ff_54", 
+    slovak_phrase: "Tento koláč má pekný tvar.", 
+    trap_word: "tvar", 
+    option_correct: "форма", 
+    option_wrong: "твар (пика)", 
+    explanation: "«Tvar» перекладається як «форма»[cite: 4].",
+    full_translation: "Цей пиріг має гарну форму."
+  },
+  { 
+    id: "ff_55", 
+    slovak_phrase: "Prepáčte, kde je tu záchod?", 
+    trap_word: "záchod", 
+    option_correct: "туалет", 
+    option_wrong: "захід", 
+    explanation: "«Záchod» — це «туалет». Захід (сонця) буде «západ»[cite: 4].",
+    full_translation: "Вибачте, де тут туалет?"
+  },
+  { 
+    id: "ff_56", 
+    slovak_phrase: "Je tu prísny zákaz fajčiť.", 
+    trap_word: "zákaz", 
+    option_correct: "заборона", 
+    option_wrong: "заказ (замовлення)", 
+    explanation: "«Zákaz» означає «заборона». Замовлення буде «objednávka»[cite: 4].",
+    full_translation: "Тут сувора заборона курити."
+  },
+  { 
+    id: "ff_57", 
+    slovak_phrase: "Na budove veje naša zástava.", 
+    trap_word: "zástava", 
+    option_correct: "прапор", 
+    option_wrong: "застава", 
+    explanation: "«Zástava» — це «прапор» або «стяг»[cite: 4].",
+    full_translation: "На будівлі майорить наш прапор."
+  },
+  { 
+    id: "ff_58", 
+    slovak_phrase: "Včera som vyhral bežecký závod.", 
+    trap_word: "závod", 
+    option_correct: "перегони", 
+    option_wrong: "завод", 
+    explanation: "«Závod» означає «перегони» або «змагання». Завод (фабрика) буде «továreň»[cite: 4].",
+    full_translation: "Вчора я виграв бігові перегони."
+  },
+  { 
+    id: "ff_59", 
+    slovak_phrase: "Učíme sa novú báseň naspamäť.", 
+    trap_word: "báseň", 
+    option_correct: "вірш", 
+    option_wrong: "байка", 
+    explanation: "«Báseň» означає «вірш»[cite: 3].",
+    full_translation: "Ми вчимо новий вірш напам'ять."
+  },
+  { 
+    id: "ff_60", 
+    slovak_phrase: "Musíme brániť naše mesto.", 
+    trap_word: "brániť", 
+    option_correct: "захищати", 
+    option_wrong: "бранити (сварити)", 
+    explanation: "«Brániť» — це «захищати». Сварити буде «hrešiť»[cite: 3].",
+    full_translation: "Ми мусимо захищати наше місто."
+  },
+  { 
+    id: "ff_61", 
+    slovak_phrase: "Kúpil som si sladkú buchtu.", 
+    trap_word: "buchta", 
+    option_correct: "булочка", 
+    option_wrong: "бухта (морська)", 
+    explanation: "«Buchta» — це «булочка» або «пиріжок»[cite: 3].",
+    full_translation: "Я купив собі солодку булочку."
+  },
+  { 
+    id: "ff_62", 
+    slovak_phrase: "Boli sme na prehliadke hradu.", 
+    trap_word: "hrad", 
+    option_correct: "замок/фортеця", 
+    option_wrong: "град", 
+    explanation: "«Hrad» означає «замок» або «фортеця»[cite: 3].",
+    full_translation: "Ми були на екскурсії в замку."
+  },
+  { 
+    id: "ff_63", 
+    slovak_phrase: "Našiel som v lese veľkú hubu.", 
+    trap_word: "huba", 
+    option_correct: "гриб", 
+    option_wrong: "губа", 
+    explanation: "«Huba» — це «гриб». Губа словацькою буде «pera»[cite: 3].",
+    full_translation: "Я знайшов у лісі великий гриб."
+  },
+  { 
+    id: "ff_64", 
+    slovak_phrase: "Ja túto úlohu vôbec nechápem.", 
+    trap_word: "chápať", 
+    option_correct: "розуміти", 
+    option_wrong: "хапати", 
+    explanation: "«Chápať» означає «розуміти». Хапати буде «chytať»[cite: 3].",
+    full_translation: "Я це завдання взагалі не розумію."
+  },
+  { 
+    id: "ff_65", 
+    slovak_phrase: "Dnes som v práci makal celý deň.", 
+    trap_word: "makať", 
+    option_correct: "важко працювати", 
+    option_wrong: "макати (вмочати)", 
+    explanation: "«Makať» — це «важко працювати» (гарувати). Вмочати буде «namáčať»[cite: 3].",
+    full_translation: "Сьогодні на роботі я гарував (важко працював) цілий день."
+  },
+  { 
+    id: "ff_66", 
+    slovak_phrase: "Som na teba veľmi pyšný.", 
+    trap_word: "pyšný", 
+    option_correct: "гордий", 
+    option_wrong: "пишний", 
+    explanation: "«Pyšný» означає «гордий»[cite: 3].",
+    full_translation: "Я дуже пишаюся тобою."
+  },
+  { 
+    id: "ff_67", 
+    slovak_phrase: "Podpísal som ten dôležitý spis.", 
+    trap_word: "spis", 
+    option_correct: "документ", 
+    option_wrong: "спис/список", 
+    explanation: "«Spis» — це «документ»[cite: 3].",
+    full_translation: "Я підписав цей важливий документ."
+  },
+  { 
+    id: "ff_68", 
+    slovak_phrase: "Veľmi ma zaujíma moderné umenie.", 
+    trap_word: "umenie", 
+    option_correct: "мистецтво", 
+    option_wrong: "уміння", 
+    explanation: "«Umenie» перекладається як «мистецтво»[cite: 3].",
+    full_translation: "Мене дуже цікавить сучасне мистецтво."
+  },
+  { 
+    id: "ff_69", 
+    slovak_phrase: "Slovensko je moja nová vlasť.", 
+    trap_word: "vlasť", 
+    option_correct: "батьківщина", 
+    option_wrong: "влада", 
+    explanation: "«Vlasť» — це «батьківщина». Влада буде «vláda» або «moc»[cite: 3].",
+    full_translation: "Словаччина — моя нова батьківщина."
+  },
+  { 
+    id: "ff_70", 
+    slovak_phrase: "Zasadil som kvety na záhon.", 
+    trap_word: "záhon", 
+    option_correct: "грядка", 
+    option_wrong: "загін (військовий)", 
+    explanation: "«Záhon» означає «грядка»[cite: 3].",
+    full_translation: "Я посадив квіти на грядку."
+  },
+  { 
+    id: "ff_71", 
+    slovak_phrase: "Pacient dostal záchvat kašľa.", 
+    trap_word: "záchvat", 
+    option_correct: "напад/приступ", 
+    option_wrong: "захват (захоплення)", 
+    explanation: "«Záchvat» — це медичний «напад» або «приступ»[cite: 3].",
+    full_translation: "У пацієнта стався напад кашлю."
+  },
+  { 
+    id: "ff_72", 
+    slovak_phrase: "Lekár povedal, že mám zápal pľúc.", 
+    trap_word: "zápal", 
+    option_correct: "запалення", 
+    option_wrong: "запал", 
+    explanation: "«Zápal» означає медичне «запалення» (наприклад, легенів)[cite: 3].",
+    full_translation: "Лікар сказав, що в мене запалення легень."
+  },
+  { 
+    id: "ff_combo_1", 
+    slovak_phrase: "V obchode je zákaz fotenia.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "У магазині є заборона на фотографування", 
+    option_wrong: "В обході є заказ фотографування", 
+    explanation: "«Obchod» = магазин, «zákaz» = заборона[cite: 4].",
+    full_translation: "У магазині є заборона на фотографування."
+  },
+  { 
+    id: "ff_combo_2", 
+    slovak_phrase: "Nechal mi odkaz, že potrebuje nový nástroj.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "Залишив мені повідомлення, що йому потрібен новий інструмент", 
+    option_wrong: "Лишив мені відмову, що потребує новий настрій", 
+    explanation: "«Odkaz» = повідомлення, «nástroj» = інструмент[cite: 4].",
+    full_translation: "Залишив мені повідомлення, що йому потрібен новий інструмент."
+  },
+  { 
+    id: "ff_combo_3", 
+    slovak_phrase: "Na chodbe stojí obrovský sud.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "У коридорі стоїть величезна бочка", 
+    option_wrong: "На ходьбі стоїть величезний суд", 
+    explanation: "«Chodba» = коридор, «sud» = бочка[cite: 4].",
+    full_translation: "У коридорі стоїть величезна бочка."
+  },
+  { 
+    id: "ff_combo_4", 
+    slovak_phrase: "Vôbec nechápem moderné umenie.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "Взагалі не розумію сучасного мистецтва", 
+    option_wrong: "Взагалі не хапаю сучасне уміння", 
+    explanation: "«Chápať» = розуміти, «umenie» = мистецтво[cite: 3].",
+    full_translation: "Взагалі не розумію сучасного мистецтва."
+  },
+  { 
+    id: "ff_combo_5", 
+    slovak_phrase: "Každý vojak musí brániť svoju vlasť.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "Кожен солдат мусить захищати свою батьківщину", 
+    option_wrong: "Кожен солдат мусить сварити свою владу", 
+    explanation: "«Brániť» = захищати, «vlasť» = батьківщина[cite: 3].",
+    full_translation: "Кожен солдат мусить захищати свою батьківщину."
+  },
+  { 
+    id: "ff_combo_6", 
+    slovak_phrase: "Mám silný zápal, musím ísť do lekárne.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "Маю сильне запалення, мушу йти в аптеку", 
+    option_wrong: "Маю сильний запал, мушу йти в лікарню", 
+    explanation: "«Zápal» = запалення, «lekáreň» = аптека[cite: 3].",
+    full_translation: "Маю сильне запалення, мушу йти в аптеку."
+  },
+  { 
+    id: "ff_combo_7", 
+    slovak_phrase: "Makal som celý deň a kúpil som si čerstvú buchtu.", 
+    trap_word: "Комбо-пастка!", 
+    option_correct: "Важко працював цілий день і купив собі свіжу булочку", 
+    option_wrong: "Макав я цілий день і купив собі черству бухту", 
+    explanation: "«Makať» = важко працювати, «čerstvý» = свіжий, «buchta» = булочка[cite: 3].",
+    full_translation: "Важко працював цілий день і купив собі свіжу булочку."
+  }
 ];
 
 // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
@@ -681,6 +1314,7 @@ function App() {
   }
 
   function handleFfNext() {
+    setFfShowTranslation(false); // ХОВАЄМО ПЕРЕКЛАД НА НОВОМУ РЕЧЕННІ
     if (ffIndex + 1 < ffCards.length) {
       const nextIndex = ffIndex + 1;
       const nextCard = ffCards[nextIndex];
@@ -1278,19 +1912,18 @@ function App() {
 
       /* 3D Flip Card Styles */
       .card-3d-container { perspective: 1000px; width: 100%; cursor: pointer; }
-      .card-3d-inner { 
-        position: relative; width: 100%; min-height: 160px; text-align: center; 
-        transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); 
-        transform-style: preserve-3d; 
-      }
+      .card-3d-inner { position: relative; width: 100%; min-height: 160px; text-align: center; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); transform-style: preserve-3d; }
       .card-3d-inner.flipped { transform: rotateY(180deg); }
-      .card-face { 
-        position: absolute; width: 100%; height: 100%; backface-visibility: hidden; 
-        display: flex; flex-direction: column; justify-content: center; align-items: center; 
-        border-radius: 12px; padding: 25px; box-sizing: border-box; 
-      }
+      .card-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 12px; padding: 25px; box-sizing: border-box; }
       .card-front { }
       .card-back { transform: rotateY(180deg); }
+
+      /* АНІМАЦІЯ ДЛЯ СПОЙЛЕРА (МИГОТІННЯ) */
+      @keyframes ffPulse {
+        0% { opacity: 1; }
+        50% { opacity: 0.5; color: #FF007F; }
+        100% { opacity: 1; }
+      }
     `}</style>
   );
 
@@ -1455,8 +2088,20 @@ function App() {
               <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
             </div>
 
-            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як це правильно перекласти?</p>
-            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '25px', lineHeight: '1.4' }}>"{currentCard.slovak_phrase}"</h3>
+            <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як перекласти виділене слово?</p>
+            
+            {/* 1. ВИДІЛЕННЯ СЛОВА-ПАСТКИ КОЛЬОРОМ ТА ПІДКРЕСЛЕННЯМ */}
+            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '25px', lineHeight: '1.4' }}>
+              {currentCard.trap_word === "Комбо-пастка!" ? (
+                <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#FF007F'}}><br/>(🔥 Комбо-пастка!)</span></span>
+              ) : (
+                currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word})`, 'gi')).map((part, i) => 
+                  part.toLowerCase() === currentCard.trap_word.toLowerCase() 
+                    ? <span key={i} style={{ color: '#FF007F', textDecoration: 'underline', padding: '0 2px' }}>{part}</span> 
+                    : part
+                )
+              )}
+            </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
               {ffCurrentOptions.map((opt, idx) => {
@@ -1497,9 +2142,35 @@ function App() {
                 <p style={{ margin: '0 0 10px 0', fontWeight: 'bold', color: ffSelected === currentCard.option_correct ? (isDarkMode ? '#9AE6B4' : '#2E7D32') : (isDarkMode ? '#FEB2B2' : '#C62828') }}>
                   {ffSelected === currentCard.option_correct ? '✅ Точно!' : '❌ Обережно, пастка!'}
                 </p>
-                <p style={{ margin: 0, fontSize: '14px', color: theme.text, lineHeight: '1.4' }}>
+                <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: theme.text, lineHeight: '1.4' }}>
                   {currentCard.explanation}
                 </p>
+
+                {/* 2. КНОПКА-СПОЙЛЕР (НАТИСНИ І ТРИМАЙ) */}
+                <div 
+                  onPointerDown={() => setFfShowTranslation(true)}
+                  onPointerUp={() => setFfShowTranslation(false)}
+                  onPointerLeave={() => setFfShowTranslation(false)}
+                  onMouseDown={() => setFfShowTranslation(true)}
+                  onMouseUp={() => setFfShowTranslation(false)}
+                  onMouseLeave={() => setFfShowTranslation(false)}
+                  style={{ 
+                    background: isDarkMode ? '#1a202c' : '#ffffff', 
+                    padding: '12px', 
+                    borderRadius: '8px', 
+                    textAlign: 'center', 
+                    cursor: 'pointer', 
+                    userSelect: 'none',
+                    border: `1px dashed ${theme.inputBorder}`,
+                    animation: !ffShowTranslation ? 'ffPulse 1.5s infinite' : 'none'
+                  }}
+                >
+                  {ffShowTranslation 
+                    ? <span style={{ fontWeight: 'bold', color: theme.text }}>{currentCard.full_translation || "Повний переклад у розробці..."}</span> 
+                    : <span style={{ color: theme.textSecondary, fontSize: '13px' }}>🫣 Натисни і тримай для перекладу речення</span>
+                  }
+                </div>
+
                 <button onClick={handleFfNext} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', marginTop: '15px', cursor: 'pointer' }}>Далі →</button>
               </div>
             )}
