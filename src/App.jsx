@@ -99,349 +99,7 @@ function getCardStyle(index, isDark, isBack = false) {
   };
 }
 
-// --- АВТО-КОНВЕРТЕР ФАЛЬШИВИХ ДРУЗІВ У ФЛЕШКАРТКИ ---
-const ffFlashcards = falseFriendsDatabase.map(ff => ({
-  id: ff.id,
-  type: 'flashcard',
-  content: ff.slovak_phrase,
-  correct_answer: ff.full_translation || ff.option_correct,
-  difficulty: 'medium',
-  isFfConverted: true
-}));
-
-// --- ГОЛОСОВИЙ ДВИЖОК (Web Speech API) ---
-function speakSlovak(text) {
-  if (!window.speechSynthesis) {
-    alert("Ваш браузер не підтримує озвучку 😔");
-    return;
-  }
-  window.speechSynthesis.cancel(); // Зупиняємо попереднє озвучення
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'sk-SK'; // Словацька мова
-  utterance.rate = 0.85; // Трохи повільніше для чіткості вимови
-  window.speechSynthesis.speak(utterance);
-}
-
-function App() {
-  // --- БАЗОВІ СТАНИ ---
-  const [userName, setUserName] = useState(null);
-  const [dbUserId, setDbUserId] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
-  
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  
-  const effectiveIsAdmin = isAdmin && !isPreviewMode;
-  
-  // --- НОВІ СТАНИ ДЛЯ ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ТА СНАЙПЕРА ---
-  const [globalView, setGlobalView] = useState(null); // 'spaced' або 'sniper'
-  
-  // Стани для Інтервального повторення
-  const [spacedCards, setSpacedCards] = useState([]);
-  const [spacedIndex, setSpacedIndex] = useState(0);
-  const [isSpacedFlipped, setIsSpacedFlipped] = useState(false);
-
-  // Стани для міні-гри "Діакритичний снайпер"
-  const [sniperCards, setSniperCards] = useState([]);
-  const [sniperIndex, setSniperIndex] = useState(0);
-  const [sniperInput, setSniperInput] = useState('');
-  const [sniperScore, setSniperScore] = useState(0);
-  const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
-  
-  // НОВІ СТАНИ: Статус гри (меню, гра, кінець) та Життя (ХП)
-  const [sniperStatus, setSniperStatus] = useState('menu'); 
-  const [sniperHp, setSniperHp] = useState(5);
-  
-  
-  // Стани для міні-гри "Фальшиві друзі"
-  const [ffCards, setFfCards] = useState([]);
-  const [ffIndex, setFfIndex] = useState(0);
-  const [ffScore, setFfScore] = useState(0);
-  const [ffSelected, setFfSelected] = useState(null);
-  const [ffCurrentOptions, setFfCurrentOptions] = useState([]);
-  const [isFfOver, setIsFfOver] = useState(false);
-  const [ffShowTranslation, setFfShowTranslation] = useState(false); // НОВИЙ СТАН ДЛЯ СПОЙЛЕРА
-
-  // --- ТЕМА ТА ЗВУК ---
-  const [isDarkMode, setIsDarkMode] = useState(false);
-  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-
-  // Об'єкт із кольорами для швидкого перемикання теми
-  const theme = {
-    bg: isDarkMode ? '#1a202c' : '#f0f4f8',
-    cardBg: isDarkMode ? '#2d3748' : 'white',
-    text: isDarkMode ? '#f7fafc' : '#333',
-    textSecondary: isDarkMode ? '#a0aec0' : '#555',
-    inputBg: isDarkMode ? '#4a5568' : 'white',
-    inputBorder: isDarkMode ? '#718096' : '#ccc',
-    adminBg: isDarkMode ? '#4a1c38' : '#ffe6f2',
-    adminBorder: isDarkMode ? '#d53f8c' : '#FF007F'
-  };
-
-  const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
-
-  const [courses, setCourses] = useState([]);
-  const [selectedCourse, setSelectedCourse] = useState(null);
-  
-  const [isEditingCourseTitle, setIsEditingCourseTitle] = useState(false);
-  const [newCourseTitle, setNewCourseTitle] = useState("");
-
-  const [modules, setModules] = useState([]);
-  const [activeModule, setActiveModule] = useState(null);
-  
-  const [tasks, setTasks] = useState([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
-
-  const [newModuleTitle, setNewModuleTitle] = useState('');
-  const [editingModuleId, setEditingModuleId] = useState(null);
-  const [editModuleTitleText, setEditModuleTitleText] = useState('');
-
-  const [newTaskType, setNewTaskType] = useState('text');
-  const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
-  const [newTaskContent, setNewTaskContent] = useState('');
-  const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
-
-  const [userAnswers, setUserAnswers] = useState({});
-  const [completedTasks, setCompletedTasks] = useState([]);
-  const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
-  const [myCards, setMyCards] = useState([]);
-  
-  useEffect(() => {
-    const savedCards = localStorage.getItem('hack_my_cards');
-    if (savedCards) {
-      try { setMyCards(JSON.parse(savedCards)); } catch(e){}
-    }
-  }, []);
-
-  // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
-  const [flippedCards, setFlippedCards] = useState({});
-  
-  const [isTrainingMode, setIsTrainingMode] = useState(false);
-  const [isTestView, setIsTestView] = useState(false); // false = просто гортати, true = тест з варіантами
-  const [trainingIndex, setTrainingIndex] = useState(0);
-  const [isTrainingFlipped, setIsTrainingFlipped] = useState(false);
-  const [quizOptions, setQuizOptions] = useState([]);
-  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState(null);
-  const [quizScore, setQuizScore] = useState(0);
-  const [isQuizFinished, setIsQuizFinished] = useState(false);
-
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-
-  const [editingTaskId, setEditingTaskId] = useState(null);
-  const [editContent, setEditContent] = useState('');
-  const [editAnswer, setEditAnswer] = useState('');
-  const [editDifficulty, setEditDifficulty] = useState('medium');
-
-  const difficultyConfig = {
-    easy: { color: '#00C853', label: '🟢 Легко', points: 10 },
-    medium: { color: '#FFB300', label: '🟡 Середньо', points: 20 },
-    hard: { color: '#F44336', label: '🔴 Складно', points: 30 }
-  };
-
-  useEffect(() => {
-    // Таймер працює ТІЛЬКИ коли статус 'playing'
-    if (globalView !== 'sniper' || sniperStatus !== 'playing') return;
-    
-    const timer = setInterval(() => {
-      setSniperTimeLeft(prev => {
-        if (prev <= 1) {
-          playUiSound('buzz', isSoundEnabled);
-          setSniperHp(hp => {
-            const newHp = hp - 1;
-            if (newHp <= 0) setSniperStatus('over'); // ХП закінчились = кінець
-            else setSniperIndex(idx => idx + 1); // Йдемо далі, якщо ще є ХП
-            return newHp;
-          });
-          return 5; // Відновлюємо час для наступного слова
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
-  }, [globalView, sniperStatus, isSoundEnabled]);
- 
-  
-  useEffect(() => {
-    try {
-      const tg = window.Telegram?.WebApp;
-      if (tg) { 
-        tg.ready(); 
-        tg.expand();
-        // Автоматично підтягуємо тему з Telegram
-        if (tg.colorScheme === 'dark') setIsDarkMode(true);
-      } else {
-        const savedTheme = localStorage.getItem('hack_theme');
-        if (savedTheme === 'dark') setIsDarkMode(true);
-      }
-
-      // Завантажуємо налаштування звуку
-      const savedSound = localStorage.getItem('hack_sound');
-      if (savedSound === 'false') setIsSoundEnabled(false);
-
-      async function registerUser(user) {
-        const savedAdmin = localStorage.getItem('hack_is_admin');
-        if (savedAdmin === 'true') {
-          setIsAdmin(true);
-        }
-
-        const { data } = await supabase
-          .from('users')
-          .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
-          .select()
-          .single();
-          
-        if (data) {
-          setDbUserId(data.id);
-          if (data.role === 'admin' || savedAdmin === 'true') {
-            setIsAdmin(true);
-            localStorage.setItem('hack_is_admin', 'true');
-          }
-        }
-      }
-
-      if (tg?.initDataUnsafe?.user) {
-        setUserName(tg.initDataUnsafe.user.first_name);
-        registerUser(tg.initDataUnsafe.user);
-      } else {
-        const browserUser = localStorage.getItem('hack_browser_user') || 'Web Guest';
-        setUserName(browserUser);
-        
-        supabase.from('users').upsert({ telegram_id: 999999, first_name: browserUser }, { onConflict: 'telegram_id' }).select().single().then(({data}) => {
-          if (data) setDbUserId(data.id);
-        });
-
-        if (localStorage.getItem('hack_is_admin') === 'true') {
-          setIsAdmin(true);
-        }
-      }
-    } catch (e) { console.error(e); }
-
-    fetchCourses();
-  }, []);
-
-  useEffect(() => {
-    if (!dbUserId) return;
-    async function fetchProgress() {
-      const { data } = await supabase
-        .from('progress')
-        .select('task_id')
-        .eq('user_id', dbUserId)
-        .eq('status', 'completed');
-
-      if (data) {
-        setCompletedTasks(data.map(p => p.task_id));
-      }
-    }
-    fetchProgress();
-  }, [dbUserId]);
-
-  useEffect(() => {
-    if (!selectedCourse) return;
-    async function fetchModulesAndProgress() {
-      const { data: mods } = await supabase.from('modules').select('*').eq('course_id', selectedCourse.id).order('id', { ascending: true });
-      if (mods) {
-        setModules(mods);
-
-        const modIds = mods.map(m => m.id);
-        if (modIds.length > 0) {
-          const { data: tks } = await supabase.from('tasks').select('id').in('module_id', modIds);
-          if (tks && tks.length > 0) {
-            const totalTasks = tks.length;
-            const taskIds = tks.map(t => t.id);
-            const completedCount = taskIds.filter(id => completedTasks.includes(id)).length;
-            setCourseProgress({ completed: completedCount, total: totalTasks });
-          } else {
-            setCourseProgress({ completed: 0, total: 0 });
-          }
-        } else {
-          setCourseProgress({ completed: 0, total: 0 });
-        }
-      }
-    }
-    fetchModulesAndProgress();
-  }, [selectedCourse, completedTasks]);
-
-  useEffect(() => {
-    if (!activeModule) return;
-    async function fetchTasks() {
-      setIsLoadingTasks(true);
-      const { data } = await supabase.from('tasks').select('*').eq('module_id', activeModule.id).order('id', { ascending: true });
-      if (data) setTasks(data);
-      setIsLoadingTasks(false);
-    }
-    fetchTasks();
-    setIsTrainingMode(false); // скидаємо режим тренування при зміні модуля
-  }, [activeModule]);
-  
-  // --- ЛОГІКА ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
-  async function startSpacedRepetition() {
-    const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
-    const { data: progressData } = await supabase.from('progress').select('*').eq('user_id', dbUserId);
-    
-    // Об'єднуємо: картки з бази + власні картки учня + фальшиві друзі
-    const combinedAllTasks = [...(allTasks || []), ...myCards, ...ffFlashcards];
-    
-    if (combinedAllTasks.length === 0) {
-      alert("Немає карток для повторення!");
-      return;
-    }
-
-    const now = new Date();
-    // Локальний прогрес для фальшивих друзів та власних карток
-    let localFfProgress = {};
-    try { localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {}; } catch(e){}
-
-    const dueCards = combinedAllTasks.filter(task => {
-      let isCompleted = false;
-      let completedDate = null;
-
-      if (task.isFfConverted || task.isCustom) {
-        const prog = localFfProgress[task.id];
-        if (prog && prog.status === 'completed') {
-          isCompleted = true;
-          completedDate = new Date(prog.updated_at);
-        }
-      } else {
-        const prog = progressData?.find(p => p.task_id === task.id);
-        if (prog && prog.status === 'completed') {
-          isCompleted = true;
-          completedDate = new Date(prog.updated_at || prog.created_at);
-        }
-      }
-      
-      if (!isCompleted) return false;
-      const diffDays = (now - completedDate) / (1000 * 60 * 60 * 24);
-      return diffDays >= 1; // Все, що вивчено день тому і більше
-    });
-
-    // Якщо старих слів для повторення немає, беремо всі (щоб завжди було що тренувати)
-    const targetCards = dueCards.length > 0 ? dueCards : combinedAllTasks;
-    
-    setSpacedCards(targetCards.sort(() => 0.5 - Math.random()));
-    setSpacedIndex(0);
-    setIsSpacedFlipped(false);
-    setGlobalView('spaced');
-    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-  }
-
-  function handleSpacedNext(card) {
-    // Зберігаємо прогрес, щоб інтервал відліковувався заново
-    if (card.isFfConverted || card.isCustom) {
-      let localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {};
-      localFfProgress[card.id] = { status: 'completed', updated_at: new Date().toISOString() };
-      localStorage.setItem('hack_ff_progress', JSON.stringify(localFfProgress));
-    } else {
-      supabase.from('progress').upsert({ user_id: dbUserId, task_id: card.id, status: 'completed', updated_at: new Date().toISOString() }, { onConflict: 'user_id, task_id' }).then();
-    }
-
-    setIsSpacedFlipped(false);
-    if (spacedIndex + 1 < spacedCards.length) setSpacedIndex(prev => prev + 1);
-    else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
-  }
-
-  // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
+// --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
  // --- БАЗОВИЙ СПИСОК ТОП-100 СЛІВ З ДІАКРИТИКОЮ ТА СВОЇ СЛОВА ДЛЯ СНАЙПЕРА ---
   // --- РОЗШИРЕНА БАЗА СЛІВ ДЛЯ СНАЙПЕРА (80+ слів) ---
   const defaultSniperWords = [
@@ -1231,6 +889,348 @@ function App() {
     full_translation: "Важко працював цілий день і купив собі свіжу булочку."
   }
 ];
+
+// --- АВТО-КОНВЕРТЕР ФАЛЬШИВИХ ДРУЗІВ У ФЛЕШКАРТКИ ---
+const ffFlashcards = falseFriendsDatabase.map(ff => ({
+  id: ff.id,
+  type: 'flashcard',
+  content: ff.slovak_phrase,
+  correct_answer: ff.full_translation || ff.option_correct,
+  difficulty: 'medium',
+  isFfConverted: true
+}));
+
+// --- ГОЛОСОВИЙ ДВИЖОК (Web Speech API) ---
+function speakSlovak(text) {
+  if (!window.speechSynthesis) {
+    alert("Ваш браузер не підтримує озвучку 😔");
+    return;
+  }
+  window.speechSynthesis.cancel(); // Зупиняємо попереднє озвучення
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = 'sk-SK'; // Словацька мова
+  utterance.rate = 0.85; // Трохи повільніше для чіткості вимови
+  window.speechSynthesis.speak(utterance);
+}
+
+function App() {
+  // --- БАЗОВІ СТАНИ ---
+  const [userName, setUserName] = useState(null);
+  const [dbUserId, setDbUserId] = useState(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+  const effectiveIsAdmin = isAdmin && !isPreviewMode;
+  
+  // --- НОВІ СТАНИ ДЛЯ ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ТА СНАЙПЕРА ---
+  const [globalView, setGlobalView] = useState(null); // 'spaced' або 'sniper'
+  
+  // Стани для Інтервального повторення
+  const [spacedCards, setSpacedCards] = useState([]);
+  const [spacedIndex, setSpacedIndex] = useState(0);
+  const [isSpacedFlipped, setIsSpacedFlipped] = useState(false);
+
+  // Стани для міні-гри "Діакритичний снайпер"
+  const [sniperCards, setSniperCards] = useState([]);
+  const [sniperIndex, setSniperIndex] = useState(0);
+  const [sniperInput, setSniperInput] = useState('');
+  const [sniperScore, setSniperScore] = useState(0);
+  const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
+  
+  // НОВІ СТАНИ: Статус гри (меню, гра, кінець) та Життя (ХП)
+  const [sniperStatus, setSniperStatus] = useState('menu'); 
+  const [sniperHp, setSniperHp] = useState(5);
+  
+  
+  // Стани для міні-гри "Фальшиві друзі"
+  const [ffCards, setFfCards] = useState([]);
+  const [ffIndex, setFfIndex] = useState(0);
+  const [ffScore, setFfScore] = useState(0);
+  const [ffSelected, setFfSelected] = useState(null);
+  const [ffCurrentOptions, setFfCurrentOptions] = useState([]);
+  const [isFfOver, setIsFfOver] = useState(false);
+  const [ffShowTranslation, setFfShowTranslation] = useState(false); // НОВИЙ СТАН ДЛЯ СПОЙЛЕРА
+
+  // --- ТЕМА ТА ЗВУК ---
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+
+  // Об'єкт із кольорами для швидкого перемикання теми
+  const theme = {
+    bg: isDarkMode ? '#1a202c' : '#f0f4f8',
+    cardBg: isDarkMode ? '#2d3748' : 'white',
+    text: isDarkMode ? '#f7fafc' : '#333',
+    textSecondary: isDarkMode ? '#a0aec0' : '#555',
+    inputBg: isDarkMode ? '#4a5568' : 'white',
+    inputBorder: isDarkMode ? '#718096' : '#ccc',
+    adminBg: isDarkMode ? '#4a1c38' : '#ffe6f2',
+    adminBorder: isDarkMode ? '#d53f8c' : '#FF007F'
+  };
+
+  const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
+
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
+  
+  const [isEditingCourseTitle, setIsEditingCourseTitle] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState("");
+
+  const [modules, setModules] = useState([]);
+  const [activeModule, setActiveModule] = useState(null);
+  
+  const [tasks, setTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+
+  const [newModuleTitle, setNewModuleTitle] = useState('');
+  const [editingModuleId, setEditingModuleId] = useState(null);
+  const [editModuleTitleText, setEditModuleTitleText] = useState('');
+
+  const [newTaskType, setNewTaskType] = useState('text');
+  const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
+  const [newTaskContent, setNewTaskContent] = useState('');
+  const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
+
+  const [userAnswers, setUserAnswers] = useState({});
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
+  const [myCards, setMyCards] = useState([]);
+  
+  useEffect(() => {
+    const savedCards = localStorage.getItem('hack_my_cards');
+    if (savedCards) {
+      try { setMyCards(JSON.parse(savedCards)); } catch(e){}
+    }
+  }, []);
+
+  // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
+  const [flippedCards, setFlippedCards] = useState({});
+  
+  const [isTrainingMode, setIsTrainingMode] = useState(false);
+  const [isTestView, setIsTestView] = useState(false); // false = просто гортати, true = тест з варіантами
+  const [trainingIndex, setTrainingIndex] = useState(0);
+  const [isTrainingFlipped, setIsTrainingFlipped] = useState(false);
+  const [quizOptions, setQuizOptions] = useState([]);
+  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [isQuizFinished, setIsQuizFinished] = useState(false);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editAnswer, setEditAnswer] = useState('');
+  const [editDifficulty, setEditDifficulty] = useState('medium');
+
+  const difficultyConfig = {
+    easy: { color: '#00C853', label: '🟢 Легко', points: 10 },
+    medium: { color: '#FFB300', label: '🟡 Середньо', points: 20 },
+    hard: { color: '#F44336', label: '🔴 Складно', points: 30 }
+  };
+
+  useEffect(() => {
+    // Таймер працює ТІЛЬКИ коли статус 'playing'
+    if (globalView !== 'sniper' || sniperStatus !== 'playing') return;
+    
+    const timer = setInterval(() => {
+      setSniperTimeLeft(prev => {
+        if (prev <= 1) {
+          playUiSound('buzz', isSoundEnabled);
+          setSniperHp(hp => {
+            const newHp = hp - 1;
+            if (newHp <= 0) setSniperStatus('over'); // ХП закінчились = кінець
+            else setSniperIndex(idx => idx + 1); // Йдемо далі, якщо ще є ХП
+            return newHp;
+          });
+          return 5; // Відновлюємо час для наступного слова
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [globalView, sniperStatus, isSoundEnabled]);
+ 
+  
+  useEffect(() => {
+    try {
+      const tg = window.Telegram?.WebApp;
+      if (tg) { 
+        tg.ready(); 
+        tg.expand();
+        // Автоматично підтягуємо тему з Telegram
+        if (tg.colorScheme === 'dark') setIsDarkMode(true);
+      } else {
+        const savedTheme = localStorage.getItem('hack_theme');
+        if (savedTheme === 'dark') setIsDarkMode(true);
+      }
+
+      // Завантажуємо налаштування звуку
+      const savedSound = localStorage.getItem('hack_sound');
+      if (savedSound === 'false') setIsSoundEnabled(false);
+
+      async function registerUser(user) {
+        const savedAdmin = localStorage.getItem('hack_is_admin');
+        if (savedAdmin === 'true') {
+          setIsAdmin(true);
+        }
+
+        const { data } = await supabase
+          .from('users')
+          .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
+          .select()
+          .single();
+          
+        if (data) {
+          setDbUserId(data.id);
+          if (data.role === 'admin' || savedAdmin === 'true') {
+            setIsAdmin(true);
+            localStorage.setItem('hack_is_admin', 'true');
+          }
+        }
+      }
+
+      if (tg?.initDataUnsafe?.user) {
+        setUserName(tg.initDataUnsafe.user.first_name);
+        registerUser(tg.initDataUnsafe.user);
+      } else {
+        const browserUser = localStorage.getItem('hack_browser_user') || 'Web Guest';
+        setUserName(browserUser);
+        
+        supabase.from('users').upsert({ telegram_id: 999999, first_name: browserUser }, { onConflict: 'telegram_id' }).select().single().then(({data}) => {
+          if (data) setDbUserId(data.id);
+        });
+
+        if (localStorage.getItem('hack_is_admin') === 'true') {
+          setIsAdmin(true);
+        }
+      }
+    } catch (e) { console.error(e); }
+
+    fetchCourses();
+  }, []);
+
+  useEffect(() => {
+    if (!dbUserId) return;
+    async function fetchProgress() {
+      const { data } = await supabase
+        .from('progress')
+        .select('task_id')
+        .eq('user_id', dbUserId)
+        .eq('status', 'completed');
+
+      if (data) {
+        setCompletedTasks(data.map(p => p.task_id));
+      }
+    }
+    fetchProgress();
+  }, [dbUserId]);
+
+  useEffect(() => {
+    if (!selectedCourse) return;
+    async function fetchModulesAndProgress() {
+      const { data: mods } = await supabase.from('modules').select('*').eq('course_id', selectedCourse.id).order('id', { ascending: true });
+      if (mods) {
+        setModules(mods);
+
+        const modIds = mods.map(m => m.id);
+        if (modIds.length > 0) {
+          const { data: tks } = await supabase.from('tasks').select('id').in('module_id', modIds);
+          if (tks && tks.length > 0) {
+            const totalTasks = tks.length;
+            const taskIds = tks.map(t => t.id);
+            const completedCount = taskIds.filter(id => completedTasks.includes(id)).length;
+            setCourseProgress({ completed: completedCount, total: totalTasks });
+          } else {
+            setCourseProgress({ completed: 0, total: 0 });
+          }
+        } else {
+          setCourseProgress({ completed: 0, total: 0 });
+        }
+      }
+    }
+    fetchModulesAndProgress();
+  }, [selectedCourse, completedTasks]);
+
+  useEffect(() => {
+    if (!activeModule) return;
+    async function fetchTasks() {
+      setIsLoadingTasks(true);
+      const { data } = await supabase.from('tasks').select('*').eq('module_id', activeModule.id).order('id', { ascending: true });
+      if (data) setTasks(data);
+      setIsLoadingTasks(false);
+    }
+    fetchTasks();
+    setIsTrainingMode(false); // скидаємо режим тренування при зміні модуля
+  }, [activeModule]);
+  
+  // --- ЛОГІКА ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
+  async function startSpacedRepetition() {
+    const { data: allTasks } = await supabase.from('tasks').select('*').eq('type', 'flashcard');
+    const { data: progressData } = await supabase.from('progress').select('*').eq('user_id', dbUserId);
+    
+    // Об'єднуємо: картки з бази + власні картки учня + фальшиві друзі
+    const combinedAllTasks = [...(allTasks || []), ...myCards, ...ffFlashcards];
+    
+    if (combinedAllTasks.length === 0) {
+      alert("Немає карток для повторення!");
+      return;
+    }
+
+    const now = new Date();
+    // Локальний прогрес для фальшивих друзів та власних карток
+    let localFfProgress = {};
+    try { localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {}; } catch(e){}
+
+    const dueCards = combinedAllTasks.filter(task => {
+      let isCompleted = false;
+      let completedDate = null;
+
+      if (task.isFfConverted || task.isCustom) {
+        const prog = localFfProgress[task.id];
+        if (prog && prog.status === 'completed') {
+          isCompleted = true;
+          completedDate = new Date(prog.updated_at);
+        }
+      } else {
+        const prog = progressData?.find(p => p.task_id === task.id);
+        if (prog && prog.status === 'completed') {
+          isCompleted = true;
+          completedDate = new Date(prog.updated_at || prog.created_at);
+        }
+      }
+      
+      if (!isCompleted) return false;
+      const diffDays = (now - completedDate) / (1000 * 60 * 60 * 24);
+      return diffDays >= 1; // Все, що вивчено день тому і більше
+    });
+
+    // Якщо старих слів для повторення немає, беремо всі (щоб завжди було що тренувати)
+    const targetCards = dueCards.length > 0 ? dueCards : combinedAllTasks;
+    
+    setSpacedCards(targetCards.sort(() => 0.5 - Math.random()));
+    setSpacedIndex(0);
+    setIsSpacedFlipped(false);
+    setGlobalView('spaced');
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  }
+
+  function handleSpacedNext(card) {
+    // Зберігаємо прогрес, щоб інтервал відліковувався заново
+    if (card.isFfConverted || card.isCustom) {
+      let localFfProgress = JSON.parse(localStorage.getItem('hack_ff_progress')) || {};
+      localFfProgress[card.id] = { status: 'completed', updated_at: new Date().toISOString() };
+      localStorage.setItem('hack_ff_progress', JSON.stringify(localFfProgress));
+    } else {
+      supabase.from('progress').upsert({ user_id: dbUserId, task_id: card.id, status: 'completed', updated_at: new Date().toISOString() }, { onConflict: 'user_id, task_id' }).then();
+    }
+
+    setIsSpacedFlipped(false);
+    if (spacedIndex + 1 < spacedCards.length) setSpacedIndex(prev => prev + 1);
+    else { alert("🎉 Повторення завершено!"); setGlobalView(null); }
+  }
 
 // --- ЛОГІКА МІНІ-ГРИ "ДІАКРИТИЧНИЙ СНАЙПЕР" ---
   async function startDiacriticalSniperGame() {
