@@ -929,13 +929,6 @@ function speakSlovak(text) {
     }
   });
 }
-  
-  window.speechSynthesis.cancel();
-  const utterance = new SpeechSynthesisUtterance(text);
-  utterance.lang = 'sk-SK';
-  utterance.rate = 0.85;
-  window.speechSynthesis.speak(utterance);
-}
 
 function App() {
   // --- БАЗОВІ СТАНИ ---
