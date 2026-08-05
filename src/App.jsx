@@ -1120,11 +1120,9 @@ function App() {
         const decodedStr = decodeURIComponent(atob(authParam));
         const user = JSON.parse(decodedStr);
         
-        // Зберігаємо сесію локально в браузері (id беремо з Телеграму, а не 999999)
         localStorage.setItem('hack_browser_user', user.first_name);
         localStorage.setItem('hack_browser_id', user.id); 
         
-        // 🔥 МАГІЯ: стираємо токен з адресного рядка, щоб його не скопіювали
         window.history.replaceState({}, document.title, window.location.pathname);
         
         setUserName(user.first_name);
@@ -1136,7 +1134,7 @@ function App() {
         if (savedSound === 'false') setIsSoundEnabled(false);
         
         fetchCourses();
-        return; // Зупиняємо подальшу ініціалізацію, бо ми вже успішно зайшли
+        return; 
       } catch (e) { console.error("Помилка Magic Link", e); }
     }
 
@@ -1156,11 +1154,6 @@ function App() {
       if (savedSound === 'false') setIsSoundEnabled(false);
 
       if (tg?.initDataUnsafe?.user) {
-        setUserName(tg.initDataUnsafe.user.first_name);
-        registerUser(tg.initDataUnsafe.user);
-      } else {
-        // Відновлена 100% оригінальна логіка для веб-версії
-        if (tg?.initDataUnsafe?.user) {
         setUserName(tg.initDataUnsafe.user.first_name);
         registerUser(tg.initDataUnsafe.user);
       } else {
