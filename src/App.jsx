@@ -2713,9 +2713,8 @@ function App() {
         <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
           Hackademia — це закрита платформа. Увійти можна виключно через нашого офіційного Telegram-бота.
         </p>
-        {/* Заміни посилання на юзернейм твого бота */}
-        <a href="https://t.me/ТВІЙ_БОТ" target="_blank" rel="noreferrer" style={{ background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}>
-          Перейти в Telegram 🚀
+        <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(49,130,206,0.3)' }}>
+          Перейти в Telegram-бота 🚀
         </a>
       </div>
     );
