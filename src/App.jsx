@@ -2727,7 +2727,7 @@ function App() {
         <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
           Ваш запит на доступ надіслано головному адміністратору.
           <br /><br />
-          Щойно Денис підтвердить вашу заявку, оновіть цю сторінку!
+          Щойно адміністратор підтвердить вашу заявку, оновіть цю сторінку!
         </p>
         <button onClick={() => window.location.reload()} style={{ background: '#00C853', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
           🔄 Оновити сторінку
