@@ -948,6 +948,7 @@ function App() {
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [accessStatus, setAccessStatus] = useState('loading'); // 'loading', 'pending', 'approved', 'rejected', 'no_auth' 
   
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -1088,9 +1089,7 @@ function App() {
     // Функція реєстрації/перевірки юзера в базі
     async function registerUser(user) {
       const savedAdmin = localStorage.getItem('hack_is_admin');
-      if (savedAdmin === 'true') {
-        setIsAdmin(true);
-      }
+      if (savedAdmin === 'true') setIsAdmin(true);
 
       const { data } = await supabase
         .from('users')
@@ -1100,9 +1099,14 @@ function App() {
         
       if (data) {
         setDbUserId(data.id);
+        
+        // Читаємо статус із бази. Якщо адмін — автоматично пускаємо.
         if (data.role === 'admin' || savedAdmin === 'true') {
           setIsAdmin(true);
+          setAccessStatus('approved');
           localStorage.setItem('hack_is_admin', 'true');
+        } else {
+          setAccessStatus(data.access_status || 'pending');
         }
       }
     }
@@ -1156,18 +1160,20 @@ function App() {
         registerUser(tg.initDataUnsafe.user);
       } else {
         // Відновлена 100% оригінальна логіка для веб-версії
-        const browserUser = localStorage.getItem('hack_browser_user') || 'Web Guest';
-        // Якщо зайшли через Magic Link раніше - беремо справжній ID, інакше 999999
-        const browserId = localStorage.getItem('hack_browser_id') || 999999; 
+        if (tg?.initDataUnsafe?.user) {
+        setUserName(tg.initDataUnsafe.user.first_name);
+        registerUser(tg.initDataUnsafe.user);
+      } else {
+        const browserId = localStorage.getItem('hack_browser_id');
+        const browserUser = localStorage.getItem('hack_browser_user');
         
-        setUserName(browserUser);
-        
-        supabase.from('users').upsert({ telegram_id: browserId, first_name: browserUser }, { onConflict: 'telegram_id' }).select().single().then(({data}) => {
-          if (data) setDbUserId(data.id);
-        });
-
-        if (localStorage.getItem('hack_is_admin') === 'true') {
-          setIsAdmin(true);
+        if (browserId && browserUser) {
+          // Якщо юзер колись зайшов через Magic Link, логінимо його
+          setUserName(browserUser);
+          registerUser({ id: browserId, first_name: browserUser });
+        } else {
+          // Якщо це рандомна людина з прямим посиланням — блокуємо
+          setAccessStatus('no_auth');
         }
       }
     } catch (e) { console.error(e); }
@@ -2702,6 +2708,53 @@ function App() {
     );
   }
 
+  // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ---
+  if (accessStatus === 'loading') {
+    return <div style={{ textAlign: 'center', padding: '50px', color: theme.text, background: theme.bg, minHeight: '100vh' }}>Завантаження...</div>;
+  }
+
+  if (accessStatus === 'no_auth') {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', background: theme.bg, color: theme.text, minHeight: '100vh' }}>
+        <h2 style={{ fontSize: '30px', marginBottom: '20px' }}>🛑 Доступ закрито</h2>
+        <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
+          Hackademia — це закрита платформа. Увійти можна виключно через нашого офіційного Telegram-бота.
+        </p>
+        {/* Заміни посилання на юзернейм твого бота */}
+        <a href="https://t.me/ТВІЙ_БОТ" target="_blank" rel="noreferrer" style={{ background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}>
+          Перейти в Telegram 🚀
+        </a>
+      </div>
+    );
+  }
+
+  if (accessStatus === 'pending') {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', background: theme.bg, color: theme.text, minHeight: '100vh' }}>
+        <h2 style={{ fontSize: '30px', marginBottom: '20px' }}>⏳ Заявка на розгляді</h2>
+        <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
+          Ваш запит на доступ надіслано головному адміністратору.
+          <br /><br />
+          Щойно Денис підтвердить вашу заявку, оновіть цю сторінку!
+        </p>
+        <button onClick={() => window.location.reload()} style={{ background: '#00C853', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
+          🔄 Оновити сторінку
+        </button>
+      </div>
+    );
+  }
+
+  if (accessStatus === 'rejected') {
+    return (
+      <div style={{ textAlign: 'center', padding: '50px', background: theme.bg, color: theme.text, minHeight: '100vh' }}>
+        <h2 style={{ fontSize: '30px', marginBottom: '20px', color: '#F44336' }}>❌ У доступі відмовлено</h2>
+        <p style={{ fontSize: '16px', color: theme.textSecondary }}>Адміністратор відхилив вашу заявку.</p>
+      </div>
+    );
+  }
+
+  // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
+  
   // ЕКРАН 1: Головна сторінка вибору курсів
   return (
     <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh' }}>
