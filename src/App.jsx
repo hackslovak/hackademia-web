@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import HelpModal from './HelpModal';
 import { supabase } from './supabase';
 import { Reorder } from 'framer-motion';
+import AdminPanel from './AdminPanel';
 
 // --- ЗВУКОВИЙ ДВИЖОК ---
 let audioCtx = null;
@@ -2045,6 +2046,21 @@ function App() {
     `}</style>
   );
 
+  // --- ЕКРАН АДМІН-ПАНЕЛІ (НОВІ ЗАЯВКИ) ---
+  if (globalView === 'admin_panel') {
+    return (
+      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
+        <GlobalStyles />
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+            ← Назад на головну
+          </button>
+        </div>
+        <AdminPanel />
+      </div>
+    );
+  }
+  
   // --- ЕКРАН ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
   if (globalView === 'spaced') {
     const currentCard = spacedCards[spacedIndex];
@@ -2855,6 +2871,16 @@ function App() {
         >
           <span>🎭 Міні-гра: Фальшиві слова</span>
         </button>
+
+        {/* НОВА КНОПКА АДМІН-ПАНЕЛІ */}
+        {effectiveIsAdmin && (
+          <button 
+            onClick={() => setGlobalView('admin_panel')} 
+            style={{ background: 'linear-gradient(135deg, #FF007F 0%, #ff4d94 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(255,0,127,0.3)' }}
+          >
+            <span>👨‍💻 Адмін-панель (Нові заявки)</span>
+          </button>
+        )}
       </div>
 
       {isAdmin && (
