@@ -2781,9 +2781,12 @@ function App() {
 
   // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-  // ЕКРАН 1: Головна сторінка вибору курсів
+// ЕКРАН 1: Головна сторінка вибору курсів
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
+      <GlobalStyles />
+      
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div></div>
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
@@ -2883,7 +2886,7 @@ function App() {
         )}
       </div>
 	  
-	  {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
+      {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
       <div style={{ maxWidth: '400px', margin: '25px auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <button 
           onClick={startSpacedRepetition}
@@ -2898,14 +2901,12 @@ function App() {
         >
           <span>🎯 Міні-гра: Діакритичний снайпер</span>
         </button>
-		<button 
+        <button 
           onClick={startFalseFriends} 
           style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(237,137,54,0.3)' }}
         >
           <span>🎭 Міні-гра: Фальшиві слова</span>
         </button>
-
-        )}
       </div>
 
       {isAdmin && (
