@@ -1119,12 +1119,18 @@ function App() {
       if (data) {
         setDbUserId(data.id);
         
-        // Читаємо статус із бази. Якщо адмін — автоматично пускаємо.
-        if (data.role === 'admin' || savedAdmin === 'true') {
+        // Читаємо статус із бази.
+        if (data.role === 'admin') {
           setIsAdmin(true);
           setAccessStatus('approved');
           localStorage.setItem('hack_is_admin', 'true');
         } else {
+          // Якщо база каже, що юзер НЕ адмін - примусово видаляємо адмінський кеш!
+          if (savedAdmin === 'true') {
+            localStorage.removeItem('hack_is_admin');
+            setIsAdmin(false);
+          }
+          // Встановлюємо реальний статус юзера (якщо rejected, то сайт його 100% заблокує)
           setAccessStatus(data.access_status || 'pending');
         }
       }
