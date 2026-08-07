@@ -1035,6 +1035,24 @@ function App() {
       try { setMyCards(JSON.parse(savedCards)); } catch(e){}
     }
   }, []);
+  
+  const [pendingCount, setPendingCount] = useState(0);
+
+  // Додаємо цей useEffect для дзвіночка, щоб він сам перевіряв заявки
+  useEffect(() => {
+    if (effectiveIsAdmin) {
+      const fetchPending = async () => {
+        const { count } = await supabase
+          .from('users')
+          .select('*', { count: 'exact', head: true })
+          .eq('access_status', 'pending');
+        setPendingCount(count || 0);
+      };
+      fetchPending();
+      const interval = setInterval(fetchPending, 15000); // Оновлює цифру кожні 15 сек
+      return () => clearInterval(interval);
+    }
+  }, [effectiveIsAdmin]);
 
   // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
   const [flippedCards, setFlippedCards] = useState({});
@@ -2765,11 +2783,26 @@ function App() {
   
   // ЕКРАН 1: Головна сторінка вибору курсів
   return (
-    <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh' }}>
-      <GlobalStyles />
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
         <div></div>
-        <div style={{ display: 'flex', gap: '15px' }}>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+          
+          {/* НОВИЙ ДЗВІНОЧОК АДМІНА */}
+          {effectiveIsAdmin && (
+            <div 
+              onClick={() => setGlobalView('admin_panel')} 
+              style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '50%', background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}
+              title="Адмін-панель (Заявки)"
+            >
+              <span style={{ fontSize: '20px', animation: pendingCount > 0 ? 'ffPulse 1.5s infinite' : 'none' }}>🔔</span>
+              {pendingCount > 0 && (
+                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#FF007F', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '12px', border: '2px solid ' + theme.bg }}>
+                  {pendingCount}
+                </span>
+              )}
+            </div>
+          )}
+
           <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
             {isSoundEnabled ? '🔊' : '🔇'}
           </button>
@@ -2872,14 +2905,6 @@ function App() {
           <span>🎭 Міні-гра: Фальшиві слова</span>
         </button>
 
-        {/* НОВА КНОПКА АДМІН-ПАНЕЛІ */}
-        {effectiveIsAdmin && (
-          <button 
-            onClick={() => setGlobalView('admin_panel')} 
-            style={{ background: 'linear-gradient(135deg, #FF007F 0%, #ff4d94 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(255,0,127,0.3)' }}
-          >
-            <span>👨‍💻 Адмін-панель (Нові заявки)</span>
-          </button>
         )}
       </div>
 
