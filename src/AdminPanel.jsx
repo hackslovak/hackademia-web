@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 // УВАГА: Перевір, чи правильний тут шлях до твого файлу налаштувань Supabase
-import { supabase } from './supabaseClient'; 
+import { supabase } from './supabase'; 
 
 const AdminPanel = () => {
   const [pendingUsers, setPendingUsers] = useState([]);
