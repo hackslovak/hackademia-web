@@ -953,6 +953,11 @@ function App() {
   const [telegramId, setTelegramId] = useState(null);
   const [allowedCourses, setAllowedCourses] = useState([]);
   
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
+  const [isPreviewMode, setIsPreviewMode] = useState(false);
+  
+  const effectiveIsAdmin = isAdmin && !isPreviewMode;
+  
   // --- ПЕРЕВІРКА ДОСТУПУ ДО ОКРЕМИХ КУРСІВ ---
   useEffect(() => {
     if (!telegramId || effectiveIsAdmin) return; // Адміни бачать усе
@@ -972,11 +977,6 @@ function App() {
     const interval = setInterval(fetchAllowedCourses, 10000); // Оновлюємо кожні 10 сек (на випадок, якщо адмін дав доступ)
     return () => clearInterval(interval);
   }, [telegramId, effectiveIsAdmin]);
-  
-  const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isPreviewMode, setIsPreviewMode] = useState(false);
-  
-  const effectiveIsAdmin = isAdmin && !isPreviewMode;
   
   // --- НОВІ СТАНИ ДЛЯ ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ТА СНАЙПЕРА ---
   const [globalView, setGlobalView] = useState(null); // 'spaced' або 'sniper'
