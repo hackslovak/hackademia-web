@@ -953,6 +953,26 @@ function App() {
   const [telegramId, setTelegramId] = useState(null);
   const [allowedCourses, setAllowedCourses] = useState([]);
   
+  // --- ПЕРЕВІРКА ДОСТУПУ ДО ОКРЕМИХ КУРСІВ ---
+  useEffect(() => {
+    if (!telegramId || effectiveIsAdmin) return; // Адміни бачать усе
+    
+    async function fetchAllowedCourses() {
+      const { data } = await supabase
+        .from('user_courses')
+        .select('course_id')
+        .eq('user_telegram_id', telegramId);
+        
+      if (data) {
+        setAllowedCourses(data.map(d => d.course_id));
+      }
+    }
+    
+    fetchAllowedCourses();
+    const interval = setInterval(fetchAllowedCourses, 10000); // Оновлюємо кожні 10 сек (на випадок, якщо адмін дав доступ)
+    return () => clearInterval(interval);
+  }, [telegramId, effectiveIsAdmin]);
+  
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
   
@@ -1165,26 +1185,6 @@ function App() {
         }
       }
     }
-	
-	// --- ПЕРЕВІРКА ДОСТУПУ ДО ОКРЕМИХ КУРСІВ ---
-  useEffect(() => {
-    if (!telegramId || effectiveIsAdmin) return; // Адміни бачать усе
-    
-    async function fetchAllowedCourses() {
-      const { data } = await supabase
-        .from('user_courses')
-        .select('course_id')
-        .eq('user_telegram_id', telegramId);
-        
-      if (data) {
-        setAllowedCourses(data.map(d => d.course_id));
-      }
-    }
-    
-    fetchAllowedCourses();
-    const interval = setInterval(fetchAllowedCourses, 10000); // Оновлюємо кожні 10 сек (на випадок, якщо адмін дав доступ)
-    return () => clearInterval(interval);
-  }, [telegramId, effectiveIsAdmin]);
 
     // --- 1. ПЕРЕВІРКА MAGIC LINK (ПЕРЕХІД ІЗ TELEGRAM В БРАУЗЕР) ---
     const urlParams = new URLSearchParams(window.location.search);
