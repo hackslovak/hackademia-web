@@ -1125,12 +1125,12 @@ function App() {
           setAccessStatus('approved');
           localStorage.setItem('hack_is_admin', 'true');
         } else {
-          // Якщо база каже, що юзер НЕ адмін - примусово видаляємо адмінський кеш!
+          // ЗАЛІЗОБЕТОННИЙ БЛОК: Видаляємо кеш, якщо юзер НЕ адмін
           if (savedAdmin === 'true') {
             localStorage.removeItem('hack_is_admin');
             setIsAdmin(false);
           }
-          // Встановлюємо реальний статус юзера (якщо rejected, то сайт його 100% заблокує)
+          // Призначаємо реальний статус (якщо rejected - сайт видасть екран блокування)
           setAccessStatus(data.access_status || 'pending');
         }
       }
