@@ -185,12 +185,10 @@ const AdminPanel = () => {
                 </select>
               </div>
               
-              {/* Кнопка виклику МОДАЛКИ (Спливаючого вікна) */}
               <div style={{ display: 'flex', gap: '10px' }}>
                 <button onClick={() => setAccessModalUser(user)} style={{ background: '#3182ce', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
                   ⚙️ Доступи до курсів
                 </button>
-
                 <button onClick={() => handleDecision(user.telegram_id, 'rejected', true)} disabled={actionLoading} style={{ background: 'transparent', color: '#F44336', border: '1px solid #F44336', padding: '8px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '13px' }}>
                   ❌ Забрати платформу
                 </button>
@@ -200,17 +198,18 @@ const AdminPanel = () => {
         </div>
       )}
 
-      {/* --- МОДАЛЬНЕ ВІКНО ДОСТУПІВ --- */}
+      {/* --- КОМПАКТНЕ МОДАЛЬНЕ ВІКНО ДОСТУПІВ --- */}
       {accessModalUser && (
         <div style={{
           position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
           backgroundColor: 'rgba(0,0,0,0.6)', zIndex: 9999,
-          display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)'
+          display: 'flex', alignItems: 'center', justifyContent: 'center', backdropFilter: 'blur(3px)',
+          padding: '20px', boxSizing: 'border-box'
         }}>
           <div style={{
             background: 'white', padding: '25px', borderRadius: '16px',
-            width: '90%', maxWidth: '400px', maxHeight: '80vh', overflowY: 'auto',
-            boxShadow: '0 10px 30px rgba(0,0,0,0.2)', position: 'relative'
+            width: '100%', maxWidth: '400px', maxHeight: '80vh', overflowY: 'auto',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.2)', position: 'relative', boxSizing: 'border-box'
           }}>
             <h3 style={{ marginTop: 0, marginBottom: '20px', borderBottom: '2px solid #f0f0f0', paddingBottom: '10px' }}>
               Доступи учня:<br/>
@@ -226,18 +225,18 @@ const AdminPanel = () => {
                   const isChecked = studentCourses.includes(course.id);
                   return (
                     <label key={course.id} style={{
-                      display: 'flex', alignItems: 'center', gap: '10px', fontSize: '15px',
+                      display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '15px',
                       cursor: 'pointer', background: isChecked ? '#E8F5E9' : '#f8fafc',
                       padding: '12px', borderRadius: '8px', border: `1px solid ${isChecked ? '#81C784' : '#e2e8f0'}`,
-                      transition: 'background 0.2s'
+                      transition: 'background 0.2s', wordBreak: 'break-word'
                     }}>
                       <input 
                         type="checkbox" 
                         checked={isChecked} 
                         onChange={() => handleToggleCourseAccess(accessModalUser.telegram_id, course.id)}
-                        style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#00C853' }}
+                        style={{ width: '20px', height: '20px', cursor: 'pointer', accentColor: '#00C853', flexShrink: 0, marginTop: '2px' }}
                       />
-                      <span style={{ fontWeight: isChecked ? 'bold' : 'normal', color: isChecked ? '#2E7D32' : '#333' }}>
+                      <span style={{ fontWeight: isChecked ? 'bold' : 'normal', color: isChecked ? '#2E7D32' : '#333', lineHeight: '1.4' }}>
                         {course.title}
                       </span>
                     </label>
