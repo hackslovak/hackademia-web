@@ -1037,6 +1037,7 @@ function App() {
   }, []);
   
   const [pendingCount, setPendingCount] = useState(0);
+  const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
 
   // Додаємо цей useEffect для дзвіночка, щоб він сам перевіряв заявки
   useEffect(() => {
@@ -1053,6 +1054,32 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [effectiveIsAdmin]);
+  
+ // --- ЛОГІКА ПЛАВАЮЧОГО НАГАДУВАННЯ ПРО КУРСИ ---
+  useEffect(() => {
+    if (effectiveIsAdmin) {
+      const fetchNeedingCourses = async () => {
+        const { data } = await supabase
+          .from('users')
+          .select('telegram_id, first_name')
+          .eq('needs_course_assignment', true)
+          .eq('access_status', 'approved');
+        if (data) setStudentsNeedingCourses(data);
+      };
+      fetchNeedingCourses();
+      const interval = setInterval(fetchNeedingCourses, 15000); // Перевіряємо кожні 15 сек
+      return () => clearInterval(interval);
+    }
+  }, [effectiveIsAdmin]);
+
+  const dismissCourseAlert = async () => {
+    const ids = studentsNeedingCourses.map(s => s.telegram_id);
+    await supabase
+      .from('users')
+      .update({ needs_course_assignment: false })
+      .in('telegram_id', ids);
+    setStudentsNeedingCourses([]);
+  };
 
   // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
   const [flippedCards, setFlippedCards] = useState({});
@@ -2946,6 +2973,36 @@ function App() {
       )}
     
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
+      {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
+        <div style={{
+          position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999,
+          background: theme.cardBg, padding: '20px', borderRadius: '16px',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #FF007F`,
+          maxWidth: '320px', textAlign: 'left', animation: 'ffPulse 2s infinite'
+        }}>
+          <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '18px' }}>🚨 Увага!</h4>
+          <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: theme.textSecondary, lineHeight: '1.4' }}>
+            Нещодавно ви додали учн{studentsNeedingCourses.length > 1 ? 'ів' : 'я'}: 
+            <b style={{ color: theme.text }}> {studentsNeedingCourses.map(s => s.first_name || 'Без імені').join(', ')}</b>. <br/><br/>
+            Який курс та групу бажаєте їм призначити?
+          </p>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              onClick={() => setGlobalView('admin_panel')} 
+              style={{ flex: 1, background: '#FF007F', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              ⚙️ Налаштувати
+            </button>
+            <button 
+              onClick={dismissCourseAlert}
+              style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+            >
+              Пізніше
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
