@@ -42,7 +42,7 @@ const AdminPanel = () => {
 
       if (dbError) throw new Error("Помилка оновлення бази даних");
 
-      // Бот надсилає сповіщення учню
+      // Бот надсилає сповіщення учню (через Edge Function)
       await supabase.functions.invoke('telegram-notify', {
         body: { telegram_id: telegramId, status: status }
       });
@@ -69,10 +69,16 @@ const AdminPanel = () => {
   return (
     <div style={{ padding: '20px', maxWidth: '600px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       
-      {/* СЕКЦІЯ 1: НОВІ ЗАЯВКИ */}
-      <h2 style={{ borderBottom: '2px solid #eee', paddingBottom: '10px', marginTop: '0' }}>
-        🔔 Нові заявки ({pendingUsers.length})
-      </h2>
+      {/* СЕКЦІЯ 1: НОВІ ЗАЯВКИ (Із кнопкою Оновити) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '2px solid #eee', paddingBottom: '10px', marginTop: '0', marginBottom: '15px' }}>
+        <h2 style={{ margin: 0 }}>🔔 Нові заявки ({pendingUsers.length})</h2>
+        <button 
+          onClick={fetchUsers} 
+          style={{ background: '#3182ce', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', cursor: 'pointer', fontWeight: 'bold', fontSize: '12px' }}
+        >
+          🔄 Оновити
+        </button>
+      </div>
       
       {loading ? (
         <p style={{ textAlign: 'center', color: '#666' }}>Завантаження...</p>
@@ -81,7 +87,7 @@ const AdminPanel = () => {
           <p style={{ color: '#888', margin: 0 }}>Нових заявок немає. 🎉</p>
         </div>
       ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginTop: '20px', marginBottom: '40px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', marginBottom: '40px' }}>
           {pendingUsers.map((user) => (
             <div key={user.telegram_id} style={{
               border: '1px solid #e0e0e0', padding: '15px', borderRadius: '12px', 
