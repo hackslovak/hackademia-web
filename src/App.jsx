@@ -950,6 +950,8 @@ function App() {
   const [dbUserId, setDbUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [accessStatus, setAccessStatus] = useState('loading'); // 'loading', 'pending', 'approved', 'rejected', 'no_auth' 
+  const [telegramId, setTelegramId] = useState(null);
+  const [allowedCourses, setAllowedCourses] = useState([]);
   
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
@@ -1134,7 +1136,8 @@ function App() {
   useEffect(() => {
     // Функція реєстрації/перевірки юзера в базі
     async function registerUser(user) {
-      const savedAdmin = localStorage.getItem('hack_is_admin');
+      setTelegramId(user.id);
+	  const savedAdmin = localStorage.getItem('hack_is_admin');
       if (savedAdmin === 'true') setIsAdmin(true);
 
       const { data } = await supabase
@@ -1162,6 +1165,26 @@ function App() {
         }
       }
     }
+	
+	// --- ПЕРЕВІРКА ДОСТУПУ ДО ОКРЕМИХ КУРСІВ ---
+  useEffect(() => {
+    if (!telegramId || effectiveIsAdmin) return; // Адміни бачать усе
+    
+    async function fetchAllowedCourses() {
+      const { data } = await supabase
+        .from('user_courses')
+        .select('course_id')
+        .eq('user_telegram_id', telegramId);
+        
+      if (data) {
+        setAllowedCourses(data.map(d => d.course_id));
+      }
+    }
+    
+    fetchAllowedCourses();
+    const interval = setInterval(fetchAllowedCourses, 10000); // Оновлюємо кожні 10 сек (на випадок, якщо адмін дав доступ)
+    return () => clearInterval(interval);
+  }, [telegramId, effectiveIsAdmin]);
 
     // --- 1. ПЕРЕВІРКА MAGIC LINK (ПЕРЕХІД ІЗ TELEGRAM В БРАУЗЕР) ---
     const urlParams = new URLSearchParams(window.location.search);
@@ -2899,7 +2922,7 @@ function App() {
                 style={{ background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', position: 'relative', border: `1px solid ${theme.inputBorder}` }}
               >
                 <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '18px', color: theme.text, flex: 1, textAlign: 'left' }}>
-                  🚀 {course.title}
+                  🔓 {course.title}
                 </span>
                 
                 {courses.length > 1 && (
@@ -2909,15 +2932,35 @@ function App() {
             ))}
           </Reorder.Group>
         ) : (
-          courses.map(course => (
-            <div key={course.id} style={{ background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', border: `1px solid ${theme.inputBorder}` }}>
-              <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '18px', color: theme.text, flex: 1, textAlign: 'left' }}>
-                🚀 {course.title}
-              </span>
-            </div>
-          ))
+          courses.map(course => {
+            const hasAccess = allowedCourses.includes(course.id);
+            return (
+              <div key={course.id} style={{ 
+                background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', 
+                boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', 
+                alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
+                opacity: hasAccess ? 1 : 0.5, // Закриті курси напівпрозорі
+                transition: 'opacity 0.3s'
+              }}>
+                <span 
+                  onClick={() => {
+                    if (hasAccess) {
+                      setSelectedCourse(course);
+                    } else {
+                      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                      alert("🔒 Цей курс наразі закритий для вас.\nЯкщо ви його вже оплатили, будь ласка, зачекайте на схвалення або напишіть адміністратору.");
+                    }
+                  }} 
+                  style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '18px', color: theme.text, flex: 1, textAlign: 'left' }}
+                >
+                  {hasAccess ? '🔓' : '🔒'} {course.title}
+                </span>
+              </div>
+            );
+          })
         )}
       </div>
+	  
 	  
       {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
       <div style={{ maxWidth: '400px', margin: '25px auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
