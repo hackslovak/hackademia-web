@@ -268,5 +268,5 @@ const AdminPanel = () => {
   );
 };
 
-App.jsx // Помилки уникнемо, оскільки це AdminPanel.jsx
+// Помилки уникнемо, оскільки це AdminPanel.jsx
 export default AdminPanel;
