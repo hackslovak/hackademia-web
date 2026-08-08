@@ -2791,6 +2791,24 @@ function App() {
     );
   }
 
+  // Функція для повторного запиту прямо з Web App
+  const handleReapplyWeb = async () => {
+    if (!telegramId) return;
+    try {
+      const { error } = await supabase
+        .from('users')
+        .update({ access_status: 'pending' })
+        .eq('telegram_id', telegramId);
+        
+      if (error) throw error;
+      
+      setAccessStatus('pending'); // Миттєво міняємо екран на "Заявка на розгляді"
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) {
+      alert("❌ Сталася помилка: " + err.message);
+    }
+  };
+  
   // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ---
   if (accessStatus === 'loading') {
     return <div style={{ textAlign: 'center', padding: '50px', color: theme.text, background: theme.bg, minHeight: '100vh' }}>Завантаження...</div>;
@@ -2830,7 +2848,16 @@ function App() {
     return (
       <div style={{ textAlign: 'center', padding: '50px', background: theme.bg, color: theme.text, minHeight: '100vh' }}>
         <h2 style={{ fontSize: '30px', marginBottom: '20px', color: '#F44336' }}>❌ У доступі відмовлено</h2>
-        <p style={{ fontSize: '16px', color: theme.textSecondary }}>Адміністратор відхилив вашу заявку.</p>
+        <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px', lineHeight: '1.5' }}>
+          Ваш доступ до платформи скасовано. <br/><br/>
+          Щоб відновити доступ, придбайте новий курс або лекцію. Після оплати натисніть кнопку нижче, щоб надіслати запит адміністратору.
+        </p>
+        <button 
+          onClick={handleReapplyWeb} 
+          style={{ background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', boxShadow: '0 4px 10px rgba(49,130,206,0.3)' }}
+        >
+          🔄 Надіслати запит повторно
+        </button>
       </div>
     );
   }
