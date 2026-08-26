@@ -948,6 +948,7 @@ function speakSlovak(text) {
 }
 
 function Platform() {
+  const navigate = useNavigate(); // <--- ДОДАЙ ОСЬ ЦЕЙ РЯДОК
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
@@ -1181,99 +1182,88 @@ function Platform() {
  
   
   useEffect(() => {
-    // Функція реєстрації/перевірки юзера в базі
-    async function registerUser(user) {
-      setTelegramId(user.id);
-	  const savedAdmin = localStorage.getItem('hack_is_admin');
-      if (savedAdmin === 'true') setIsAdmin(true);
+    async function initUser() {
+      // 1. Перевіряємо, чи юзер залогинений через Supabase Auth (Email у браузері)
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Якщо є сесія поштою, беремо її
+        const emailUser = session.user;
+        setUserName(emailUser.email.split('@')[0]); // Беремо частину пошти як ім'я
+        
+        // Шукаємо юзера в нашій таблиці users за email або створюємо, якщо нема
+        let { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', emailUser.email)
+          .single();
+          
+        if (!userData) {
+          // Якщо в таблиці його ще немає, створюємо запис зі статусом approved (або pending)
+          const { data: newUserData } = await supabase
+            .from('users')
+            .insert({ email: emailUser.email, first_name: emailUser.email.split('@')[0], access_status: 'approved' })
+            .select()
+            .single();
+          userData = newUserData;
+        }
+        
+        if (userData) {
+          setDbUserId(userData.id);
+          setAccessStatus(userData.access_status || 'approved');
+          if (userData.role === 'admin') setIsAdmin(true);
+        }
+        fetchCourses();
+        return;
+      }
 
-      const { data } = await supabase
-        .from('users')
-        .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
-        .select()
-        .single();
-        
-      if (data) {
-        setDbUserId(data.id);
-        
-        // Читаємо статус із бази.
-        if (data.role === 'admin') {
-          setIsAdmin(true);
-          setAccessStatus('approved');
-          localStorage.setItem('hack_is_admin', 'true');
-        } else {
-          // ЗАЛІЗОБЕТОННИЙ БЛОК: Видаляємо кеш, якщо юзер НЕ адмін
-          if (savedAdmin === 'true') {
-            localStorage.removeItem('hack_is_admin');
-            setIsAdmin(false);
+      // 2. Якщо сесії поштою немає, перевіряємо Telegram (стара логіка)
+      async function registerTelegramUser(user) {
+        setTelegramId(user.id);
+        const savedAdmin = localStorage.getItem('hack_is_admin');
+        if (savedAdmin === 'true') setIsAdmin(true);
+
+        const { data } = await supabase
+          .from('users')
+          .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
+          .select()
+          .single();
+          
+        if (data) {
+          setDbUserId(data.id);
+          if (data.role === 'admin') {
+            setIsAdmin(true);
+            setAccessStatus('approved');
+            localStorage.setItem('hack_is_admin', 'true');
+          } else {
+            if (savedAdmin === 'true') {
+              localStorage.removeItem('hack_is_admin');
+              setIsAdmin(false);
+            }
+            setAccessStatus(data.access_status || 'pending');
           }
-          // Призначаємо реальний статус (якщо rejected - сайт видасть екран блокування)
-          setAccessStatus(data.access_status || 'pending');
         }
       }
-    }
 
-    // --- 1. ПЕРЕВІРКА MAGIC LINK (ПЕРЕХІД ІЗ TELEGRAM В БРАУЗЕР) ---
-    const urlParams = new URLSearchParams(window.location.search);
-    const authParam = urlParams.get('auth');
-    
-    if (authParam) {
-      try {
-        const decodedStr = decodeURIComponent(atob(authParam));
-        const user = JSON.parse(decodedStr);
-        
-        localStorage.setItem('hack_browser_user', user.first_name);
-        localStorage.setItem('hack_browser_id', user.id); 
-        
-        window.history.replaceState({}, document.title, window.location.pathname);
-        
-        setUserName(user.first_name);
-        registerUser(user);
-        
-        const savedTheme = localStorage.getItem('hack_theme');
-        if (savedTheme === 'dark') setIsDarkMode(true);
-        const savedSound = localStorage.getItem('hack_sound');
-        if (savedSound === 'false') setIsSoundEnabled(false);
-        
-        fetchCourses();
-        return; 
-      } catch (e) { console.error("Помилка Magic Link", e); }
-    }
-
-    // --- 2. ЗВИЧАЙНА ІНІЦІАЛІЗАЦІЯ (TELEGRAM АБО СТАРА БРАУЗЕРНА СЕСІЯ) ---
-    try {
       const tg = window.Telegram?.WebApp;
       if (tg) { 
         tg.ready(); 
         tg.expand();
         if (tg.colorScheme === 'dark') setIsDarkMode(true);
-      } else {
-        const savedTheme = localStorage.getItem('hack_theme');
-        if (savedTheme === 'dark') setIsDarkMode(true);
       }
-
-      const savedSound = localStorage.getItem('hack_sound');
-      if (savedSound === 'false') setIsSoundEnabled(false);
 
       if (tg?.initDataUnsafe?.user) {
         setUserName(tg.initDataUnsafe.user.first_name);
-        registerUser(tg.initDataUnsafe.user);
+        registerTelegramUser(tg.initDataUnsafe.user);
       } else {
-        const browserId = localStorage.getItem('hack_browser_id');
-        const browserUser = localStorage.getItem('hack_browser_user');
-        
-        if (browserId && browserUser) {
-          // Якщо юзер колись зайшов через Magic Link, логінимо його
-          setUserName(browserUser);
-          registerUser({ id: browserId, first_name: browserUser });
-        } else {
-          // Якщо це рандомна людина з прямим посиланням — блокуємо
-          setAccessStatus('no_auth');
-        }
+        // Якщо це не Telegram і не веб-сесія через пошту — відправляємо на сторінку логіну замість блокування!
+        navigate('/login'); // Переконайся, що у тебе підключено useNavigate усередині Platform, або використовуй window.location.href = '/login';
       }
-    } catch (e) { console.error(e); }
 
-    fetchCourses();
+      fetchCourses();
+    }
+
+    initUser();
   }, []);
 
   useEffect(() => {
@@ -2427,6 +2417,16 @@ function Platform() {
             <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
               {isSoundEnabled ? '🔊' : '🔇'}
             </button>
+			<button 
+  onClick={async () => { 
+    await supabase.auth.signOut(); 
+    window.location.href = '/login'; 
+  }} 
+  style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}
+  title="Вийти з акаунта"
+>
+  🚪
+</button>
             <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
               {isDarkMode ? '☀️' : '🌙'}
             </button>

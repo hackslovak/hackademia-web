@@ -27,7 +27,7 @@ export default function Landing() {
                     <img 
                         src="/logo-main.svg" 
                         alt="Hackademia Logo" 
-                        style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
+                        style={{ width: '65px', height: '65px', objectFit: 'contain' }} 
                     />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
