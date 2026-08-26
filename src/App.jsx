@@ -1060,19 +1060,19 @@ function Platform() {
 
   // Об'єкт із кольорами для швидкого перемикання теми (Пастельний редизайн)
   const theme = {
-    bg: isDarkMode ? '#1a202c' : '#F7FAF9', // Дуже м'який м'ятно-сірий фон
+    bg: isDarkMode ? '#1a202c' : '#F4F7F6', // М'який пастельний сіро-м'ятний фон
     cardBg: isDarkMode ? '#2d3748' : '#ffffff',
-    text: isDarkMode ? '#f7fafc' : '#2C3E50', // М'якший темний колір замість чорного
-    textSecondary: isDarkMode ? '#a0aec0' : '#7F8C8D',
-    inputBg: isDarkMode ? '#4a5568' : '#F0F4F8',
+    text: isDarkMode ? '#f7fafc' : '#2D3748',
+    textSecondary: isDarkMode ? '#a0aec0' : '#718096',
+    inputBg: isDarkMode ? '#4a5568' : '#EDF2F7',
     inputBorder: isDarkMode ? '#718096' : '#E2E8F0',
-    adminBg: isDarkMode ? '#4a1c38' : '#FFF5F7',
-    adminBorder: isDarkMode ? '#d53f8c' : '#FF6B6B',
-    // Додаткові пастельні акценти для кнопок і плашок
-    mint: '#A7D7C5',
-    softBlue: '#AECBFA',
-    softYellow: '#FDE68A',
-    peach: '#FFD3B6'
+    
+    // БРЕНДОВІ ТЕПЛІ КОЛЬОРИ (замість кричущого рожевого)
+    primary: '#2B6CB0',       // Теплий глибокий синій/акцент (або можна замінити на м'ятний/охристий)
+    primaryHover: '#2C5282',
+    accentWarm: '#D69E2E',    // Теплий золотистий/охристий акцент
+    adminBg: isDarkMode ? '#2c3e50' : '#FEFCBF',
+    adminBorder: isDarkMode ? '#d69e2e' : '#ECC94B',
   };
 
   const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
@@ -2943,46 +2943,108 @@ function Platform() {
   
   // ЕКРАН 1: Головна сторінка вибору курсів
   return (
-    <div style={{ textAlign: 'center', padding: '40px 20px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg, boxSizing: 'border-box' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* ВЕРХНЯ ПАНЕЛЬ НАВІГАЦІЇ (Збільшені елементи для ПК) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '850px', margin: '0 auto 30px auto' }}>
-        
-        {/* Кнопка повернення на лендінг */}
-        <button 
-          onClick={() => navigate('/')} 
-          style={{ 
-            background: theme.inputBg, 
-            color: theme.text, 
-            border: `1px solid ${theme.inputBorder}`, 
-            padding: '10px 18px', 
-            borderRadius: '10px', 
-            fontSize: '14px', 
-            fontWeight: 'bold', 
-            cursor: 'pointer',
-            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
-          }}
-          title="Повернутися на головну сторінку сайту"
-        >
-          🏠 Головна
-        </button>
+      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (як у Visual 360) */}
+      <div style={{ 
+        width: '260px', 
+        background: isDarkMode ? '#1a202c' : '#1E3A3A', // Глибокий теплий темний зелено-синій відтінок
+        color: '#ffffff', 
+        display: 'flex', 
+        flexDirection: 'column', 
+        padding: '25px 20px',
+        boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        boxSizing: 'border-box'
+      }}>
+        {/* Логотип / Назва */}
+        <div style={{ fontSize: '22px', fontWeight: '900', marginBottom: '40px', letterSpacing: '0.5px', color: '#F6AD55' }}>
+          🎓 Hackademia
+        </div>
 
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+        {/* Меню навігації */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+          <button 
+            onClick={() => { setSelectedCourse(null); setGlobalView(null); }}
+            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            📚 Курси
+          </button>
+
+          <button 
+            onClick={startSpacedRepetition}
+            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            🔄 Інтервальне
+          </button>
+
+          <button 
+            onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
+            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            🎯 Снайпер
+          </button>
+
+          <button 
+            onClick={startFalseFriends} 
+            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
+            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+          >
+            🎭 Фальшиві слова
+          </button>
+
+          {effectiveIsAdmin && (
+            <button 
+              onClick={() => setGlobalView('admin_panel')}
+              style={{ background: 'transparent', border: 'none', color: '#F6AD55', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
+              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            >
+              ⚙️ Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
+            </button>
+          )}
+        </div>
+
+        {/* Нижня частина сайдбару (Кнопка виходу / Головна сайту) */}
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <button 
+            onClick={() => navigate('/')} 
+            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', textAlign: 'left' }}
+          >
+            🏠 На головну сайту
+          </button>
+        </div>
+      </div>
+
+      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи) */}
+      <div style={{ flex: 1, padding: '40px 50px', overflowY: 'auto', boxSizing: 'border-box' }}>
+        
+        {/* Верхня міні-панель (Мови, Тема, Звук) */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
           
-          {/* Кнопки перемикання мов (більші) */}
-          <div style={{ display: 'flex', gap: '6px' }}>
+          {/* Кнопки перемикання мов */}
+          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
             {['uk', 'sk', 'en', 'ru'].map((l) => (
               <button 
                 key={l}
                 onClick={() => changeLang(l)} 
                 style={{ 
-                  background: lang === l ? '#FF007F' : theme.inputBg, 
+                  background: lang === l ? '#2B6CB0' : 'transparent', 
                   color: lang === l ? '#fff' : theme.text, 
-                  border: `1px solid ${theme.inputBorder}`, 
-                  padding: '8px 12px', 
-                  borderRadius: '8px', 
-                  fontSize: '13px', 
+                  border: 'none', 
+                  padding: '6px 10px', 
+                  borderRadius: '6px', 
+                  fontSize: '12px', 
                   fontWeight: 'bold', 
                   cursor: 'pointer' 
                 }}
@@ -2992,121 +3054,107 @@ function Platform() {
             ))}
           </div>
 
-          {/* ДЗВІНОЧОК АДМІНА */}
-          {effectiveIsAdmin && (
-            <div 
-              onClick={() => setGlobalView('admin_panel')} 
-              style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '50%', background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}
-              title="Адмін-панель (Заявки)"
-            >
-              <span style={{ fontSize: '22px', animation: pendingCount > 0 ? 'ffPulse 1.5s infinite' : 'none' }}>🔔</span>
-              {pendingCount > 0 && (
-                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#FF007F', color: 'white', fontSize: '12px', fontWeight: 'bold', padding: '3px 7px', borderRadius: '12px', border: '2px solid ' + theme.bg }}>
-                  {pendingCount}
-                </span>
-              )}
-            </div>
-          )}
-
-          <button onClick={toggleSound} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, width: '44px', height: '44px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '40px', height: '40px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isSoundEnabled ? '🔊' : '🔇'}
           </button>
-          <button onClick={toggleTheme} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, width: '44px', height: '44px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          
+          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '40px', height: '40px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isDarkMode ? '☀️' : '🌙'}
           </button>
         </div>
-      </div>
 
-      <h1 style={{ color: theme.text, fontSize: '36px', marginBottom: '10px' }}>{t('title')}</h1>
-      {userName && <p style={{ color: theme.textSecondary, fontSize: '16px', marginBottom: '20px' }}>{t('greeting')}, <b>{userName}</b>!</p>}
-      
-      {isAdmin && (
-        <span 
-          onClick={handleBadgeClick}
-          onDoubleClick={handleBadgeDoubleClick}
-          style={{ background: isPreviewMode ? '#4A5568' : '#FF007F', color: 'white', padding: '6px 18px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginBottom: '15px' }}
-          title="Клікніть для довідки, двічі клікніть для перемикання превью"
-        >
-          {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
-        </span>
-      )}
-
-      {!window.Telegram?.WebApp?.initDataUnsafe?.user && (
-        <div style={{ margin: '15px auto', maxWidth: '350px' }}>
-          <input 
-            type="text" 
-            placeholder="Твоє ім'я для веб-версії" 
-            defaultValue={localStorage.getItem('hack_browser_user') || ''} 
-            onBlur={e => { localStorage.setItem('hack_browser_user', e.target.value); window.location.reload(); }}
-            style={{ padding: '12px', width: '100%', borderRadius: '8px', border: `1px solid ${theme.inputBorder}`, fontSize: '15px', boxSizing: 'border-box' }}
-          />
+        {/* Заголовок сторінки */}
+        <div style={{ textAlign: 'left', marginBottom: '40px' }}>
+          <h1 style={{ color: theme.text, fontSize: '36px', margin: '0 0 8px 0' }}>{t('title')}</h1>
+          {userName && <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>{t('greeting')}, <b>{userName}</b>!</p>}
+          
+          {isAdmin && (
+            <span 
+              onClick={handleBadgeClick}
+              onDoubleClick={handleBadgeDoubleClick}
+              style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '5px 14px', borderRadius: '15px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '12px', fontWeight: 'bold' }}
+            >
+              {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
+            </span>
+          )}
         </div>
-      )}
 
-      {effectiveIsAdmin && (
-        <div style={{ margin: '20px 0' }}>
-          <button onClick={handleAddCourse} style={{ background: '#FF007F', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,0,127,0.3)' }}>+ Створити новий курс</button>
-        </div>
-      )}
-
-      {/* СПИСОК КУРСІВ (Ширший і симетричний для ПК) */}
-      <div style={{ marginTop: '30px', maxWidth: '650px', margin: '30px auto' }}>
-        <h3 style={{ color: theme.text, fontSize: '22px', marginBottom: '20px', textAlign: 'left' }}>{t('selectCourse')}</h3>
-        
-        {effectiveIsAdmin && courses.length > 1 && (
-          <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px', textAlign: 'left' }}>
-            💡 Затисни і потягни блок курсу, щоб змінити його позицію
-          </p>
+        {effectiveIsAdmin && (
+          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+            <button onClick={handleAddCourse} style={{ background: '#2B6CB0', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,108,176,0.3)' }}>+ Створити новий курс</button>
+          </div>
         )}
 
-        {effectiveIsAdmin ? (
-          <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-            {courses.map(course => (
-              <Reorder.Item
-                key={course.id}
-                value={course}
-                whileDrag={{ scale: 1.02, boxShadow: "0px 15px 25px rgba(255, 0, 127, 0.25)" }} 
-                style={{ background: theme.cardBg, padding: '24px 28px', borderRadius: '14px', marginBottom: '18px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', position: 'relative', border: `1px solid ${theme.inputBorder}` }}
-              >
-                <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1, textAlign: 'left' }}>
-                  🔓 {course.title}
-                </span>
-                
-                {courses.length > 1 && (
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '10px 14px', cursor: 'pointer', zIndex: 10, fontSize: '16px' }}>🗑</button>
-                )}
-              </Reorder.Item>
-            ))}
-          </Reorder.Group>
-        ) : (
-          courses.map(course => {
-            const hasAccess = allowedCourses.includes(course.id);
-            return (
-              <div key={course.id} style={{ 
-                background: theme.cardBg, padding: '24px 28px', borderRadius: '14px', marginBottom: '18px', 
-                boxShadow: '0 4px 15px rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between', 
-                alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
-                opacity: hasAccess ? 1 : 0.5,
-                transition: 'opacity 0.3s'
-              }}>
-                <span 
-                  onClick={() => {
-                    if (hasAccess) {
-                      setSelectedCourse(course);
-                    } else {
-                      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-                      alert("🔒 Цей курс наразі закритий для вас.\nЯкщо ви його вже оплатили, будь ласка, зачекайте на схвалення або напишіть адміністратору.");
-                    }
-                  }} 
-                  style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1, textAlign: 'left' }}
+        {/* СПИСОК КУРСІВ (Великі картки у стилі Visual 360 з м'якими кутами) */}
+        <div style={{ maxWidth: '800px', textAlign: 'left' }}>
+          <h3 style={{ color: theme.text, fontSize: '22px', marginBottom: '20px' }}>{t('selectCourse')}</h3>
+          
+          {effectiveIsAdmin && courses.length > 1 && (
+            <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px' }}>
+              💡 Затисни і потягни блок курсу, щоб змінити його позицію
+            </p>
+          )}
+
+          {effectiveIsAdmin ? (
+            <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+              {courses.map(course => (
+                <Reorder.Item
+                  key={course.id}
+                  value={course}
+                  whileDrag={{ scale: 1.02, boxShadow: "0px 15px 25px rgba(0, 0, 0, 0.1)" }} 
+                  style={{ 
+                    background: theme.cardBg, 
+                    padding: '28px 32px', 
+                    borderRadius: '20px', 
+                    marginBottom: '20px', 
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center', 
+                    cursor: 'grab', 
+                    border: `1px solid ${theme.inputBorder}`,
+                    transition: '0.2s'
+                  }}
                 >
-                  {hasAccess ? '🔓' : '🔒'} {course.title}
-                </span>
-              </div>
-            );
-          })
-        )}
+                  <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1 }}>
+                    🔓 {course.title}
+                  </span>
+                  
+                  {courses.length > 1 && (
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontSize: '15px' }}>🗑</button>
+                  )}
+                </Reorder.Item>
+              ))}
+            </Reorder.Group>
+          ) : (
+            courses.map(course => {
+              const hasAccess = allowedCourses.includes(course.id);
+              return (
+                <div key={course.id} style={{ 
+                  background: theme.cardBg, padding: '28px 32px', borderRadius: '20px', marginBottom: '20px', 
+                  boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', 
+                  alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
+                  opacity: hasAccess ? 1 : 0.6,
+                  transition: 'opacity 0.3s'
+                }}>
+                  <span 
+                    onClick={() => {
+                      if (hasAccess) setSelectedCourse(course);
+                      else alert(t('lockedAlert'));
+                    }} 
+                    style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1 }}
+                  >
+                    {hasAccess ? '🔓' : '🔒'} {course.title}
+                  </span>
+                </div>
+              );
+            })
+          )}
+        </div>
+
       </div>
+    </div>
+  );
 	  
       {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (Ширші кнопки для ПК) */}
       <div style={{ maxWidth: '650px', margin: '35px auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
