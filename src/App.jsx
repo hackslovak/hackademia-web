@@ -3,6 +3,8 @@ import HelpModal from './HelpModal';
 import { supabase } from './supabase';
 import { Reorder } from 'framer-motion';
 import AdminPanel from './AdminPanel';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Landing from './Landing';
 
 // --- ЗВУКОВИЙ ДВИЖОК ---
 let audioCtx = null;
@@ -944,7 +946,7 @@ function speakSlovak(text) {
   });
 }
 
-function App() {
+function Platform() {
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
@@ -1010,17 +1012,41 @@ function App() {
   // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+  
+  // --- МОТИВАЦІЙНІ ФРАЗИ ---
+  const [toast, setToast] = useState(null);
 
-  // Об'єкт із кольорами для швидкого перемикання теми
+  const motivationalPhrases = [
+    "Вау, як легко! ✨",
+    "Чудова робота! 🫶",
+    "У тебе все вийде! 🚀",
+    "Ти молодець! 💛",
+    "Просто супер! 🎉",
+    "Так тримати! 🌟",
+    "Неймовірно! 🌸"
+  ];
+
+  function showMotivation() {
+    const phrase = motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)];
+    setToast(phrase);
+    setTimeout(() => setToast(null), 3000); // Плашка зникне через 3 секунди
+  }
+
+  // Об'єкт із кольорами для швидкого перемикання теми (Пастельний редизайн)
   const theme = {
-    bg: isDarkMode ? '#1a202c' : '#f0f4f8',
-    cardBg: isDarkMode ? '#2d3748' : 'white',
-    text: isDarkMode ? '#f7fafc' : '#333',
-    textSecondary: isDarkMode ? '#a0aec0' : '#555',
-    inputBg: isDarkMode ? '#4a5568' : 'white',
-    inputBorder: isDarkMode ? '#718096' : '#ccc',
-    adminBg: isDarkMode ? '#4a1c38' : '#ffe6f2',
-    adminBorder: isDarkMode ? '#d53f8c' : '#FF007F'
+    bg: isDarkMode ? '#1a202c' : '#F7FAF9', // Дуже м'який м'ятно-сірий фон
+    cardBg: isDarkMode ? '#2d3748' : '#ffffff',
+    text: isDarkMode ? '#f7fafc' : '#2C3E50', // М'якший темний колір замість чорного
+    textSecondary: isDarkMode ? '#a0aec0' : '#7F8C8D',
+    inputBg: isDarkMode ? '#4a5568' : '#F0F4F8',
+    inputBorder: isDarkMode ? '#718096' : '#E2E8F0',
+    adminBg: isDarkMode ? '#4a1c38' : '#FFF5F7',
+    adminBorder: isDarkMode ? '#d53f8c' : '#FF6B6B',
+    // Додаткові пастельні акценти для кнопок і плашок
+    mint: '#A7D7C5',
+    softBlue: '#AECBFA',
+    softYellow: '#FDE68A',
+    peach: '#FFD3B6'
   };
 
   const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
@@ -1448,7 +1474,7 @@ function App() {
     const isCorrect = sniperInput.trim().toLowerCase() === currentCard.correct_answer.trim().toLowerCase();
     
     if (isCorrect) {
-      playUiSound('ding', isSoundEnabled);
+      showMotivation(); playUiSound('ding', isSoundEnabled);
       setSniperScore(prev => prev + 10);
       setSniperTimeLeft(prev => Math.min(prev + 3, 10)); // ДАЄМО +3 сек (макс 10)
       setSniperIndex(prev => prev + 1); // Наступне слово
@@ -1497,7 +1523,7 @@ function App() {
     setFfSelected(selectedOption);
     
     if (isCorrectOption) {
-      playUiSound('ding', isSoundEnabled);
+      showMotivation(); playUiSound('ding', isSoundEnabled);
       setFfScore(prev => prev + 10);
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } else {
@@ -1889,7 +1915,7 @@ function App() {
     }
 
     if (studentAnswer === correctAnswer) {
-      playUiSound('ding', isSoundEnabled);
+      showMotivation(); playUiSound('ding', isSoundEnabled);
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       
       const diff = difficultyConfig[task.difficulty || 'medium'];
@@ -2004,7 +2030,7 @@ function App() {
   }
 
   async function handleCompleteFlashcard(task) {
-    playUiSound('ding', isSoundEnabled);
+    showMotivation(); playUiSound('ding', isSoundEnabled);
     const diff = difficultyConfig[task.difficulty || 'medium'];
     await supabase.from('progress').upsert({ user_id: dbUserId, task_id: task.id, status: 'completed', points: diff.points }, { onConflict: 'user_id, task_id' });
     setCompletedTasks([...new Set([...completedTasks, task.id])]); 
@@ -3042,7 +3068,29 @@ function App() {
         </div>
       )}
     
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      {/* ПЛАВАЮЧА МОТИВАЦІЙНА ПЛАШКА */}
+      {toast && (
+        <div style={{
+          position: 'fixed',
+          top: '40px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', // Теплий пастельний градієнт
+          color: '#2C3E50',
+          padding: '12px 25px',
+          borderRadius: '20px',
+          fontWeight: '900',
+          fontSize: '16px',
+          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+          zIndex: 9999,
+          animation: 'ffPulse 1.5s infinite',
+          border: '2px solid #fff'
+        }}>
+          {toast}
+        </div>
+      )}
+	  
+	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
         <div style={{
@@ -3074,6 +3122,19 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+// --- НОВИЙ ГОЛОВНИЙ КОМПОНЕНТ (РОУТЕР) ---
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/app" element={<Platform />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 

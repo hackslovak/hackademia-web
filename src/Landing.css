@@ -1,0 +1,92 @@
+/* Вміст файлу Landing.css */
+.landing-body { 
+    background-color: #f4f9f8; 
+    color: #062440; 
+    line-height: 1.6; 
+    overflow-x: hidden; 
+    min-height: 100vh;
+}
+
+.landing-body * { 
+    box-sizing: border-box; 
+    margin: 0; 
+    padding: 0; 
+    font-family: 'Montserrat', sans-serif; 
+}
+
+/* Header / Navbar */
+.landing-body header { background: #062440; padding: 20px 40px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+.landing-body .logo { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+.landing-body .logo svg { width: 45px; height: 45px; }
+.landing-body .logo span { color: #fff; font-weight: 900; font-size: 1.4rem; letter-spacing: 1px; }
+.landing-body .logo span span { color: #38BA9B; }
+
+.landing-body .header-btn { background: #38BA9B; color: #fff; padding: 10px 22px; border-radius: 10px; font-weight: 700; text-decoration: none; font-size: 0.9rem; transition: 0.3s; border: none; cursor: pointer; }
+.landing-body .header-btn:hover { background: #2da386; transform: translateY(-2px); }
+
+/* Hero Section */
+.landing-body .hero { background-color: #062440; color: #fff; padding: 100px 20px 120px; text-align: center; position: relative; }
+.landing-body .hero__label { color: #38BA9B; font-weight: 700; text-transform: uppercase; margin-bottom: 15px; letter-spacing: 2px; }
+.landing-body .hero h1 { font-size: 3.5rem; font-weight: 900; margin-bottom: 20px; line-height: 1.2; }
+.landing-body .hero h1 span { color: #38BA9B; }
+.landing-body .hero p { font-size: 1.2rem; color: #ccd; max-width: 600px; margin: 0 auto 35px; }
+
+.landing-body .btn { display: inline-block; background-color: #38BA9B; color: #fff; padding: 15px 35px; border-radius: 12px; font-weight: 700; text-decoration: none; transition: 0.3s; box-shadow: 0 10px 25px rgba(56,186,155,0.4); cursor: pointer; border: none; font-size: 1rem; }
+.landing-body .btn:hover { background-color: #2da386; transform: translateY(-3px); box-shadow: 0 15px 30px rgba(56,186,155,0.5); }
+
+/* Container */
+.landing-body .container { max-width: 1200px; margin: 0 auto; padding: 80px 20px; }
+.landing-body .section-title { text-align: center; font-size: 2.5rem; font-weight: 900; margin-bottom: 50px; color: #062440; }
+.landing-body .section-title span { color: #38BA9B; display: block; font-size: 1rem; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; }
+
+/* About Grid */
+.landing-body .about-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+.landing-body .about-card { background: #fff; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); border-top: 5px solid #38BA9B; transition: transform 0.3s, box-shadow 0.3s; }
+.landing-body .about-card:hover { transform: translateY(-7px); box-shadow: 0 20px 40px rgba(0,0,0,0.08); }
+.landing-body .about-card h3 { font-size: 1.3rem; margin-bottom: 15px; font-weight: 700; }
+.landing-body .about-card p { color: #555; }
+
+/* Pricing Grid */
+.landing-body .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 25px; }
+.landing-body .price-card { background: #fff; border-radius: 24px; padding: 35px 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); display: flex; flex-direction: column; justify-content: space-between; position: relative; border: 2px solid transparent; transition: transform 0.3s, border-color 0.3s; }
+.landing-body .price-card:hover { transform: translateY(-5px); }
+.landing-body .price-card.highlight { border-color: #38BA9B; }
+.landing-body .badge { display: inline-block; background: #E1F5F0; color: #38BA9B; padding: 6px 15px; border-radius: 20px; font-weight: 700; font-size: 0.85rem; margin-bottom: 20px; }
+.landing-body .price-card h3 { font-size: 1.5rem; font-weight: 900; margin-bottom: 15px; }
+.landing-body .price-card ul { list-style: none; margin: 20px 0; }
+.landing-body .price-card ul li { margin-bottom: 10px; color: #445; font-size: 0.9rem; }
+.landing-body .price-card ul li b { color: #062440; }
+.landing-body .price { font-size: 2.2rem; font-weight: 900; color: #062440; margin-bottom: 20px; }
+.landing-body .price span { font-size: 0.9rem; font-weight: 400; color: #777; }
+
+/* Extra Info */
+.landing-body .extra-box { background: #E1F5F0; border-radius: 24px; padding: 40px; margin-top: 50px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+.landing-body .extra-box h4 { font-size: 1.3rem; margin-bottom: 15px; font-weight: 800; color: #062440; }
+.landing-body .extra-box ul { list-style: none; }
+.landing-body .extra-box ul li { margin-bottom: 10px; font-size: 0.95rem; }
+
+/* Floating Action Buttons */
+.landing-body .floating-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 15px; z-index: 999; }
+.landing-body .float-btn { width: 60px; height: 60px; background-color: #FF6B6B; border-radius: 50%; display: flex; justify-content: center; align-items: center; box-shadow: 0 8px 25px rgba(255,107,107,0.4); cursor: pointer; border: none; transition: transform 0.3s; }
+.landing-body .float-btn:hover { transform: scale(1.1); }
+.landing-body .float-btn svg { width: 28px; height: 28px; fill: #fff; }
+
+/* Chat Widget Popup */
+.landing-body .chat-modal { position: fixed; bottom: 105px; right: 30px; width: 360px; background: #fff; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.15); z-index: 1000; overflow: hidden; transform: translateY(20px); opacity: 0; pointer-events: none; transition: all 0.3s ease; border: 1px solid #eaeaea; }
+.landing-body .chat-modal.active { transform: translateY(0); opacity: 1; pointer-events: auto; }
+.landing-body .chat-header { background: #062440; color: #fff; padding: 20px; display: flex; justify-content: space-between; align-items: center; }
+.landing-body .chat-header-info { display: flex; align-items: center; gap: 10px; }
+.landing-body .chat-avatar { width: 36px; height: 36px; background: #38BA9B; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-weight: 900; color: #062440; }
+.landing-body .chat-body { padding: 25px 20px; background: #fafbfc; min-height: 200px; max-height: 300px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+.landing-body .chat-message { background: #fff; padding: 15px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); font-size: 0.9rem; color: #333; line-height: 1.5; border: 1px solid #eee; }
+.landing-body .chat-footer { padding: 15px 20px; background: #fff; border-top: 1px solid #eee; display: flex; gap: 10px; }
+.landing-body .chat-footer input { flex: 1; padding: 10px 15px; border: 1px solid #ddd; border-radius: 10px; outline: none; font-size: 0.9rem; }
+.landing-body .chat-footer button { background: #38BA9B; color: #fff; border: none; padding: 0 15px; border-radius: 10px; cursor: pointer; font-weight: 700; transition: 0.3s; }
+.landing-body .chat-footer button:hover { background: #2da386; }
+
+/* Footer */
+.landing-body footer { background-color: #062440; color: #fff; padding: 60px 20px; text-align: center; }
+.landing-body footer h3 { font-size: 1.8rem; font-weight: 900; margin-bottom: 10px; }
+.landing-body footer p { color: #aaa; margin-bottom: 25px; }
+.landing-body footer a { color: #38BA9B; text-decoration: none; font-weight: 700; font-size: 1.1rem; margin: 0 15px; }
+.landing-body footer a:hover { text-decoration: underline; }
