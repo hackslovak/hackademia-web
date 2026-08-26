@@ -1129,41 +1129,6 @@ function Platform() {
       </div>
     </div>
   );
-  
-  // --- ЕКРАН ПРОФІЛЮ ---
-  if (globalView === 'profile') {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
-        {renderSidebar()}
-        <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>👤 Мій профіль</h2>
-          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, maxWidth: '600px' }}>
-            <p style={{color: theme.textSecondary, fontSize: '18px'}}>Ім'я: <b style={{color: theme.text}}>{userName || 'Гість'}</b></p>
-            <p style={{color: theme.textSecondary, fontSize: '18px'}}>Статус доступу: <b style={{color: '#00C853'}}>{accessStatus === 'approved' ? 'Активний' : accessStatus}</b></p>
-            {isAdmin && <span style={{ background: '#F6AD55', color: '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // --- ЕКРАН ЧАТУ ---
-  if (globalView === 'chat') {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
-        {renderSidebar()}
-        <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>💬 Чат з викладачем</h2>
-          <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
-            <span style={{fontSize: '48px'}}>🛠</span>
-            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
 
   // (Далі йдуть інші екрани: admin_panel, spaced, sniper, false_friends, activeModule, selectedCourse тощо)
@@ -2293,124 +2258,6 @@ function Platform() {
     `}</style>
   );
 
-// --- ЕКРАН ПРОФІЛЮ (У стилі повноцінного кабінету) ---
-  if (globalView === 'profile') {
-    const handleLinkEmail = async (e) => {
-      e.preventDefault();
-      const email = e.target.email.value;
-      const password = e.target.password.value;
-      
-      const { error } = await supabase.auth.updateUser({ email, password });
-      if (error) {
-        alert("❌ Помилка прив'язки: " + error.message);
-      } else {
-        alert("✅ Пошту та пароль успішно прив'язано до вашого акаунта!");
-        window.location.reload();
-      }
-    };
-
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
-        {renderSidebar()}
-        <div style={{ flex: 1, padding: '40px 5%', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          
-          <h2 style={{ color: theme.text, fontSize: '36px', marginBottom: '30px', fontWeight: '900', letterSpacing: '-0.5px' }}>👤 Мій профіль</h2>
-
-          {/* КОНТЕЙНЕР ДЛЯ ДВОХ КОЛОНОК */}
-          <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-
-            {/* ЛІВА КОЛОНКА (Особисті дані) */}
-            <div className="hover-card" style={{ flex: '1 1 500px', background: theme.cardBg, padding: '35px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: `1px solid ${theme.inputBorder}` }}>
-              
-              {/* Аватар та статус */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' }}>
-                 <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#fff', fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(255,123,84,0.3)' }}>
-                    {userName ? userName[0].toUpperCase() : 'H'}
-                 </div>
-                 <div>
-                    <h3 style={{ margin: 0, color: theme.text, fontSize: '26px', fontWeight: '900' }}>{userName || 'Гість'}</h3>
-                    <span style={{ color: accessStatus === 'approved' ? '#00C853' : '#F44336', fontWeight: 'bold', fontSize: '14px', background: accessStatus === 'approved' ? 'rgba(0,200,83,0.1)' : 'rgba(244,67,54,0.1)', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', marginTop: '6px' }}>
-                      {accessStatus === 'approved' ? 'Активний учень' : 'Обмежений доступ'}
-                    </span>
-                 </div>
-              </div>
-
-              {/* Сітка полів */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                <div>
-                   <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Ім'я</label>
-                   <input type="text" defaultValue={userName || ''} placeholder="Ваше ім'я" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
-                </div>
-                <div>
-                   <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Прізвище</label>
-                   <input type="text" placeholder="Не вказано" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
-                </div>
-              </div>
-
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                <div>
-                   <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Телефон / Telegram</label>
-                   <input type="text" placeholder="+380..." style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
-                </div>
-                <div>
-                   <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Місто</label>
-                   <input type="text" placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
-                </div>
-              </div>
-
-              <div style={{ marginBottom: '25px' }}>
-                <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Про мене</label>
-                <textarea rows="3" placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
-              </div>
-
-              <button style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#ffffff', padding: '14px 24px', borderRadius: '12px', border: 'none', fontWeight: '800', cursor: 'pointer', fontSize: '15px', width: '100%', boxShadow: '0 6px 20px rgba(255,123,84,0.3)', transition: '0.2s' }}>
-                Зберегти особисті дані
-              </button>
-            </div>
-
-            {/* ПРАВА КОЛОНКА (Безпека / Налаштування) */}
-            <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                
-                {/* Блок Прив'язки Email */}
-                <div className="hover-card" style={{ background: theme.cardBg, padding: '35px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: `1px solid ${theme.inputBorder}` }}>
-                    <h3 style={{ margin: '0 0 10px 0', fontSize: '20px', color: theme.text, fontWeight: '800' }}>🔐 Web-доступ</h3>
-                    <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>Додайте пошту та пароль, щоб мати змогу заходити на платформу з будь-якого комп'ютера без використання Telegram.</p>
-                    
-                    <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                      <input type="email" name="email" placeholder="Ваша пошта (email)" required style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '15px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
-                      <input type="password" name="password" placeholder="Новий пароль" required style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '15px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
-                      <button type="submit" style={{ background: theme.inputBg, color: theme.text, border: `2px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s' }}>
-                        Зв'язати акаунти
-                      </button>
-                    </form>
-                </div>
-
-                {/* Блок Системна інформація */}
-                <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', border: `1px dashed ${theme.inputBorder}` }}>
-                    <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: theme.textSecondary, fontWeight: '800' }}>⚙️ Технічна інформація</h3>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '8px' }}>
-                        <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
-                        <b style={{ color: isAdmin ? '#FF7B54' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '8px' }}>
-                        <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram ID</span>
-                        <b style={{ color: theme.text, fontSize: '14px' }}>{telegramId || 'Не підключено'}</b>
-                      </div>
-                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                        <span style={{ color: theme.textSecondary, fontSize: '14px' }}>ID Бази</span>
-                        <span style={{ color: theme.textSecondary, fontSize: '12px', fontFamily: 'monospace' }}>{dbUserId || 'Очікування...'}</span>
-                      </div>
-                    </div>
-                </div>
-
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   // --- ЕКРАН ЧАТУ ---
   if (globalView === 'chat') {
@@ -2919,6 +2766,126 @@ function Platform() {
     'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop'
   ];
 
+
+// --- ЕКРАН ПРОФІЛЮ (З кнопкою "Назад" та крутим екраном помилки) ---
+  if (globalView === 'profile') {
+    const handleLinkEmail = async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      const { error } = await supabase.auth.updateUser({ email, password });
+      if (error) alert("❌ Помилка прив'язки: " + error.message);
+      else { alert("✅ Пошту та пароль успішно прив'язано!"); window.location.reload(); }
+    };
+
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
+        <GlobalStyles />
+        {renderSidebar()}
+        <div style={{ flex: 1, padding: '40px 5%', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+          
+          {/* КНОПКА ПОВЕРНЕННЯ НАЗАД */}
+          <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Назад до курсів
+          </button>
+
+          <h2 style={{ color: theme.text, fontSize: '36px', marginBottom: '30px', fontWeight: '900', letterSpacing: '-0.5px' }}>👤 Мій профіль</h2>
+
+          {/* ЯКЩО ДАНІ НЕ ПІДВАНТАЖИЛИСЬ - ПОКАЗУЄМО КРУТУ ЗАГЛУШКУ */}
+          {!userName && !dbUserId ? (
+            <div style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%)', padding: '40px', borderRadius: '24px', color: '#fff', textAlign: 'center', boxShadow: '0 10px 30px rgba(201,42,42,0.3)', maxWidth: '600px', margin: '0 auto' }}>
+              <div style={{ fontSize: '60px', marginBottom: '15px' }}>👾</div>
+              <h3 style={{ fontSize: '28px', margin: '0 0 10px 0', fontWeight: '900' }}>Ой, сталася помилочка!</h3>
+              <p style={{ fontSize: '16px', opacity: 0.9, marginBottom: '20px' }}>Ваші дані профілю десь загубилися в матриці або сесія застаріла. Спробуйте оновити систему.</p>
+              <button onClick={() => window.location.reload()} style={{ background: '#fff', color: '#C92A2A', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>🔄 Оновити сторінку</button>
+            </div>
+          ) : (
+            /* ГОЛОВНИЙ ДИЗАЙН ПРОФІЛЮ */
+            <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
+              
+              {/* ЛІВА КОЛОНКА (Особисті дані) */}
+              <div className="hover-card" style={{ flex: '1 1 500px', background: theme.cardBg, padding: '35px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: `1px solid ${theme.inputBorder}` }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '30px' }}>
+                   <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', color: '#fff', fontSize: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', boxShadow: '0 4px 15px rgba(246,173,85,0.3)' }}>
+                      {userName ? userName[0].toUpperCase() : 'H'}
+                   </div>
+                   <div>
+                      <h3 style={{ margin: 0, color: theme.text, fontSize: '26px', fontWeight: '900' }}>{userName || 'Гість'}</h3>
+                      <span style={{ color: accessStatus === 'approved' ? '#00C853' : '#F44336', fontWeight: 'bold', fontSize: '14px', background: accessStatus === 'approved' ? 'rgba(0,200,83,0.1)' : 'rgba(244,67,54,0.1)', padding: '4px 10px', borderRadius: '8px', display: 'inline-block', marginTop: '6px' }}>
+                        {accessStatus === 'approved' ? 'Активний учень' : 'Обмежений доступ'}
+                      </span>
+                   </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Ім'я</label>
+                     <input type="text" defaultValue={userName || ''} placeholder="Ваше ім'я" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                  </div>
+                  <div>
+                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Прізвище</label>
+                     <input type="text" placeholder="Не вказано" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '20px' }}>
+                  <div>
+                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Телефон / Telegram</label>
+                     <input type="text" placeholder="+380..." style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                  </div>
+                  <div>
+                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Місто</label>
+                     <input type="text" placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                  </div>
+                </div>
+
+                <div style={{ marginBottom: '25px' }}>
+                  <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold' }}>Про мене</label>
+                  <textarea rows="3" placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '14px 16px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
+                </div>
+
+                <button style={{ background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', color: '#1A3636', padding: '14px 24px', borderRadius: '12px', border: 'none', fontWeight: '900', cursor: 'pointer', fontSize: '15px', width: '100%', boxShadow: '0 6px 20px rgba(246,173,85,0.3)', transition: '0.2s' }}>
+                  Зберегти особисті дані
+                </button>
+              </div>
+
+              {/* ПРАВА КОЛОНКА */}
+              <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                  
+                  <div className="hover-card" style={{ background: theme.cardBg, padding: '35px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.04)', border: `1px solid ${theme.inputBorder}` }}>
+                      <h3 style={{ margin: '0 0 10px 0', fontSize: '20px', color: theme.text, fontWeight: '800' }}>🔐 Web-доступ</h3>
+                      <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>Додайте пошту та пароль, щоб заходити на платформу з комп'ютера.</p>
+                      
+                      <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <input type="email" name="email" placeholder="Ваша пошта (email)" required style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '15px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
+                        <input type="password" name="password" placeholder="Новий пароль" required style={{ padding: '14px 16px', borderRadius: '12px', fontSize: '15px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
+                        <button type="submit" style={{ background: theme.inputBg, color: theme.text, border: `2px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s' }}>
+                          Зв'язати акаунти
+                        </button>
+                      </form>
+                  </div>
+
+                  <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', border: `1px dashed ${theme.inputBorder}` }}>
+                      <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: theme.textSecondary, fontWeight: '800' }}>⚙️ Технічна інформація</h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '8px' }}>
+                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
+                          <b style={{ color: isAdmin ? '#F6AD55' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '8px' }}>
+                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram ID</span>
+                          <b style={{ color: theme.text, fontSize: '14px' }}>{telegramId || 'Не підключено'}</b>
+                        </div>
+                      </div>
+                  </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
 // ЕКРАН 1: Головна сторінка вибору курсів
   return (
