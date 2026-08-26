@@ -3099,8 +3099,8 @@ function Platform() {
           </div>
         )}
 
-        {/* СПИСОК КУРСІВ (Великі преміальні банери у стилі Visual 360) */}
-        <div style={{ maxWidth: '850px', marginBottom: '40px' }}>
+{/* СПИСОК КУРСІВ (Велика сітка преміальних карток у стилі Visual 360) */}
+        <div style={{ maxWidth: '950px', marginBottom: '40px' }}>
           <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>{t('selectCourse')}</h3>
           
           {effectiveIsAdmin && courses.length > 1 && (
@@ -3110,82 +3110,87 @@ function Platform() {
           )}
 
           {effectiveIsAdmin ? (
-            <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-              {courses.map(course => (
+            <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', listStyle: 'none', padding: 0, margin: 0 }}>
+              {courses.map((course, idx) => (
                 <Reorder.Item
                   key={course.id}
                   value={course}
-                  whileDrag={{ scale: 1.02, boxShadow: "0px 15px 35px rgba(0, 0, 0, 0.12)" }} 
+                  whileDrag={{ scale: 1.03, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.15)" }} 
                   style={{ 
                     background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', 
                     color: '#ffffff',
-                    padding: '32px 36px', 
+                    padding: '30px', 
                     borderRadius: '24px', 
-                    marginBottom: '20px', 
-                    boxShadow: '0 10px 35px rgba(30,58,58,0.15)', 
+                    boxShadow: '0 10px 30px rgba(30,58,58,0.12)', 
                     display: 'flex', 
-                    justifyContent: 'space-between', 
-                    alignItems: 'center', 
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    minHeight: '180px',
                     cursor: 'grab', 
                     border: '1px solid rgba(255,255,255,0.1)',
-                    transition: 'all 0.3s ease'
+                    boxSizing: 'border-box',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
                       🚀
                     </div>
-                    <div>
-                      <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Словацька мова • Hackademia</span>
-                      <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '22px', color: '#ffffff' }}>
-                        {course.title}
-                      </span>
-                    </div>
+                    {courses.length > 1 && (
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '8px 12px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>
+                    )}
                   </div>
-                  
-                  {courses.length > 1 && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '12px', padding: '12px 16px', cursor: 'pointer', fontSize: '16px', transition: '0.2s' }}>🗑</button>
-                  )}
+
+                  <div style={{ textAlign: 'left', marginTop: '20px' }}>
+                    <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Модуль • Hackademia</span>
+                    <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.3', display: 'block' }}>
+                      {course.title}
+                    </span>
+                  </div>
                 </Reorder.Item>
               ))}
             </Reorder.Group>
           ) : (
-            courses.map(course => {
-              const hasAccess = allowedCourses.includes(course.id);
-              return (
-                <div key={course.id} style={{ 
-                  background: hasAccess 
-                    ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)')
-                    : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
-                  color: hasAccess ? '#ffffff' : theme.textSecondary,
-                  padding: '32px 36px', borderRadius: '24px', marginBottom: '20px', 
-                  boxShadow: hasAccess ? '0 10px 35px rgba(30,58,58,0.15)' : 'none', 
-                  display: 'flex', justifyContent: 'space-between', 
-                  alignItems: 'center', 
-                  opacity: hasAccess ? 1 : 0.75,
-                  transition: 'all 0.3s ease',
-                  border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
-                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>
-                      {hasAccess ? '🔓' : '🔒'}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+              {courses.map(course => {
+                const hasAccess = allowedCourses.includes(course.id);
+                return (
+                  <div key={course.id} style={{ 
+                    background: hasAccess 
+                      ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)')
+                      : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
+                    color: hasAccess ? '#ffffff' : theme.textSecondary,
+                    padding: '30px', borderRadius: '24px', 
+                    boxShadow: hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none', 
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    minHeight: '180px',
+                    opacity: hasAccess ? 1 : 0.75,
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    boxSizing: 'border-box',
+                    transition: 'transform 0.2s ease'
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
+                        {hasAccess ? '🔓' : '🔒'}
+                      </div>
                     </div>
-                    <div>
-                      <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Словацька мова • Курс</span>
+
+                    <div style={{ textAlign: 'left', marginTop: '20px' }}>
+                      <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Словацька мова</span>
                       <span 
                         onClick={() => {
                           if (hasAccess) setSelectedCourse(course);
                           else alert(t('lockedAlert'));
                         }} 
-                        style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: '900', fontSize: '22px', color: hasAccess ? '#ffffff' : theme.text }}
+                        style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: '900', fontSize: '20px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.3', display: 'block' }}
                       >
                         {course.title}
                       </span>
                     </div>
                   </div>
-                </div>
-              );
-            })
+                );
+              })}
+            </div>
           )}
         </div>
 
