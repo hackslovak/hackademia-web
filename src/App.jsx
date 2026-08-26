@@ -2939,15 +2939,23 @@ function Platform() {
 
   // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-  // ЕКРАН 1: Головна сторінка вибору курсів (Преміальний дизайн у стилі Visual 360)
+  // --- МАСИВ КРУТИХ 3D КАРТИНОК ДЛЯ КУРСІВ (Зі стоку Unsplash) ---
+  const decorImages = [
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop', // Абстрактні 3D лінії
+    'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop', // 3D бульбашки
+    'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=400&auto=format&fit=crop', // 3D куби/форми
+    'https://images.unsplash.com/photo-1634986666676-ec8fd922cdfd?q=80&w=400&auto=format&fit=crop'  // 3D хвилі
+  ];
+
+  // ЕКРАН 1: Головна сторінка вибору курсів (Преміальний дизайн з іконками та 3D)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (з іконками та активними станами) */}
+      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР */}
       <div style={{ 
         width: '280px', 
-        background: isDarkMode ? '#1a202c' : '#1A3636', // Глибокий теплий темний зелено-синій відтінок
+        background: isDarkMode ? '#1a202c' : '#1A3636', 
         color: '#ffffff', 
         display: 'flex', 
         flexDirection: 'column', 
@@ -2958,123 +2966,86 @@ function Platform() {
         height: '100vh',
         boxSizing: 'border-box'
       }}>
-        {/* Логотип / Назва */}
+        {/* Логотип */}
         <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '40px', letterSpacing: '0.5px', color: '#F6AD55', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <span>🎓</span> Hackademia
+          <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+          Hackademia
         </div>
 
-        {/* Меню навігації з іконками та підсвічуванням активного пункту */}
+        {/* Меню навігації (SVG іконки) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <button 
             onClick={() => { setSelectedCourse(null); setGlobalView(null); }}
-            style={{ 
-              background: (selectedCourse === null && globalView === null) ? 'rgba(255,255,255,0.15)' : 'transparent', 
-              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
-              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
-              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
-            }}
+            style={{ background: (selectedCourse === null && globalView === null) ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' }}
           >
-            <span style={{ fontSize: '18px' }}>📚</span> {t('selectCourse')}
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+            {t('selectCourse')}
           </button>
 
           <button 
             onClick={startSpacedRepetition}
-            style={{ 
-              background: globalView === 'spaced' ? 'rgba(255,255,255,0.15)' : 'transparent', 
-              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
-              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
-              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
-            }}
+            style={{ background: globalView === 'spaced' ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' }}
           >
-            <span style={{ fontSize: '18px' }}>🔄</span> {t('repeatToday')}
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.5 9.5 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+            {t('repeatToday')}
           </button>
 
           <button 
             onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
-            style={{ 
-              background: globalView === 'sniper' ? 'rgba(255,255,255,0.15)' : 'transparent', 
-              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
-              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
-              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
-            }}
+            style={{ background: globalView === 'sniper' ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' }}
           >
-            <span style={{ fontSize: '18px' }}>🎯</span> {t('sniperGame')}
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>
+            {t('sniperGame')}
           </button>
 
           <button 
             onClick={startFalseFriends} 
-            style={{ 
-              background: globalView === 'false_friends' ? 'rgba(255,255,255,0.15)' : 'transparent', 
-              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
-              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
-              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
-            }}
+            style={{ background: globalView === 'false_friends' ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' }}
           >
-            <span style={{ fontSize: '18px' }}>🎭</span> {t('falseFriends')}
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M12 12h.01M16 12h.01M8 12h.01M6 12h.01"/></svg>
+            {t('falseFriends')}
           </button>
 
           {effectiveIsAdmin && (
             <button 
               onClick={() => setGlobalView('admin_panel')}
-              style={{ 
-                background: globalView === 'admin_panel' ? 'rgba(255,255,255,0.15)' : 'transparent', 
-                border: 'none', color: '#F6AD55', textAlign: 'left', padding: '14px 18px', 
-                borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
-                display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s', marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' 
-              }}
+              style={{ background: globalView === 'admin_panel' ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#F6AD55', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s', marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
             >
-              <span style={{ fontSize: '18px' }}>⚙️</span> Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
             </button>
           )}
         </div>
 
-        {/* Нижня частина сайдбару */}
+        {/* Нижня частина */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
           <button 
             onClick={() => navigate('/')} 
             style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', padding: '12px 18px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}
           >
-            <span>🏠</span> На головну сайту
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            На головну сайту
           </button>
         </div>
       </div>
 
-      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи) */}
+      {/* 2. ПРАВА ЧАСТИНА */}
       <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
         
         {/* Верхня міні-панель (Мови, Тема, Звук) */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '35px', gap: '15px' }}>
-          
-          {/* Кнопки перемикання мов */}
           <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '5px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             {['uk', 'sk', 'en', 'ru'].map((l) => (
               <button 
-                key={l}
-                onClick={() => changeLang(l)} 
-                style={{ 
-                  background: lang === l ? '#2B6CB0' : 'transparent', 
-                  color: lang === l ? '#fff' : theme.text, 
-                  border: 'none', 
-                  padding: '6px 12px', 
-                  borderRadius: '8px', 
-                  fontSize: '12px', 
-                  fontWeight: 'bold', 
-                  cursor: 'pointer',
-                  transition: '0.2s'
-                }}
+                key={l} onClick={() => changeLang(l)} 
+                style={{ background: lang === l ? '#2B6CB0' : 'transparent', color: lang === l ? '#fff' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
               >
                 {l.toUpperCase()}
               </button>
             ))}
           </div>
-
-          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-            {isSoundEnabled ? '🔊' : '🔇'}
-          </button>
-          
-          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-            {isDarkMode ? '☀️' : '🌙'}
-          </button>
+          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>{isDarkMode ? '☀️' : '🌙'}</button>
         </div>
 
         {/* Заголовок сторінки */}
@@ -3084,8 +3055,7 @@ function Platform() {
           
           {isAdmin && (
             <span 
-              onClick={handleBadgeClick}
-              onDoubleClick={handleBadgeDoubleClick}
+              onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick}
               style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '14px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}
             >
               {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
@@ -3095,94 +3065,137 @@ function Platform() {
 
         {effectiveIsAdmin && (
           <div style={{ marginBottom: '35px' }}>
-            <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '16px 32px', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(43,108,176,0.3)', transition: 'transform 0.2s' }}>+ Створити новий курс</button>
+            <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '16px 32px', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(43,108,176,0.3)' }}>+ Створити новий курс</button>
           </div>
         )}
 
-{/* СПИСОК КУРСІВ (Велика сітка преміальних карток у стилі Visual 360) */}
+        {/* СПИСОК КУРСІВ (Великі картки + 3D Картинки всередині) */}
         <div style={{ maxWidth: '950px', marginBottom: '40px' }}>
           <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>{t('selectCourse')}</h3>
           
-          {effectiveIsAdmin && courses.length > 1 && (
+          {/* --- ПОВЕРНУТІ ІНТЕРАКТИВНІ БЛОКИ (Тренажери) у преміум-стилі --- */}
+        <div style={{ maxWidth: '950px', marginBottom: '40px' }}>
+          <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>Тренажери та ігри</h3>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px' }}>
+            
+            <div onClick={startSpacedRepetition} style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', transition: 'transform 0.2s ease', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none' }} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', position: 'relative', zIndex: 1 }}>🔄</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}>
+                <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Розумні картки</span>
+                <span style={{ fontWeight: '900', fontSize: '22px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('repeatToday')}</span>
+              </div>
+            </div>
+
+            <div onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }} style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #805AD5 0%, #9F7AEA 100%)', color: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(128,90,213,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', transition: 'transform 0.2s ease', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none' }} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', position: 'relative', zIndex: 1 }}>🎯</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}>
+                <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Міні-гра на час</span>
+                <span style={{ fontWeight: '900', fontSize: '22px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('sniperGame')}</span>
+              </div>
+            </div>
+
+            <div onClick={startFalseFriends} style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #D69E2E 0%, #ECC94B 100%)', color: '#ffffff', padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(214,158,46,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', transition: 'transform 0.2s ease', border: '1px solid rgba(255,255,255,0.2)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '150px', height: '150px', objectFit: 'cover', borderRadius: '50%', opacity: 0.15, mixBlendMode: 'screen', pointerEvents: 'none' }} />
+              <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px', position: 'relative', zIndex: 1 }}>🎭</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}>
+                <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#FFF5F5', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Тест на уважність</span>
+                <span style={{ fontWeight: '900', fontSize: '22px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('falseFriends')}</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        {/* ПОВЕРНУТЕ ВВЕДЕННЯ ІМЕНІ ДЛЯ ГОСТЕЙ БРАУЗЕРА */}
+        {!window.Telegram?.WebApp?.initDataUnsafe?.user && !userName && (
+          <div style={{ marginBottom: '35px', maxWidth: '350px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '13px', marginBottom: '8px' }}>Як до вас звертатися?</p>
+            <input 
+              type="text" placeholder="Твоє ім'я..." defaultValue={localStorage.getItem('hack_browser_user') || ''} 
+              onBlur={e => { localStorage.setItem('hack_browser_user', e.target.value); window.location.reload(); }}
+              style={{ padding: '12px 16px', width: '100%', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, fontSize: '15px', background: theme.cardBg, color: theme.text, boxSizing: 'border-box' }}
+            />
+          </div>
+        )}
+		  
+		  {effectiveIsAdmin && courses.length > 1 && (
             <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px' }}>
               💡 Затисни і потягни блок курсу, щоб змінити його позицію
             </p>
           )}
 
           {effectiveIsAdmin ? (
-            <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', listStyle: 'none', padding: 0, margin: 0 }}>
-              {courses.map((course, idx) => (
-                <Reorder.Item
-                  key={course.id}
-                  value={course}
-                  whileDrag={{ scale: 1.03, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.15)" }} 
-                  style={{ 
-                    background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', 
-                    color: '#ffffff',
-                    padding: '30px', 
-                    borderRadius: '24px', 
-                    boxShadow: '0 10px 30px rgba(30,58,58,0.12)', 
-                    display: 'flex', 
-                    flexDirection: 'column',
-                    justifyContent: 'space-between',
-                    minHeight: '180px',
-                    cursor: 'grab', 
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    boxSizing: 'border-box',
-                    transition: 'transform 0.2s ease, box-shadow 0.2s ease'
-                  }}
-                >
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                      🚀
-                    </div>
-                    {courses.length > 1 && (
-                      <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '8px 12px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>
-                    )}
-                  </div>
+            <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px', listStyle: 'none', padding: 0, margin: 0 }}>
+              {courses.map((course, idx) => {
+                const imgUrl = decorImages[idx % decorImages.length];
+                return (
+                  <Reorder.Item
+                    key={course.id} value={course} whileDrag={{ scale: 1.03, zIndex: 10, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.15)" }} 
+                    style={{ 
+                      position: 'relative', overflow: 'hidden',
+                      background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', 
+                      color: '#ffffff', padding: '30px', borderRadius: '24px', 
+                      boxShadow: '0 10px 30px rgba(30,58,58,0.12)', 
+                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                      minHeight: '190px', cursor: 'grab', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box'
+                    }}
+                  >
+                    {/* ОБ'ЄМНА 3D КАРТИНКА НА ФОНІ (Visual 360 Style) */}
+                    <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '160px', height: '160px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
 
-                  <div style={{ textAlign: 'left', marginTop: '20px' }}>
-                    <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Модуль • Hackademia</span>
-                    <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.3', display: 'block' }}>
-                      {course.title}
-                    </span>
-                  </div>
-                </Reorder.Item>
-              ))}
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}>
+                        <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
+                      </div>
+                      {courses.length > 1 && (
+                        <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '8px 12px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>
+                      )}
+                    </div>
+
+                    <div style={{ position: 'relative', zIndex: 1, textAlign: 'left', marginTop: '20px' }}>
+                      <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
+                      <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '22px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>
+                        {course.title}
+                      </span>
+                    </div>
+                  </Reorder.Item>
+                );
+              })}
             </Reorder.Group>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-              {courses.map(course => {
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px' }}>
+              {courses.map((course, idx) => {
                 const hasAccess = allowedCourses.includes(course.id);
+                const imgUrl = decorImages[idx % decorImages.length];
                 return (
                   <div key={course.id} style={{ 
-                    background: hasAccess 
-                      ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)')
-                      : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
+                    position: 'relative', overflow: 'hidden',
+                    background: hasAccess ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)') : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
                     color: hasAccess ? '#ffffff' : theme.textSecondary,
                     padding: '30px', borderRadius: '24px', 
                     boxShadow: hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none', 
                     display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                    minHeight: '180px',
-                    opacity: hasAccess ? 1 : 0.75,
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    boxSizing: 'border-box',
-                    transition: 'transform 0.2s ease'
+                    minHeight: '190px', opacity: hasAccess ? 1 : 0.75, border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box'
                   }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '24px' }}>
-                        {hasAccess ? '🔓' : '🔒'}
+                    {/* ОБ'ЄМНА 3D КАРТИНКА НА ФОНІ */}
+                    {hasAccess && <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '160px', height: '160px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />}
+
+                    <div style={{ position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasAccess ? '#fff' : theme.textSecondary }}>
+                        {hasAccess ? <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> : <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
                       </div>
                     </div>
 
-                    <div style={{ textAlign: 'left', marginTop: '20px' }}>
-                      <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Словацька мова</span>
+                    <div style={{ position: 'relative', zIndex: 1, textAlign: 'left', marginTop: '20px' }}>
+                      <span style={{ fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
                       <span 
                         onClick={() => {
                           if (hasAccess) setSelectedCourse(course);
                           else alert(t('lockedAlert'));
                         }} 
-                        style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: '900', fontSize: '20px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.3', display: 'block' }}
+                        style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: '900', fontSize: '22px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.2', display: 'block' }}
                       >
                         {course.title}
                       </span>
@@ -3201,10 +3214,7 @@ function Platform() {
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: theme.textSecondary }}>
                 <span>Додати адміна:</span>
                 <input 
-                  type="number" 
-                  placeholder="Telegram ID" 
-                  value={newAdminTelegramId} 
-                  onChange={e => setNewAdminTelegramId(e.target.value)} 
+                  type="number" placeholder="Telegram ID" value={newAdminTelegramId} onChange={e => setNewAdminTelegramId(e.target.value)} 
                   style={{ padding: '10px 14px', borderRadius: '8px', fontSize: '14px', width: '150px' }} 
                 />
                 <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
@@ -3215,38 +3225,20 @@ function Platform() {
               <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 ☁️ Зробити бекап у хмару
               </button>
-              
               <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 ❓ Довідка
               </button>
-              
               <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 🔄 Відновити останній бекап
               </button>
             </div>
           </div>
         )}
-
       </div>
 
       {/* ПЛАВАЮЧА МОТИВАЦІЙНА ПЛАШКА */}
       {toast && (
-        <div style={{
-          position: 'fixed',
-          top: '40px',
-          left: '50%',
-          transform: 'translateX(-50%)',
-          background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)',
-          color: '#2C3E50',
-          padding: '14px 30px',
-          borderRadius: '24px',
-          fontWeight: '900',
-          fontSize: '17px',
-          boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-          zIndex: 9999,
-          animation: 'ffPulse 1.5s infinite',
-          border: '2px solid #fff'
-        }}>
+        <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>
           {toast}
         </div>
       )}
@@ -3255,35 +3247,18 @@ function Platform() {
 	  
 	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
-        <div style={{
-          position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999,
-          background: theme.cardBg, padding: '24px', borderRadius: '18px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #2B6CB0`,
-          maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite'
-        }}>
+        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, background: theme.cardBg, padding: '24px', borderRadius: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #2B6CB0`, maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite' }}>
           <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px' }}>🚨 Увага!</h4>
-          <p style={{ margin: '0 0 18px 0', fontSize: '15px', color: theme.textSecondary, lineHeight: '1.4' }}>
-            Нещодавно ви додали учня. Який курс та групу бажаєте йому призначити?
-          </p>
+          <p style={{ margin: '0 0 18px 0', fontSize: '15px', color: theme.textSecondary, lineHeight: '1.4' }}>Нещодавно ви додали учня. Який курс та групу бажаєте йому призначити?</p>
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              onClick={() => setGlobalView('admin_panel')} 
-              style={{ flex: 1, background: '#2B6CB0', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
-            >
-              ⚙️ Налаштувати
-            </button>
-            <button 
-              onClick={dismissCourseAlert}
-              style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
-            >
-              Пізніше
-            </button>
+            <button onClick={() => setGlobalView('admin_panel')} style={{ flex: 1, background: '#2B6CB0', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>⚙️ Налаштувати</button>
+            <button onClick={dismissCourseAlert} style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Пізніше</button>
           </div>
         </div>
       )}
     </div>
   );
-} // <--- ЦЕ ОБОВ'ЯЗКОВО: закриває саму функцію Platform()
+}
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
