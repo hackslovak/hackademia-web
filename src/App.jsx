@@ -1215,10 +1215,15 @@ function Platform() {
           userData = newUserData;
         }
         
-        if (userData) {
+       if (userData) {
           setDbUserId(userData.id);
           setAccessStatus(userData.access_status || 'approved');
-          if (userData.role === 'admin') setIsAdmin(true);
+          
+          // ЗАЛІЗОБЕТОННЕ ПРАВИЛО: якщо це твоя пошта або в базі role === admin, робимо адміном!
+          if (userData.role === 'admin' || emailUser.email === 'hackslovak@gmail.com') {
+            setIsAdmin(true);
+            localStorage.setItem('hack_is_admin', 'true');
+          }
         } else {
           // Запасний варіант, якщо створення в базу не вдалося, але сесія є
           setAccessStatus('approved');
