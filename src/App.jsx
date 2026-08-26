@@ -2939,101 +2939,114 @@ function Platform() {
 
   // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-// Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
-  
-  // ЕКРАН 1: Головна сторінка вибору курсів (у стилі Visual 360 з лівим сайдбаром)
+  // ЕКРАН 1: Головна сторінка вибору курсів (Преміальний дизайн у стилі Visual 360)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (у стилі Visual 360) */}
+      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (з іконками та активними станами) */}
       <div style={{ 
-        width: '260px', 
-        background: isDarkMode ? '#1a202c' : '#1E3A3A', // Глибокий теплий темний зелено-синій відтінок
+        width: '280px', 
+        background: isDarkMode ? '#1a202c' : '#1A3636', // Глибокий теплий темний зелено-синій відтінок
         color: '#ffffff', 
         display: 'flex', 
         flexDirection: 'column', 
-        padding: '25px 20px',
-        boxShadow: '4px 0 15px rgba(0,0,0,0.05)',
+        padding: '30px 20px',
+        boxShadow: '4px 0 20px rgba(0,0,0,0.08)',
         position: 'sticky',
         top: 0,
         height: '100vh',
         boxSizing: 'border-box'
       }}>
         {/* Логотип / Назва */}
-        <div style={{ fontSize: '22px', fontWeight: '900', marginBottom: '40px', letterSpacing: '0.5px', color: '#F6AD55' }}>
-          🎓 Hackademia
+        <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '40px', letterSpacing: '0.5px', color: '#F6AD55', display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <span>🎓</span> Hackademia
         </div>
 
-        {/* Меню навігації */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
+        {/* Меню навігації з іконками та підсвічуванням активного пункту */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
           <button 
             onClick={() => { setSelectedCourse(null); setGlobalView(null); }}
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{ 
+              background: (selectedCourse === null && globalView === null) ? 'rgba(255,255,255,0.15)' : 'transparent', 
+              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
+              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
+              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
+            }}
           >
-            📚 {t('selectCourse')}
+            <span style={{ fontSize: '18px' }}>📚</span> {t('selectCourse')}
           </button>
 
           <button 
             onClick={startSpacedRepetition}
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{ 
+              background: globalView === 'spaced' ? 'rgba(255,255,255,0.15)' : 'transparent', 
+              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
+              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
+              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
+            }}
           >
-            {t('repeatToday')}
+            <span style={{ fontSize: '18px' }}>🔄</span> {t('repeatToday')}
           </button>
 
           <button 
             onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{ 
+              background: globalView === 'sniper' ? 'rgba(255,255,255,0.15)' : 'transparent', 
+              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
+              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
+              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
+            }}
           >
-            {t('sniperGame')}
+            <span style={{ fontSize: '18px' }}>🎯</span> {t('sniperGame')}
           </button>
 
           <button 
             onClick={startFalseFriends} 
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
-            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-            onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+            style={{ 
+              background: globalView === 'false_friends' ? 'rgba(255,255,255,0.15)' : 'transparent', 
+              border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', 
+              borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
+              display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s' 
+            }}
           >
-            {t('falseFriends')}
+            <span style={{ fontSize: '18px' }}>🎭</span> {t('falseFriends')}
           </button>
 
           {effectiveIsAdmin && (
             <button 
               onClick={() => setGlobalView('admin_panel')}
-              style={{ background: 'transparent', border: 'none', color: '#F6AD55', textAlign: 'left', padding: '12px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s', marginTop: '10px', borderTop: '1px solid rgba(255,255,255,0.1)' }}
-              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-              onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+              style={{ 
+                background: globalView === 'admin_panel' ? 'rgba(255,255,255,0.15)' : 'transparent', 
+                border: 'none', color: '#F6AD55', textAlign: 'left', padding: '14px 18px', 
+                borderRadius: '12px', cursor: 'pointer', fontSize: '15px', fontWeight: 'bold', 
+                display: 'flex', alignItems: 'center', gap: '14px', transition: '0.2s', marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.1)' 
+              }}
             >
-              ⚙️ Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
+              <span style={{ fontSize: '18px' }}>⚙️</span> Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
             </button>
           )}
         </div>
 
         {/* Нижня частина сайдбару */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
           <button 
             onClick={() => navigate('/')} 
-            style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: '#fff', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', textAlign: 'left' }}
+            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', padding: '12px 18px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '10px' }}
           >
-            🏠 На головну сайту
+            <span>🏠</span> На головну сайту
           </button>
         </div>
       </div>
 
-      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи у просторому стилі) */}
-      <div style={{ flex: 1, padding: '40px 50px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи) */}
+      <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
         
         {/* Верхня міні-панель (Мови, Тема, Звук) */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '35px', gap: '15px' }}>
           
           {/* Кнопки перемикання мов */}
-          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
+          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '5px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             {['uk', 'sk', 'en', 'ru'].map((l) => (
               <button 
                 key={l}
@@ -3042,11 +3055,12 @@ function Platform() {
                   background: lang === l ? '#2B6CB0' : 'transparent', 
                   color: lang === l ? '#fff' : theme.text, 
                   border: 'none', 
-                  padding: '6px 10px', 
-                  borderRadius: '6px', 
+                  padding: '6px 12px', 
+                  borderRadius: '8px', 
                   fontSize: '12px', 
                   fontWeight: 'bold', 
-                  cursor: 'pointer' 
+                  cursor: 'pointer',
+                  transition: '0.2s'
                 }}
               >
                 {l.toUpperCase()}
@@ -3054,25 +3068,25 @@ function Platform() {
             ))}
           </div>
 
-          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '40px', height: '40px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             {isSoundEnabled ? '🔊' : '🔇'}
           </button>
           
-          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '40px', height: '40px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
             {isDarkMode ? '☀️' : '🌙'}
           </button>
         </div>
 
         {/* Заголовок сторінки */}
         <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ color: theme.text, fontSize: '36px', margin: '0 0 8px 0' }}>{t('title')}</h1>
-          {userName && <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>{t('greeting')}, <b>{userName}</b>!</p>}
+          <h1 style={{ color: theme.text, fontSize: '38px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>{t('title')}</h1>
+          {userName && <p style={{ color: theme.textSecondary, fontSize: '17px', margin: 0 }}>{t('greeting')}, <b>{userName}</b>!</p>}
           
           {isAdmin && (
             <span 
               onClick={handleBadgeClick}
               onDoubleClick={handleBadgeDoubleClick}
-              style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '5px 14px', borderRadius: '15px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '12px', fontWeight: 'bold' }}
+              style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '14px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}
             >
               {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
             </span>
@@ -3080,14 +3094,14 @@ function Platform() {
         </div>
 
         {effectiveIsAdmin && (
-          <div style={{ marginBottom: '30px' }}>
-            <button onClick={handleAddCourse} style={{ background: '#2B6CB0', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,108,176,0.3)' }}>+ Створити новий курс</button>
+          <div style={{ marginBottom: '35px' }}>
+            <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '16px 32px', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(43,108,176,0.3)', transition: 'transform 0.2s' }}>+ Створити новий курс</button>
           </div>
         )}
 
-        {/* СПИСОК КУРСІВ (Великі картки у стилі Visual 360 з м'якими кутами) */}
-        <div style={{ maxWidth: '800px', marginBottom: '40px' }}>
-          <h3 style={{ color: theme.text, fontSize: '22px', marginBottom: '20px' }}>{t('selectCourse')}</h3>
+        {/* СПИСОК КУРСІВ (Великі преміальні банери у стилі Visual 360) */}
+        <div style={{ maxWidth: '850px', marginBottom: '40px' }}>
+          <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>{t('selectCourse')}</h3>
           
           {effectiveIsAdmin && courses.length > 1 && (
             <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px' }}>
@@ -3101,27 +3115,36 @@ function Platform() {
                 <Reorder.Item
                   key={course.id}
                   value={course}
-                  whileDrag={{ scale: 1.02, boxShadow: "0px 15px 25px rgba(0, 0, 0, 0.1)" }} 
+                  whileDrag={{ scale: 1.02, boxShadow: "0px 15px 35px rgba(0, 0, 0, 0.12)" }} 
                   style={{ 
-                    background: theme.cardBg, 
-                    padding: '28px 32px', 
-                    borderRadius: '20px', 
+                    background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', 
+                    color: '#ffffff',
+                    padding: '32px 36px', 
+                    borderRadius: '24px', 
                     marginBottom: '20px', 
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.04)', 
+                    boxShadow: '0 10px 35px rgba(30,58,58,0.15)', 
                     display: 'flex', 
                     justifyContent: 'space-between', 
                     alignItems: 'center', 
                     cursor: 'grab', 
-                    border: `1px solid ${theme.inputBorder}`,
-                    transition: '0.2s'
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    transition: 'all 0.3s ease'
                   }}
                 >
-                  <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1 }}>
-                    🔓 {course.title}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>
+                      🚀
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Словацька мова • Hackademia</span>
+                      <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '22px', color: '#ffffff' }}>
+                        {course.title}
+                      </span>
+                    </div>
+                  </div>
                   
                   {courses.length > 1 && (
-                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontSize: '15px' }}>🗑</button>
+                    <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '12px', padding: '12px 16px', cursor: 'pointer', fontSize: '16px', transition: '0.2s' }}>🗑</button>
                   )}
                 </Reorder.Item>
               ))}
@@ -3131,21 +3154,35 @@ function Platform() {
               const hasAccess = allowedCourses.includes(course.id);
               return (
                 <div key={course.id} style={{ 
-                  background: theme.cardBg, padding: '28px 32px', borderRadius: '20px', marginBottom: '20px', 
-                  boxShadow: '0 8px 30px rgba(0,0,0,0.04)', display: 'flex', justifyContent: 'space-between', 
-                  alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
-                  opacity: hasAccess ? 1 : 0.6,
-                  transition: 'opacity 0.3s'
+                  background: hasAccess 
+                    ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)')
+                    : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
+                  color: hasAccess ? '#ffffff' : theme.textSecondary,
+                  padding: '32px 36px', borderRadius: '24px', marginBottom: '20px', 
+                  boxShadow: hasAccess ? '0 10px 35px rgba(30,58,58,0.15)' : 'none', 
+                  display: 'flex', justifyContent: 'space-between', 
+                  alignItems: 'center', 
+                  opacity: hasAccess ? 1 : 0.75,
+                  transition: 'all 0.3s ease',
+                  border: '1px solid rgba(255,255,255,0.1)'
                 }}>
-                  <span 
-                    onClick={() => {
-                      if (hasAccess) setSelectedCourse(course);
-                      else alert(t('lockedAlert'));
-                    }} 
-                    style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1 }}
-                  >
-                    {hasAccess ? '🔓' : '🔒'} {course.title}
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flex: 1 }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '26px' }}>
+                      {hasAccess ? '🔓' : '🔒'}
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Словацька мова • Курс</span>
+                      <span 
+                        onClick={() => {
+                          if (hasAccess) setSelectedCourse(course);
+                          else alert(t('lockedAlert'));
+                        }} 
+                        style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: '900', fontSize: '22px', color: hasAccess ? '#ffffff' : theme.text }}
+                      >
+                        {course.title}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               );
             })
@@ -3154,7 +3191,7 @@ function Platform() {
 
         {/* НИЖНІ КЕРУЮЧІ ПАНЕЛІ ТА ІНФО ДЛЯ АДМІНА */}
         {isAdmin && (
-          <div style={{ marginTop: '50px', opacity: 0.8, fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '30px' }}>
+          <div style={{ marginTop: '50px', opacity: 0.85, fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '30px' }}>
             {effectiveIsAdmin && (
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: theme.textSecondary }}>
                 <span>Додати адміна:</span>
@@ -3163,22 +3200,22 @@ function Platform() {
                   placeholder="Telegram ID" 
                   value={newAdminTelegramId} 
                   onChange={e => setNewAdminTelegramId(e.target.value)} 
-                  style={{ padding: '8px 12px', borderRadius: '6px', fontSize: '14px', width: '140px' }} 
+                  style={{ padding: '10px 14px', borderRadius: '8px', fontSize: '14px', width: '150px' }} 
                 />
-                <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+                <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '10px 18px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
               </div>
             )}
             
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-              <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 ☁️ Зробити бекап у хмару
               </button>
               
-              <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 ❓ Довідка
               </button>
               
-              <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '10px 20px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
                 🔄 Відновити останній бекап
               </button>
             </div>
@@ -3241,7 +3278,6 @@ function Platform() {
       )}
     </div>
   );
-}
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
