@@ -1187,24 +1187,31 @@ function Platform() {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        // Якщо є сесія поштою, беремо її
         const emailUser = session.user;
-        setUserName(emailUser.email.split('@')[0]); // Беремо частину пошти як ім'я
+        setUserName(emailUser.email.split('@')[0]);
         
-        // Шукаємо юзера в нашій таблиці users за email або створюємо, якщо нема
-        let { data: userData } = await supabase
+        // Шукаємо юзера за email (тепер колонка точно існуватиме)
+        let { data: userData, error: selectError } = await supabase
           .from('users')
           .select('*')
           .eq('email', emailUser.email)
-          .single();
+          .maybeSingle(); // Використовуємо maybeSingle, щоб не падало, якщо юзера ще нема
           
         if (!userData) {
-          // Якщо в таблиці його ще немає, створюємо запис зі статусом approved (або pending)
-          const { data: newUserData } = await supabase
+          // Якщо в таблиці його ще немає, створюємо запис
+          const { data: newUserData, error: insertError } = await supabase
             .from('users')
-            .insert({ email: emailUser.email, first_name: emailUser.email.split('@')[0], access_status: 'approved' })
+            .insert({ 
+              email: emailUser.email, 
+              first_name: emailUser.email.split('@')[0], 
+              access_status: 'approved' 
+            })
             .select()
             .single();
+            
+          if (insertError) {
+            console.error("Помилка створення юзера:", insertError.message);
+          }
           userData = newUserData;
         }
         
@@ -1212,7 +1219,11 @@ function Platform() {
           setDbUserId(userData.id);
           setAccessStatus(userData.access_status || 'approved');
           if (userData.role === 'admin') setIsAdmin(true);
+        } else {
+          // Запасний варіант, якщо створення в базу не вдалося, але сесія є
+          setAccessStatus('approved');
         }
+        
         fetchCourses();
         return;
       }
