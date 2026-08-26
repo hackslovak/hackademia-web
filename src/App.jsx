@@ -1002,8 +1002,26 @@ function Platform() {
   const [isFfOver, setIsFfOver] = useState(false);
   const [ffShowTranslation, setFfShowTranslation] = useState(false);
 
+  // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
+
+  // ОБ'ЄКТ THEME МАЄ БУТИ ТУТ (ВИЩЕ УСІХ ЕКРАНІВ)
+  const theme = {
+    bg: isDarkMode ? '#1a202c' : '#F4F7F6',
+    cardBg: isDarkMode ? '#2d3748' : '#ffffff',
+    text: isDarkMode ? '#f7fafc' : '#2D3748',
+    textSecondary: isDarkMode ? '#a0aec0' : '#718096',
+    inputBg: isDarkMode ? '#4a5568' : '#EDF2F7',
+    inputBorder: isDarkMode ? '#718096' : '#E2E8F0',
+    primary: '#2B6CB0',
+    accentWarm: '#D69E2E',
+    adminBg: isDarkMode ? '#2c3e50' : '#FEFCBF',
+    adminBorder: isDarkMode ? '#d69e2e' : '#ECC94B',
+  };
+
+  // ПІСЛЯ ЦЬОГО ІДУТЬ ЕКРАНИ (globalView === 'profile', chat тощо)
+  
   const [toast, setToast] = useState(null);
 
   const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
