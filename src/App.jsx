@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import HelpModal from './HelpModal';
 import { supabase } from './supabase';
 import { Reorder } from 'framer-motion';
+import { translations } from './i18n';
 import AdminPanel from './AdminPanel';
 import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Landing from './Landing';
