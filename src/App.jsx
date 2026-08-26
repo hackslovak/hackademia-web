@@ -3187,7 +3187,7 @@ function Platform() {
 	  
 	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 	  
-	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
+{/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
         <div style={{
           position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999,
@@ -3218,10 +3218,10 @@ function Platform() {
         </div>
       )}
     </div>
-  );
-	  
+  ); // <--- Закінчення return компонента Platform
+} // <--- ОБОВ'ЯЗКОВО: Закінчення самісінької функції Platform()
 
-// --- НОВИЙ ГОЛОВНИЙ КОМПОНЕНТ (РОУТЕР) ---
+// --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
   return (
     <BrowserRouter>
