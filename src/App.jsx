@@ -1115,8 +1115,13 @@ function Platform() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px',
       boxShadow: '4px 0 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box'
     }}>
-      {/* ЛОГОТИП-СОВА SVG */}
-      <div title="Hackademia" style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      {/* ЛОГОТИП-СОВА SVG (Тепер клікабельний і з анімацією) */}
+      <div 
+        title="На головну сторінку" 
+        onClick={() => navigate('/')} 
+        className="hover-card" 
+        style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', padding: '5px', borderRadius: '14px' }}
+      >
         <img src="/logo.svg" alt="Hackademia Logo" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
       </div>
 
@@ -2856,8 +2861,8 @@ function Platform() {
       const email = e.target.email.value;
       const password = e.target.password.value;
       const { error } = await supabase.auth.updateUser({ email, password });
-      if (error) alert("❌ Помилка прив'язки: " + error.message);
-      else { alert("✅ Пошту та пароль успішно прив'язано!"); window.location.reload(); }
+      if (error) alert("❌ Помилка: " + error.message);
+      else { alert("✅ Дані доступу (пошта та пароль) успішно оновлено!"); window.location.reload(); }
     };
 
     return (
@@ -2954,26 +2959,28 @@ function Platform() {
               {/* ПРАВА КОЛОНКА */}
               <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
                   
-                  {/* Блок Web-доступ */}
+                  {/* Блок Доступ / Зміна паролю */}
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                       <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#E0A345' }}>🔐</span> Web-доступ
+                        <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
                       </h3>
-                      <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>Додайте пошту та пароль, щоб заходити на платформу з комп'ютера.</p>
+                      <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>
+                        Тут ви можете прив'язати email або <b>змінити свій пароль</b> для входу на платформу.
+                      </p>
                       
                       <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <input type="email" name="email" defaultValue={userProfile.email || ''} placeholder="Ваша пошта (email)" required style={{ padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
                         
                         {/* ІНПУТ ПАРОЛЯ З ОКОМ */}
                         <div style={{ position: 'relative' }}>
-                          <input type={showPassword ? "text" : "password"} name="password" placeholder="Новий пароль" required style={{ width: '100%', boxSizing: 'border-box', padding: '16px', paddingRight: '50px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                          <input type={showPassword ? "text" : "password"} name="password" placeholder="Введіть новий пароль" required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', paddingRight: '50px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
                           <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: 0.6 }}>
                             {showPassword ? '🙈' : '👁'}
                           </button>
                         </div>
 
-                        <button type="submit" className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', marginTop: '5px' }}>
-                          Зв'язати акаунти
+                        <button type="submit" className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s', marginTop: '5px' }}>
+                          Оновити дані доступу
                         </button>
                       </form>
                   </div>
