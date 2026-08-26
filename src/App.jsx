@@ -1097,6 +1097,7 @@ function Platform() {
     );
   }
 
+
   // (Далі йдуть інші екрани: admin_panel, spaced, sniper, false_friends, activeModule, selectedCourse тощо)
 
   const [newTaskType, setNewTaskType] = useState('text');
