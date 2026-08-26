@@ -950,7 +950,30 @@ function speakSlovak(text) {
 
 function Platform() {
   const navigate = useNavigate();
-  // --- БАЗОВІ СТАНИ ---
+  
+  // --- РОЗУМНА МУЛЬТИЯЗИЧНІСТЬ ---
+  const [lang, setLang] = useState(() => {
+    // 1. Перевіряємо, чи користувач вже обирав мову раніше
+    const saved = localStorage.getItem('hack_lang');
+    if (saved) return saved;
+    
+    // 2. Якщо ні — автоматично визначаємо мову його браузера/гаджета
+    const browserLang = navigator.language || navigator.userLanguage || 'uk';
+    if (browserLang.startsWith('sk')) return 'sk';
+    if (browserLang.startsWith('en')) return 'en';
+    if (browserLang.startsWith('ru')) return 'ru';
+    return 'uk'; // За замовчуванням українська
+  });
+
+  const changeLang = (newLang) => {
+    setLang(newLang);
+    localStorage.setItem('hack_lang', newLang);
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  };
+
+  const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
+  
+  // --- ДАЛІ ЙДУТЬ ТВОЇ ЗВИЧАЙНІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(true); // <--- ПОКИ ЩО ПОСТАВИЛІ True ТУТ ДЛЯ ТЕСТУ!
@@ -2426,29 +2449,37 @@ function Platform() {
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', paddingBottom: '100px' }}>
         <GlobalStyles />
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button onClick={() => { if (isTrainingMode) setIsTrainingMode(false); else setActiveModule(null); }} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', padding: '0' }}>
-            ← Назад 
-          </button>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-              {isSoundEnabled ? '🔊' : '🔇'}
-            </button>
-			<button 
-  onClick={async () => { 
-    await supabase.auth.signOut(); 
-    window.location.href = '/login'; 
-  }} 
-  style={{ background: 'transparent', border: 'none', fontSize: '18px', cursor: 'pointer' }}
-  title="Вийти з акаунта"
->
-  🚪
-</button>
-            <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-              {isDarkMode ? '☀️' : '🌙'}
-            </button>
-          </div>
-        </div>
+        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+  
+  {/* Кнопки перемикання мов */}
+  <div style={{ display: 'flex', gap: '4px' }}>
+    {['uk', 'sk', 'en', 'ru'].map((l) => (
+      <button 
+        key={l}
+        onClick={() => changeLang(l)} 
+        style={{ 
+          background: lang === l ? '#FF007F' : theme.inputBg, 
+          color: lang === l ? '#fff' : theme.text, 
+          border: `1px solid ${theme.inputBorder}`, 
+          padding: '4px 7px', 
+          borderRadius: '6px', 
+          fontSize: '10px', 
+          fontWeight: 'bold', 
+          cursor: 'pointer' 
+        }}
+      >
+        {l.toUpperCase()}
+      </button>
+    ))}
+  </div>
+
+  <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+    {isSoundEnabled ? '🔊' : '🔇'}
+  </button>
+  <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+    {isDarkMode ? '☀️' : '🌙'}
+  </button>
+</div>
         
         <h2 style={{ color: theme.text }}>{activeModule.title}</h2>
 
@@ -2910,7 +2941,58 @@ function Platform() {
   
 // ЕКРАН 1: Головна сторінка вибору курсів
   return (
-    <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
+    
+	<div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+  
+  {/* Кнопка повернення на лендінг */}
+  <button 
+    onClick={() => navigate('/')} 
+    style={{ 
+      background: theme.inputBg, 
+      color: theme.text, 
+      border: `1px solid ${theme.inputBorder}`, 
+      padding: '5px 10px', 
+      borderRadius: '6px', 
+      fontSize: '11px', 
+      fontWeight: 'bold', 
+      cursor: 'pointer' 
+    }}
+    title="Повернутися на головну сторінку сайту"
+  >
+    🏠 Головна
+  </button>
+
+  {/* Кнопки перемикання мов */}
+  <div style={{ display: 'flex', gap: '4px' }}>
+    {['uk', 'sk', 'en', 'ru'].map((l) => (
+      <button 
+        key={l}
+        onClick={() => changeLang(l)} 
+        style={{ 
+          background: lang === l ? '#FF007F' : theme.inputBg, 
+          color: lang === l ? '#fff' : theme.text, 
+          border: `1px solid ${theme.inputBorder}`, 
+          padding: '4px 7px', 
+          borderRadius: '6px', 
+          fontSize: '10px', 
+          fontWeight: 'bold', 
+          cursor: 'pointer' 
+        }}
+      >
+        {l.toUpperCase()}
+      </button>
+    ))}
+  </div>
+
+  <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+    {isSoundEnabled ? '🔊' : '🔇'}
+  </button>
+  <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+    {isDarkMode ? '☀️' : '🌙'}
+  </button>
+</div>
+	
+	<div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
       <GlobalStyles />
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
@@ -2942,8 +3024,8 @@ function Platform() {
         </div>
       </div>
 
-      <h1 style={{ color: theme.text }}>🎓 Hackademia Курси</h1>
-      {userName && <p style={{ color: theme.textSecondary }}>Привіт, <b>{userName}</b>!</p>}
+      <h1 style={{ color: theme.text }}>{t('title')}</h1>
+      {userName && <p style={{ color: theme.textSecondary }}>{t('greeting')}, <b>{userName}</b>!</p>}
       
       {isAdmin && (
         <span 
@@ -2975,7 +3057,7 @@ function Platform() {
       )}
 
       <div style={{ marginTop: '30px', maxWidth: '400px', margin: '30px auto' }}>
-        <h3 style={{ color: theme.text }}>Обери курс:</h3>
+        <h3 style={{ color: theme.text }}>{t('selectCourse')}</h3>
         
         {effectiveIsAdmin && courses.length > 1 && (
           <p style={{ fontSize: '13px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '15px' }}>
@@ -3039,20 +3121,20 @@ function Platform() {
           onClick={startSpacedRepetition}
           style={{ background: 'linear-gradient(135deg, #3182ce 0%, #63b3ed 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(49,130,206,0.3)' }}
         >
-          <span>🔄 Повторити сьогодні (Інтервальне)</span>
+          <span>{t('repeatToday')}</span>
         </button>
 
         <button 
           onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
           style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(128,90,213,0.3)' }}
         >
-          <span>🎯 Міні-гра: Діакритичний снайпер</span>
+          <span>{t('sniperGame')}</span>
         </button>
         <button 
           onClick={startFalseFriends} 
           style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(237,137,54,0.3)' }}
         >
-          <span>🎭 Міні-гра: Фальшиві слова</span>
+          <span>{t('falseFriends')}</span>
         </button>
       </div>
 
