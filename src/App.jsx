@@ -1074,6 +1074,22 @@ function Platform() {
   const [editContent, setEditContent] = useState('');
   const [editAnswer, setEditAnswer] = useState('');
   const [editDifficulty, setEditDifficulty] = useState('medium');
+  
+  // Локальні стани для екрану профілю
+    const [showPassword, setShowPassword] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [userProfile, setUserProfile] = useState({});
+
+    // Завантажуємо повні дані користувача при відкритті профілю
+    useEffect(() => {
+      async function fetchFullProfile() {
+        if (!dbUserId) return;
+        const { data } = await supabase.from('users').select('*').eq('id', dbUserId).single();
+        if (data) setUserProfile(data);
+      }
+      fetchFullProfile();
+    }, [dbUserId]);
 
   // --- 2. УСІ useEffect ТАХОЖ ВИЩЕ УСІХ УМОВНІХ РЕНДЕРІВ ---
   // (тут розміщуються твої useEffect для ініціалізації юзера, завантаження курсів тощо)
@@ -2772,21 +2788,7 @@ function Platform() {
 
   // --- ЕКРАН ПРОФІЛЮ (Повністю функціональний) ---
   if (globalView === 'profile') {
-    // Локальні стани для екрану профілю
-    const [showPassword, setShowPassword] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [userProfile, setUserProfile] = useState({});
-
-    // Завантажуємо повні дані користувача при відкритті профілю
-    useEffect(() => {
-      async function fetchFullProfile() {
-        if (!dbUserId) return;
-        const { data } = await supabase.from('users').select('*').eq('id', dbUserId).single();
-        if (data) setUserProfile(data);
-      }
-      fetchFullProfile();
-    }, [dbUserId]);
+    
 
     // ФУНКЦІЯ: Збереження особистих даних
     const handleSaveProfile = async (e) => {
