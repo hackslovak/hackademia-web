@@ -3194,10 +3194,22 @@ function Platform() {
 {/* ЧИСТИЙ БЛОК ПРИВІТАННЯ ТА КНОПКА ПО ЦЕНТРУ */}
         <div style={{ marginBottom: '30px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <div>
-              {userName && <p style={{ color: theme.textSecondary, fontSize: '24px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userName}</b>! 👋</p>}
-              {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#F6AD55', color: isPreviewMode ? 'white' : '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}</span>}
+            
+            {/* ОНОВЛЕНИЙ БЛОК З АВАТАРКОЮ ТА ПРИВІТАННЯМ */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div className="hover-card" onClick={() => setGlobalView('profile')} title="Перейти в профіль" style={{ width: '65px', height: '65px', borderRadius: '50%', background: userProfile.avatar_url ? 'transparent' : '#E0A345', color: '#fff', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)', cursor: 'pointer', flexShrink: 0 }}>
+                {userProfile.avatar_url ? (
+                  <img src={userProfile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                ) : (
+                  userName ? userName[0].toUpperCase() : 'H'
+                )}
+              </div>
+              <div>
+                {userName && <p style={{ color: theme.textSecondary, fontSize: '26px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userProfile.first_name || userName}</b>! 👋</p>}
+                {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? '👤 Учень (Превью)' : '🛡 АДМІНІСТРАТОР'}</span>}
+              </div>
             </div>
+
           </div>
 
           {/* КНОПКА СТВОРЕННЯ КУРСУ: По центру над курсами, правильний градієнт і білий текст */}
