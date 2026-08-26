@@ -1079,7 +1079,51 @@ function Platform() {
 
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
-  
+
+  // === ВСТАВЛЯЄМО ЛОГІКУ РЕОРДЕРУ СЮДИ ===
+  const [activeReorderId, setActiveReorderId] = useState(null);
+  const pressTimer = React.useRef(null);
+
+  const handlePressStart = (e, id) => {
+    if (!effectiveIsAdmin) return;
+    pressTimer.current = setTimeout(() => {
+      setActiveReorderId(id);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+    }, 500);
+  };
+
+  const handlePressEnd = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+
+  const moveCourse = (courseId, direction) => {
+    setCourses(prev => {
+      const idx = prev.findIndex(c => c.id === courseId);
+      if (idx < 0) return prev;
+      let newIdx = direction === 'left' ? idx - 1 : idx + 1;
+      if (newIdx < 0 || newIdx >= prev.length) return prev;
+      const newArr = [...prev];
+      [newArr[idx], newArr[newIdx]] = [newArr[newIdx], newArr[idx]];
+      
+      const updates = newArr.map((c, i) => ({ id: c.id, title: c.title, order_index: i }));
+      supabase.from('courses').upsert(updates).then();
+      return newArr;
+    });
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  };
+
+  useEffect(() => {
+    if (!activeReorderId) return;
+    const handleKeyDown = (e) => {
+      if (e.key === 'ArrowLeft') moveCourse(activeReorderId, 'left');
+      if (e.key === 'ArrowRight') moveCourse(activeReorderId, 'right');
+      if (e.key === 'Escape' || e.key === 'Enter') setActiveReorderId(null);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [activeReorderId]);
+  // === КІНЕЦЬ ЛОГІКИ РЕОРДЕРУ ===
+
   const [isEditingCourseTitle, setIsEditingCourseTitle] = useState(false);
   const [newCourseTitle, setNewCourseTitle] = useState("");
 
@@ -1223,12 +1267,15 @@ function Platform() {
           
         if (!userData) {
           // Якщо в таблиці його ще немає, створюємо запис
+          const fakeTelegramId = Math.floor(Math.random() * 1000000000) + 1000000000; // Фейковий ID для пошти, щоб БД не сварилася
+          
           const { data: newUserData, error: insertError } = await supabase
             .from('users')
             .insert({ 
               email: emailUser.email, 
               first_name: emailUser.email.split('@')[0], 
-              access_status: 'approved' 
+              access_status: 'approved',
+              telegram_id: fakeTelegramId // <-- ДОДАНО ДЛЯ ВИРІШЕННЯ ПОМИЛКИ
             })
             .select()
             .single();
