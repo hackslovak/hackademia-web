@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Landing.css'; // Сюди потрібно буде винести CSS, який був у <style> тегу
+import './Landing.css'; 
 
 export default function Landing() {
     const navigate = useNavigate();
@@ -14,7 +14,7 @@ export default function Landing() {
             alert('Введіть текст повідомлення!');
             return;
         }
-        const encodedText = encodeURIComponent("Лід з сайту (Закритий доступ / Навчання): " + chatInput.trim());
+        const encodedText = encodeURIComponent("Лід з сайту: " + chatInput.trim());
         window.open(`https://t.me/xackademia?text=${encodedText}`, '_blank');
         setChatInput('');
         toggleChat();
@@ -60,8 +60,7 @@ export default function Landing() {
                 <div className="hero__label">( Школа онлайн )</div>
                 <h1>ВИВЧАЙ СЛОВАЦЬКУ<br /><span>З HACKADEMIA</span></h1>
                 <p>Новий, крутий формат навчання у нашій школі. Старт нових груп вже незабаром!</p>
-                {/* Перенаправлення на сторінку платформи */}
-                <button className="btn" onClick={() => navigate('/app')}>Увійти до платформи</button>
+                <button className="btn" onClick={() => navigate('/login')}>Увійти до платформи</button>
             </section>
 
             <div className="container">
@@ -85,7 +84,7 @@ export default function Landing() {
             <div className="container" style={{ paddingTop: 0 }}>
                 <h2 className="section-title"><span>( 02 - Формати та ціни )</span>Оберіть зручний формат навчання</h2>
                 <div className="pricing-grid">
-                    {/* 1. Закритий доступ (За матеріалами) */}
+                    {/* 1. Закритий доступ */}
                     <div className="price-card">
                         <div>
                             <span className="badge" style={{ background: '#EBF3FF', color: '#062440' }}>Самостійно</span>
@@ -99,7 +98,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">35€ <span>/ місяць</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate('/app')}>Отримати доступ</button>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate('/login')}>Отримати доступ</button>
                         </div>
                     </div>
 
@@ -121,7 +120,7 @@ export default function Landing() {
                         </div>
                     </div>
 
-                    {/* 3. Рівень В1 (Популярний) */}
+                    {/* 3. Рівень В1 */}
                     <div className="price-card highlight">
                         <div>
                             <span className="badge" style={{ background: '#062440', color: '#fff' }}>Популярний</span>
@@ -157,6 +156,23 @@ export default function Landing() {
                         </div>
                     </div>
                 </div>
+
+                {/* Додаткові переваги */}
+                <div className="extra-box">
+                    <div>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>✨ Всі формати включають:</h4>
+                        <ul style={{ listStyle: 'none' }}>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>💬 <b>Постійний чат</b> з особистим ментором</li>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>🎥 <b>Відеозаписи всіх занять</b></li>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>📚 <b>Авторські капсули</b> та ілюстровані воркбуки</li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>🕊️ Як почати навчання?</h4>
+                        <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>Ви можете записатися на <b>безкоштовне пробне заняття</b> або отримати доступ до платформи матеріалів. Оплату здійснюєте лише тоді, коли переконаєтеся, що вам усе подобається!</p>
+                    </div>
+                </div>
+            </div>
 
             <div className="floating-buttons">
                 <a href="https://t.me/xackademia" target="_blank" rel="noreferrer" className="float-btn" title="Зв'язатися в Telegram">
