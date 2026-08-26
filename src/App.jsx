@@ -1100,15 +1100,6 @@ function Platform() {
 
   // (Далі йдуть інші екрани: admin_panel, spaced, sniper, false_friends, activeModule, selectedCourse тощо)
 
-  const [newTaskType, setNewTaskType] = useState('text');
-  const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
-  const [newTaskContent, setNewTaskContent] = useState('');
-  const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
-
-  const [userAnswers, setUserAnswers] = useState({});
-  const [completedTasks, setCompletedTasks] = useState([]);
-  const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
-  const [myCards, setMyCards] = useState([]);
   
   useEffect(() => {
     const savedCards = localStorage.getItem('hack_my_cards');
