@@ -1926,6 +1926,51 @@ function Platform() {
     }
   }
 
+  async function handleLocalJsonRestore(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!window.confirm(`⚠️ УВАГА! Це відновить базу з локального файлу "${file.name}". Поточні дані будуть оновлені/перезаписані. Продовжити?`)) {
+      e.target.value = ''; // очищаємо інпут
+      return;
+    }
+    
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (data.courses && data.courses.length > 0) {
+        const { error: cErr } = await supabase.from('courses').upsert(data.courses);
+        if (cErr) throw cErr;
+      }
+      if (data.modules && data.modules.length > 0) {
+        const { error: mErr } = await supabase.from('modules').upsert(data.modules);
+        if (mErr) throw mErr;
+      }
+      if (data.tasks && data.tasks.length > 0) {
+        const { error: tErr } = await supabase.from('tasks').upsert(data.tasks);
+        if (tErr) throw tErr;
+      }
+
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        window.Telegram.WebApp.showAlert(`✅ Успішно відновлено з файлу: ${file.name}`);
+      } else {
+        alert(`✅ Успішно відновлено з файлу: ${file.name}`);
+      }
+      
+      fetchCourses();
+      setSelectedCourse(null);
+      setActiveModule(null);
+      
+    } catch (err) {
+      console.error(err);
+      alert("❌ Помилка читання або відновлення з файлу: " + err.message);
+    } finally {
+      e.target.value = ''; // скидаємо інпут
+    }
+  }
+  
   async function handleCloudRestore() {
     if (!window.confirm("⚠️ УВАГА! Це відновить базу з ОСТАННЬОГО хмарного бекапу. Поточні дані будуть перезаписані. Продовжити?")) return;
     
@@ -2997,7 +3042,11 @@ function Platform() {
               <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>☁️ Зробити бекап у хмару</button>
               <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>❓ Довідка</button>
               <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🔄 Відновити останній бекап</button>
-            </div>
+            <label style={{ background: 'transparent', border: '1px solid #38A169', color: '#38A169', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+  📂 Завантажити JSON бекап
+  <input type="file" accept=".json" onChange={handleLocalJsonRestore} style={{ display: 'none' }} />
+</label>
+			</div>
           </div>
         )}
       </div>
