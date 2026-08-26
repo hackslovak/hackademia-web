@@ -948,7 +948,7 @@ function speakSlovak(text) {
 }
 
 function Platform() {
-  const navigate = useNavigate(); // <--- ДОДАЙ ОСЬ ЦЕЙ РЯДОК
+  const navigate = useNavigate(); // <--- ОСЬ ЦЕЙ РЯДОК ВИРІШУЄ ПРОБЛЕМУ
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
@@ -1257,7 +1257,7 @@ function Platform() {
         registerTelegramUser(tg.initDataUnsafe.user);
       } else {
         // Якщо це не Telegram і не веб-сесія через пошту — відправляємо на сторінку логіну замість блокування!
-        navigate('/login'); // Переконайся, що у тебе підключено useNavigate усередині Platform, або використовуй window.location.href = '/login';
+        window.location.href = '/login'; // Переконайся, що у тебе підключено useNavigate усередині Platform, або використовуй window.location.href = '/login';
       }
 
       fetchCourses();
