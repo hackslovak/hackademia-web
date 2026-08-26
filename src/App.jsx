@@ -2213,7 +2213,7 @@ function Platform() {
     );
   }
 
-  const GlobalStyles = () => (
+  const renderGlobalStyles = () => (
     <style>{`
       body { background-color: ${theme.bg}; color: ${theme.text}; transition: all 0.3s ease; }
       input, textarea, select { background-color: ${theme.inputBg}; color: ${theme.text}; border: 1px solid ${theme.inputBorder}; }
@@ -2259,28 +2259,12 @@ function Platform() {
   );
 
 
-  // --- ЕКРАН ЧАТУ ---
-  if (globalView === 'chat') {
-    return (
-      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
-        {renderSidebar()}
-        <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>💬 Чат з викладачем</h2>
-          <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
-            <span style={{fontSize: '48px'}}>🛠</span>
-            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
   
   // --- ЕКРАН АДМІН-ПАНЕЛІ (НОВІ ЗАЯВКИ) ---
   if (globalView === 'admin_panel') {
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -2296,7 +2280,7 @@ function Platform() {
     const currentCard = spacedCards[spacedIndex];
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -2342,7 +2326,7 @@ function Platform() {
     
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -2428,7 +2412,7 @@ function Platform() {
     const currentCard = ffCards[ffIndex];
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -2547,7 +2531,7 @@ function Platform() {
   if (activeModule) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         {renderSidebar()}
         
         {/* ПЛАВАЮЧА КНОПКА НАЗАД */}
@@ -2610,7 +2594,7 @@ function Platform() {
   if (selectedCourse && !activeModule) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         {renderSidebar()}
         
         <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
@@ -2767,7 +2751,24 @@ function Platform() {
   ];
 
 
-// --- ЕКРАН ПРОФІЛЮ (З кнопкою "Назад" та крутим екраном помилки) ---
+// --- ЕКРАН ЧАТУ ---
+  if (globalView === 'chat') {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
+        {renderGlobalStyles()}
+        {renderSidebar()}
+        <div style={{ flex: 1, padding: '40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+          <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>💬 Чат з викладачем</h2>
+          <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
+            <span style={{fontSize: '48px'}}>🛠</span>
+            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- ЕКРАН ПРОФІЛЮ (З кнопкою "Назад" та крутим екраном помилки) ---
   if (globalView === 'profile') {
     const handleLinkEmail = async (e) => {
       e.preventDefault();
@@ -2780,7 +2781,7 @@ function Platform() {
 
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        <GlobalStyles />
+        {renderGlobalStyles()}
         {renderSidebar()}
         <div style={{ flex: 1, padding: '40px 5%', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
@@ -2890,7 +2891,7 @@ function Platform() {
 // ЕКРАН 1: Головна сторінка вибору курсів
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-      <GlobalStyles />
+      {renderGlobalStyles()}
       {renderSidebar()}
       
       {/* ПРАВА ЧАСТИНА */}
