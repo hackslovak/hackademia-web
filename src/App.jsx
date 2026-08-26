@@ -2994,53 +2994,6 @@ function Platform() {
     'https://images.unsplash.com/photo-1634986666676-ec8fd922cdfd?q=80&w=400&auto=format&fit=crop'  // 3D хвилі
   ];
 
-// --- ЛОГІКА РЕОРДЕРУ (ДОВГЕ НАТИСКАННЯ) ---
-  const [activeReorderId, setActiveReorderId] = useState(null);
-  const pressTimer = React.useRef(null);
-
-  const handlePressStart = (e, id) => {
-    if (!effectiveIsAdmin) return;
-    pressTimer.current = setTimeout(() => {
-      setActiveReorderId(id);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-    }, 500); // 500 мілісекунд затискання для активації режиму переміщення
-  };
-
-  const handlePressEnd = () => {
-    if (pressTimer.current) clearTimeout(pressTimer.current);
-  };
-
-  const moveCourse = (courseId, direction) => {
-    setCourses(prev => {
-      const idx = prev.findIndex(c => c.id === courseId);
-      if (idx < 0) return prev;
-      let newIdx = direction === 'left' ? idx - 1 : idx + 1;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
-      const newArr = [...prev];
-      // Міняємо місцями
-      [newArr[idx], newArr[newIdx]] = [newArr[newIdx], newArr[idx]];
-      
-      // Зберігаємо порядок у базу
-      const updates = newArr.map((c, i) => ({ id: c.id, title: c.title, order_index: i }));
-      supabase.from('courses').upsert(updates).then();
-      
-      return newArr;
-    });
-    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-  };
-
-  // Керування стрілочками на клавіатурі
-  useEffect(() => {
-    if (!activeReorderId) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') moveCourse(activeReorderId, 'left');
-      if (e.key === 'ArrowRight') moveCourse(activeReorderId, 'right');
-      if (e.key === 'Escape' || e.key === 'Enter') setActiveReorderId(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeReorderId]);
-
 
   // ЕКРАН 1: Головна сторінка вибору курсів (Мінімалістичний дашборд з іконками)
   return (
