@@ -87,10 +87,12 @@ export default function Landing() {
                 <div className="hero__label">( Школа онлайн )</div>
                 <h1>ВИВЧАЙ СЛОВАЦЬКУ<br /><span>З HACKADEMIA</span></h1>
                 <p>Новий, крутий формат навчання у нашій школі. Старт нових груп вже незабаром!</p>
-                {/* ЗАМІСТЬ СТАРОЇ КНОПКИ ВСТАВ ЦЮ: */}
-<button className="btn" onClick={() => navigate(isAuth ? '/app' : '/login')}>
-  {isAuth ? 'Повернутися до навчання 🚀' : 'Увійти до платформи'}
-</button>
+                
+                {/* РОЗУМНА КНОПКА (ПЕРЕВІРЯЄ ЧИ МИ ВЖЕ УВІЙШЛИ) */}
+                <button className="btn" onClick={() => navigate(isAuth ? '/app' : '/login')}>
+                  {isAuth ? 'Повернутися до навчання 🚀' : 'Увійти до платформи'}
+                </button>
+            </section>
 
             <div className="container">
                 <h2 className="section-title"><span>( 01 - Про нас )</span>Сучасна онлайн-школа словацької мови</h2>
@@ -127,10 +129,9 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">35€ <span>/ місяць</span></div>
-                            {/* ЗАМІСТЬ СТАРОЇ КНОПКИ В КАРТОЧЦІ ВСТАВ ЦЮ: */}
-<button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate(isAuth ? '/app' : '/login')}>
-  {isAuth ? 'Перейти в кабінет' : 'Отримати доступ'}
-</button>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate(isAuth ? '/app' : '/login')}>
+                                {isAuth ? 'Перейти в кабінет' : 'Отримати доступ'}
+                            </button>
                         </div>
                     </div>
 
