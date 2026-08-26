@@ -2943,11 +2943,11 @@ function Platform() {
   
   // ЕКРАН 1: Головна сторінка вибору курсів
   return (
-    <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
+    <div style={{ textAlign: 'center', padding: '40px 20px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg, boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* ВЕРХНЯ ПАНЕЛЬ НАВІГАЦІЇ */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+      {/* ВЕРХНЯ ПАНЕЛЬ НАВІГАЦІЇ (Збільшені елементи для ПК) */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '850px', margin: '0 auto 30px auto' }}>
         
         {/* Кнопка повернення на лендінг */}
         <button 
@@ -2956,11 +2956,12 @@ function Platform() {
             background: theme.inputBg, 
             color: theme.text, 
             border: `1px solid ${theme.inputBorder}`, 
-            padding: '5px 10px', 
-            borderRadius: '6px', 
-            fontSize: '11px', 
+            padding: '10px 18px', 
+            borderRadius: '10px', 
+            fontSize: '14px', 
             fontWeight: 'bold', 
-            cursor: 'pointer' 
+            cursor: 'pointer',
+            boxShadow: '0 2px 5px rgba(0,0,0,0.05)'
           }}
           title="Повернутися на головну сторінку сайту"
         >
@@ -2969,8 +2970,8 @@ function Platform() {
 
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
-          {/* Кнопки перемикання мов */}
-          <div style={{ display: 'flex', gap: '4px' }}>
+          {/* Кнопки перемикання мов (більші) */}
+          <div style={{ display: 'flex', gap: '6px' }}>
             {['uk', 'sk', 'en', 'ru'].map((l) => (
               <button 
                 key={l}
@@ -2979,9 +2980,9 @@ function Platform() {
                   background: lang === l ? '#FF007F' : theme.inputBg, 
                   color: lang === l ? '#fff' : theme.text, 
                   border: `1px solid ${theme.inputBorder}`, 
-                  padding: '4px 7px', 
-                  borderRadius: '6px', 
-                  fontSize: '10px', 
+                  padding: '8px 12px', 
+                  borderRadius: '8px', 
+                  fontSize: '13px', 
                   fontWeight: 'bold', 
                   cursor: 'pointer' 
                 }}
@@ -2991,39 +2992,39 @@ function Platform() {
             ))}
           </div>
 
-          {/* НОВИЙ ДЗВІНОЧОК АДМІНА */}
+          {/* ДЗВІНОЧОК АДМІНА */}
           {effectiveIsAdmin && (
             <div 
               onClick={() => setGlobalView('admin_panel')} 
-              style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '38px', height: '38px', borderRadius: '50%', background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}
+              style={{ position: 'relative', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '50%', background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}
               title="Адмін-панель (Заявки)"
             >
-              <span style={{ fontSize: '20px', animation: pendingCount > 0 ? 'ffPulse 1.5s infinite' : 'none' }}>🔔</span>
+              <span style={{ fontSize: '22px', animation: pendingCount > 0 ? 'ffPulse 1.5s infinite' : 'none' }}>🔔</span>
               {pendingCount > 0 && (
-                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#FF007F', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '12px', border: '2px solid ' + theme.bg }}>
+                <span style={{ position: 'absolute', top: '-4px', right: '-4px', background: '#FF007F', color: 'white', fontSize: '12px', fontWeight: 'bold', padding: '3px 7px', borderRadius: '12px', border: '2px solid ' + theme.bg }}>
                   {pendingCount}
                 </span>
               )}
             </div>
           )}
 
-          <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+          <button onClick={toggleSound} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, width: '44px', height: '44px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isSoundEnabled ? '🔊' : '🔇'}
           </button>
-          <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
+          <button onClick={toggleTheme} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, width: '44px', height: '44px', borderRadius: '50%', fontSize: '20px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {isDarkMode ? '☀️' : '🌙'}
           </button>
         </div>
       </div>
 
-      <h1 style={{ color: theme.text }}>{t('title')}</h1>
-      {userName && <p style={{ color: theme.textSecondary }}>{t('greeting')}, <b>{userName}</b>!</p>}
+      <h1 style={{ color: theme.text, fontSize: '36px', marginBottom: '10px' }}>{t('title')}</h1>
+      {userName && <p style={{ color: theme.textSecondary, fontSize: '16px', marginBottom: '20px' }}>{t('greeting')}, <b>{userName}</b>!</p>}
       
       {isAdmin && (
         <span 
           onClick={handleBadgeClick}
           onDoubleClick={handleBadgeDoubleClick}
-          style={{ background: isPreviewMode ? '#4A5568' : '#FF007F', color: 'white', padding: '5px 14px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}
+          style={{ background: isPreviewMode ? '#4A5568' : '#FF007F', color: 'white', padding: '6px 18px', borderRadius: '20px', fontSize: '13px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', boxShadow: '0 2px 5px rgba(0,0,0,0.1)', marginBottom: '15px' }}
           title="Клікніть для довідки, двічі клікніть для перемикання превью"
         >
           {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
@@ -3031,28 +3032,29 @@ function Platform() {
       )}
 
       {!window.Telegram?.WebApp?.initDataUnsafe?.user && (
-        <div style={{ margin: '15px auto', maxWidth: '300px' }}>
+        <div style={{ margin: '15px auto', maxWidth: '350px' }}>
           <input 
             type="text" 
             placeholder="Твоє ім'я для веб-версії" 
             defaultValue={localStorage.getItem('hack_browser_user') || ''} 
             onBlur={e => { localStorage.setItem('hack_browser_user', e.target.value); window.location.reload(); }}
-            style={{ padding: '8px', width: '100%', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, boxSizing: 'border-box' }}
+            style={{ padding: '12px', width: '100%', borderRadius: '8px', border: `1px solid ${theme.inputBorder}`, fontSize: '15px', boxSizing: 'border-box' }}
           />
         </div>
       )}
 
       {effectiveIsAdmin && (
         <div style={{ margin: '20px 0' }}>
-          <button onClick={handleAddCourse} style={{ background: '#FF007F', color: 'white', padding: '12px 20px', border: 'none', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>+ Створити новий курс</button>
+          <button onClick={handleAddCourse} style={{ background: '#FF007F', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(255,0,127,0.3)' }}>+ Створити новий курс</button>
         </div>
       )}
 
-      <div style={{ marginTop: '30px', maxWidth: '400px', margin: '30px auto' }}>
-        <h3 style={{ color: theme.text }}>{t('selectCourse')}</h3>
+      {/* СПИСОК КУРСІВ (Ширший і симетричний для ПК) */}
+      <div style={{ marginTop: '30px', maxWidth: '650px', margin: '30px auto' }}>
+        <h3 style={{ color: theme.text, fontSize: '22px', marginBottom: '20px', textAlign: 'left' }}>{t('selectCourse')}</h3>
         
         {effectiveIsAdmin && courses.length > 1 && (
-          <p style={{ fontSize: '13px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '15px' }}>
+          <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px', textAlign: 'left' }}>
             💡 Затисни і потягни блок курсу, щоб змінити його позицію
           </p>
         )}
@@ -3063,15 +3065,15 @@ function Platform() {
               <Reorder.Item
                 key={course.id}
                 value={course}
-                whileDrag={{ scale: 1.05, boxShadow: "0px 15px 25px rgba(255, 0, 127, 0.25)" }} 
-                style={{ background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', position: 'relative', border: `1px solid ${theme.inputBorder}` }}
+                whileDrag={{ scale: 1.02, boxShadow: "0px 15px 25px rgba(255, 0, 127, 0.25)" }} 
+                style={{ background: theme.cardBg, padding: '24px 28px', borderRadius: '14px', marginBottom: '18px', boxShadow: '0 4px 15px rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'grab', position: 'relative', border: `1px solid ${theme.inputBorder}` }}
               >
-                <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '18px', color: theme.text, flex: 1, textAlign: 'left' }}>
+                <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1, textAlign: 'left' }}>
                   🔓 {course.title}
                 </span>
                 
                 {courses.length > 1 && (
-                  <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '6px', padding: '8px', cursor: 'pointer', zIndex: 10 }}>🗑</button>
+                  <button onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '10px 14px', cursor: 'pointer', zIndex: 10, fontSize: '16px' }}>🗑</button>
                 )}
               </Reorder.Item>
             ))}
@@ -3081,8 +3083,8 @@ function Platform() {
             const hasAccess = allowedCourses.includes(course.id);
             return (
               <div key={course.id} style={{ 
-                background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', 
-                boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', 
+                background: theme.cardBg, padding: '24px 28px', borderRadius: '14px', marginBottom: '18px', 
+                boxShadow: '0 4px 15px rgba(0,0,0,0.06)', display: 'flex', justifyContent: 'space-between', 
                 alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
                 opacity: hasAccess ? 1 : 0.5,
                 transition: 'opacity 0.3s'
@@ -3096,7 +3098,7 @@ function Platform() {
                       alert("🔒 Цей курс наразі закритий для вас.\nЯкщо ви його вже оплатили, будь ласка, зачекайте на схвалення або напишіть адміністратору.");
                     }
                   }} 
-                  style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '18px', color: theme.text, flex: 1, textAlign: 'left' }}
+                  style={{ cursor: hasAccess ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '20px', color: theme.text, flex: 1, textAlign: 'left' }}
                 >
                   {hasAccess ? '🔓' : '🔒'} {course.title}
                 </span>
@@ -3106,56 +3108,58 @@ function Platform() {
         )}
       </div>
 	  
-      {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
-      <div style={{ maxWidth: '400px', margin: '25px auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+      {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (Ширші кнопки для ПК) */}
+      <div style={{ maxWidth: '650px', margin: '35px auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         <button 
           onClick={startSpacedRepetition}
-          style={{ background: 'linear-gradient(135deg, #3182ce 0%, #63b3ed 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(49,130,206,0.3)' }}
+          style={{ background: 'linear-gradient(135deg, #3182ce 0%, #63b3ed 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(49,130,206,0.3)' }}
         >
           <span>{t('repeatToday')}</span>
         </button>
 
         <button 
           onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
-          style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(128,90,213,0.3)' }}
+          style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(128,90,213,0.3)' }}
         >
           <span>{t('sniperGame')}</span>
         </button>
         <button 
           onClick={startFalseFriends} 
-          style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', boxShadow: '0 4px 12px rgba(237,137,54,0.3)' }}
+          style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(237,137,54,0.3)' }}
         >
           <span>{t('falseFriends')}</span>
         </button>
       </div>
 
       {isAdmin && (
-        <div style={{ marginTop: '60px', opacity: 0.6, fontSize: '12px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
+        <div style={{ marginTop: '50px', opacity: 0.7, fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
           {effectiveIsAdmin && (
-            <div style={{ display: 'flex', gap: '5px', alignItems: 'center', color: theme.textSecondary }}>
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: theme.textSecondary }}>
               <span>Додати адміна:</span>
               <input 
                 type="number" 
                 placeholder="Telegram ID" 
                 value={newAdminTelegramId} 
                 onChange={e => setNewAdminTelegramId(e.target.value)} 
-                style={{ padding: '4px 8px', borderRadius: '4px', border: `1px solid ${theme.inputBorder}`, fontSize: '12px', width: '100px' }} 
+                style={{ padding: '8px 12px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, fontSize: '14px', width: '130px' }} 
               />
-              <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '4px', padding: '4px 10px', cursor: 'pointer' }}>OK</button>
+              <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '6px', padding: '8px 14px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
             </div>
           )}
           
-          <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #00C853', color: '#00C853', padding: '6px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-            ☁️ Зробити бекап у хмару
-          </button>
-          
-          <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #3182ce', color: '#3182ce', padding: '6px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
-            ❓ Довідка
-          </button>
-          
-          <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', padding: '6px 15px', borderRadius: '6px', cursor: 'pointer', fontSize: '12px', marginTop: '-5px' }}>
-            🔄 Відновити останній бекап
-          </button>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: '300px', justifyContent: 'center' }}>
+            <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #00C853', color: '#00C853', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              ☁️ Зробити бекап у хмару
+            </button>
+            
+            <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #3182ce', color: '#3182ce', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              ❓ Довідка
+            </button>
+            
+            <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+              🔄 Відновити останній бекап
+            </button>
+          </div>
         </div>
       )}
     
@@ -3168,10 +3172,10 @@ function Platform() {
           transform: 'translateX(-50%)',
           background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)',
           color: '#2C3E50',
-          padding: '12px 25px',
-          borderRadius: '20px',
+          padding: '14px 30px',
+          borderRadius: '24px',
           fontWeight: '900',
-          fontSize: '16px',
+          fontSize: '17px',
           boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
           zIndex: 9999,
           animation: 'ffPulse 1.5s infinite',
@@ -3182,30 +3186,31 @@ function Platform() {
       )}
 	  
 	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+	  
 	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
         <div style={{
           position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999,
-          background: theme.cardBg, padding: '20px', borderRadius: '16px',
+          background: theme.cardBg, padding: '24px', borderRadius: '18px',
           boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #FF007F`,
-          maxWidth: '320px', textAlign: 'left', animation: 'ffPulse 2s infinite'
+          maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite'
         }}>
-          <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '18px' }}>🚨 Увага!</h4>
-          <p style={{ margin: '0 0 15px 0', fontSize: '14px', color: theme.textSecondary, lineHeight: '1.4' }}>
+          <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px' }}>🚨 Увага!</h4>
+          <p style={{ margin: '0 0 18px 0', fontSize: '15px', color: theme.textSecondary, lineHeight: '1.4' }}>
             Нещодавно ви додали учн{studentsNeedingCourses.length > 1 ? 'ів' : 'я'}: 
             <b style={{ color: theme.text }}> {studentsNeedingCourses.map(s => s.first_name || 'Без імені').join(', ')}</b>. <br/><br/>
             Який курс та групу бажаєте їм призначити?
           </p>
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '12px' }}>
             <button 
               onClick={() => setGlobalView('admin_panel')} 
-              style={{ flex: 1, background: '#FF007F', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ flex: 1, background: '#FF007F', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
             >
               ⚙️ Налаштувати
             </button>
             <button 
               onClick={dismissCourseAlert}
-              style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 'bold' }}
+              style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
             >
               Пізніше
             </button>
@@ -3214,7 +3219,6 @@ function Platform() {
       )}
     </div>
   );
-}
 	  
 
 // --- НОВИЙ ГОЛОВНИЙ КОМПОНЕНТ (РОУТЕР) ---
