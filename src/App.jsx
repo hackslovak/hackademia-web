@@ -2949,7 +2949,7 @@ function Platform() {
   if (globalView === 'profile') {
     
 
-    // ФУНКЦІЯ: Збереження особистих даних
+    // ФУНКЦІЯ: Збереження особистих даних із миттєвим глобальним оновленням
     const handleSaveProfile = async (e) => {
       e.preventDefault();
       setIsSaving(true);
@@ -2963,17 +2963,26 @@ function Platform() {
         bio: form.bio.value.trim(),
       };
 
-      const { error } = await supabase.from('users').update(updates).eq('id', dbUserId);
+      // Зберігаємо за унікальним id або email
+      const { error } = await supabase
+        .from('users')
+        .update(updates)
+        .eq('id', dbUserId);
       
       setIsSaving(false);
       
       if (error) {
         alert("❌ Помилка збереження: " + error.message);
       } else {
-        setUserName(updates.first_name); // Оновлюємо ім'я в шапці/сайдбарі миттєво
-        setUserProfile({ ...userProfile, ...updates });
+        setUserName(updates.first_name); 
+        setUserProfile(prev => ({ ...prev, ...updates }));
+        
+        // Зберігаємо також у localStorage, щоб головна сторінка бачила зміни без перезавантаження
+        localStorage.setItem('hack_user_name', updates.first_name);
+        
         playUiSound('ding', isSoundEnabled);
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        
         alert("✅ Дані успішно збережено!");
       }
     };
