@@ -1020,6 +1020,15 @@ function Platform() {
     adminBorder: isDarkMode ? '#d69e2e' : '#ECC94B',
   };
 
+  // --- ФУНКЦІЯ ВИХОДУ ---
+  const handleLogout = async () => {
+    if (window.confirm("Ви точно хочете вийти з акаунта?")) {
+      await supabase.auth.signOut();
+      localStorage.removeItem('hack_auth_cache');
+      window.location.href = '/'; // Перекидаємо на лендінг
+    }
+  };
+  
   // ПІСЛЯ ЦЬОГО ІДУТЬ ЕКРАНИ (globalView === 'profile', chat тощо)
   
   const [toast, setToast] = useState(null);
@@ -2737,26 +2746,39 @@ function Platform() {
         
         <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          {/* Верхня міні-панель (ОНОВЛЕНІ ТЕПЛІ КОЛЬОРИ ДЛЯ МОВИ) */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
-            <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
-              {['uk', 'sk', 'en', 'ru'].map((l) => (
-                <button 
-                  key={l} onClick={() => changeLang(l)} 
-                  style={{ 
-  background: lang === l ? '#F6AD55' : 'transparent', 
-  color: lang === l ? '#1A3636' : theme.text, 
-  border: 'none', padding: '6px 12px', borderRadius: '8px', 
-  fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' 
-}}
-                >
-                  {l.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-            <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          {/* Верхня міні-панель */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
+            {['uk', 'sk', 'en', 'ru'].map((l) => (
+              <button 
+                key={l} 
+                onClick={() => changeLang(l)} 
+                className="hover-card"
+                style={{ 
+                  background: lang === l ? '#E0A345' : 'transparent', 
+                  color: lang === l ? '#fff' : theme.text, 
+                  border: 'none', 
+                  padding: '6px 12px', 
+                  borderRadius: '8px', 
+                  fontSize: '12px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer', 
+                  transition: '0.2s' 
+                }}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
           </div>
+          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          
+          {/* НОВА КНОПКА ВИХОДУ */}
+          <button onClick={handleLogout} className="hover-card" title="Вийти з акаунта" style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            Вийти
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
 
           <button onClick={() => setSelectedCourse(null)} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', marginBottom: '20px', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', padding: 0 }}>
             ← До списку курсів
@@ -3009,21 +3031,20 @@ function Platform() {
             <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
               
               {/* ЛІВА КОЛОНКА (Особисті дані) */}
-              <div style={{ flex: '1 1 500px', background: theme.cardBg, padding: '45px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+              <div style={{ flex: '1 1 500px', background: theme.cardBg, padding: '45px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', position: 'relative', zIndex: 10 }}>
                 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '40px' }}>
                    
-                   {/* АВАТАРКА З МОЖЛИВІСТЮ ЗАВАНТАЖЕННЯ */}
+                   {/* АВАТАРКА З ІДЕАЛЬНИМ АВТО-КАДРУВАННЯМ */}
                    <label title="Змінити фото" className="hover-card" style={{ position: 'relative', width: '85px', height: '85px', borderRadius: '50%', background: userProfile.avatar_url ? 'transparent' : '#E0A345', color: '#fff', fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)' }}>
                       {isUploading ? (
                         <span style={{ fontSize: '14px' }}>⏳</span>
                       ) : userProfile.avatar_url ? (
-                        <img src={userProfile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={userProfile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', borderRadius: '50%' }} />
                       ) : (
                         userName ? userName[0].toUpperCase() : 'H'
                       )}
                       
-                      {/* Темна плашка "Камера" при наведенні (через CSS) */}
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.8 }}>
                         <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                       </div>
@@ -3039,7 +3060,7 @@ function Platform() {
                 </div>
 
                 {/* ФОРМА ОСОБИСТИХ ДАНИХ */}
-                <form onSubmit={handleSaveProfile}>
+                <form onSubmit={handleSaveProfile} style={{ position: 'relative', zIndex: 20 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ім'я</label>
@@ -3067,7 +3088,7 @@ function Platform() {
                     <textarea name="bio" rows="3" defaultValue={userProfile.bio || ''} placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
                   </div>
 
-                  <button type="submit" disabled={isSaving} className="hover-card" style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', fontSize: '16px', width: '100%', opacity: isSaving ? 0.7 : 1 }}>
+                  <button type="submit" disabled={isSaving} className="hover-card" style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', fontSize: '16px', width: '100%', opacity: isSaving ? 0.7 : 1, position: 'relative', zIndex: 30 }}>
                     {isSaving ? 'Збереження...' : 'Зберегти особисті дані'}
                   </button>
                 </form>
@@ -3159,8 +3180,14 @@ function Platform() {
               </button>
             ))}
           </div>
-          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          
+          {/* НОВА КНОПКА ВИХОДУ */}
+          <button onClick={handleLogout} className="hover-card" title="Вийти з акаунта" style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            Вийти
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
         </div>
 		
 
