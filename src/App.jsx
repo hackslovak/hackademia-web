@@ -2871,23 +2871,40 @@ function Platform() {
           <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
         </div>
 
-        {/* ЧИСТИЙ БЛОК ПРИВІТАННЯ */}
-        <div style={{ marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
-          <div>
-            {userName && <p style={{ color: theme.textSecondary, fontSize: '24px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userName}</b>! 👋</p>}
-            {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}>{isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}</span>}
+{/* ЧИСТИЙ БЛОК ПРИВІТАННЯ ТА КНОПКА ПО ЦЕНТРУ */}
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div>
+              {userName && <p style={{ color: theme.textSecondary, fontSize: '24px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userName}</b>! 👋</p>}
+              {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#F6AD55', color: isPreviewMode ? 'white' : '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}</span>}
+            </div>
           </div>
-          {effectiveIsAdmin && <button onClick={handleAddCourse} style={{ 
-  background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', 
-  color: '#1A3636', 
-  padding: '14px 28px', 
-  border: 'none', 
-  borderRadius: '12px', 
-  fontWeight: '900', 
-  fontSize: '15px', 
-  cursor: 'pointer', 
-  boxShadow: '0 4px 15px rgba(246,173,85,0.3)' 
-}}>+ Створити новий курс</button>}
+
+          {/* КНОПКА СТВОРЕННЯ КУРСУ: По центру над курсами, правильний градієнт і білий текст */}
+          {effectiveIsAdmin && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '25px' }}>
+              <button 
+                onClick={handleAddCourse} 
+                className="hover-card" 
+                style={{ 
+                  background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', 
+                  color: '#ffffff', 
+                  padding: '12px 24px', 
+                  border: 'none', 
+                  borderRadius: '12px', 
+                  fontWeight: '800', 
+                  fontSize: '14px', 
+                  cursor: 'pointer', 
+                  boxShadow: '0 6px 20px rgba(255,123,84,0.3)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                + Створити новий курс
+              </button>
+            </div>
+          )}
         </div>
 
         {/* СПИСОК КУРСІВ */}
