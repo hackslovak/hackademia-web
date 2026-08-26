@@ -24,11 +24,10 @@ export default function Landing() {
         <div className="landing-body">
             <header>
                 <a href="#" className="logo">
-                    {/* ТУТ ТЕПЕР ТВОЯ СОВА! */}
                     <img 
-                        src="/logo-a1.jpg" 
+                        src="/logo-main.svg" 
                         alt="Hackademia Logo" 
-                        style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FF4B2B' }} 
+                        style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
                     />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
