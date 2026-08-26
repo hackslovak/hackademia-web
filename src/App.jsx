@@ -3139,11 +3139,28 @@ function Platform() {
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
           <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
             {['uk', 'sk', 'en', 'ru'].map((l) => (
-              <button key={l} onClick={() => changeLang(l)} style={{ background: lang === l ? '#2B6CB0' : 'transparent', color: lang === l ? '#fff' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>{l.toUpperCase()}</button>
+              <button 
+                key={l} 
+                onClick={() => changeLang(l)} 
+                className="hover-card"
+                style={{ 
+                  background: lang === l ? '#E0A345' : 'transparent', 
+                  color: lang === l ? '#fff' : theme.text, 
+                  border: 'none', 
+                  padding: '6px 12px', 
+                  borderRadius: '8px', 
+                  fontSize: '12px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer', 
+                  transition: '0.2s' 
+                }}
+              >
+                {l.toUpperCase()}
+              </button>
             ))}
           </div>
-          <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-          <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
         </div>
 
 {/* ЧИСТИЙ БЛОК ПРИВІТАННЯ ТА КНОПКА ПО ЦЕНТРУ */}
