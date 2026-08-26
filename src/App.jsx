@@ -3274,3 +3274,19 @@ function App() {
 }
 
 export default App;
+
+// --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/app" element={<Platform />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
