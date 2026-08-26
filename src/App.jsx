@@ -1133,9 +1133,9 @@ function Platform() {
       display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px',
       boxShadow: '4px 0 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box'
     }}>
-      {/* 1. ЗАМІНА ЛОГОТИПА НА ВЛАСНУ SVG КАРТИНКУ */}
+      {/* ЗБІЛЬШЕНИЙ ЛОГОТИП-СОВА SVG */}
       <div title="Hackademia" style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/logo.svg" alt="Hackademia Logo" style={{ width: '45px', height: '45px', objectFit: 'contain' }} />
+        <img src="/logo.svg" alt="Hackademia Logo" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', flex: 1 }}>
@@ -1175,9 +1175,7 @@ function Platform() {
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, maxWidth: '600px' }}>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Ім'я: <b style={{color: theme.text}}>{userName || 'Гість'}</b></p>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Статус доступу: <b style={{color: '#00C853'}}>{accessStatus === 'approved' ? 'Активний' : accessStatus}</b></p>
-            {isAdmin && <span style={{ background: '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
-            <hr style={{ border: 'none', borderTop: `1px solid ${theme.inputBorder}`, margin: '30px 0' }}/>
-            <p style={{color: theme.textSecondary, fontStyle: 'italic'}}>Тут незабаром з'явиться детальна статистика, зміна пароля та сертифікати.</p>
+            {isAdmin && <span style={{ background: '#F6AD55', color: '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
           </div>
         </div>
       </div>
@@ -1194,7 +1192,7 @@ function Platform() {
           <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>💬 Чат з викладачем</h2>
           <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
             <span style={{fontSize: '48px'}}>🛠</span>
-            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою та надсилати домашні завдання.</p>
+            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
           </div>
         </div>
       </div>
@@ -1327,12 +1325,17 @@ function Platform() {
   
   useEffect(() => {
     async function initUser() {
-      // 1. Перевіряємо, чи юзер залогинений через Supabase Auth (Email у браузері)
+      // 1. ШВИДКИЙ КЕШ (додаємо цей рядок, щоб не викидало при кнопці "Назад")
+      const cachedStatus = localStorage.getItem('hack_auth_cache');
+      if (cachedStatus) setAccessStatus(cachedStatus);
+
+      // 2. Далі йде твоя робоча перевірка сесії (її НЕ міняємо)
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
         const emailUser = session.user;
         setUserName(emailUser.email.split('@')[0]);
+        localStorage.setItem('hack_auth_cache', 'approved');
         
         // Шукаємо юзера за email (тепер колонка точно існуватиме)
         let { data: userData, error: selectError } = await supabase
