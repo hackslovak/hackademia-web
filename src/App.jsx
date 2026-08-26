@@ -2770,8 +2770,85 @@ function Platform() {
     );
   }
 
-  // --- ЕКРАН ПРОФІЛЮ (Ідеальна копія дизайну зі скріншоту) ---
+  // --- ЕКРАН ПРОФІЛЮ (Повністю функціональний) ---
   if (globalView === 'profile') {
+    // Локальні стани для екрану профілю
+    const [showPassword, setShowPassword] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [isUploading, setIsUploading] = useState(false);
+    const [userProfile, setUserProfile] = useState({});
+
+    // Завантажуємо повні дані користувача при відкритті профілю
+    useEffect(() => {
+      async function fetchFullProfile() {
+        if (!dbUserId) return;
+        const { data } = await supabase.from('users').select('*').eq('id', dbUserId).single();
+        if (data) setUserProfile(data);
+      }
+      fetchFullProfile();
+    }, [dbUserId]);
+
+    // ФУНКЦІЯ: Збереження особистих даних
+    const handleSaveProfile = async (e) => {
+      e.preventDefault();
+      setIsSaving(true);
+      const form = e.target;
+      
+      const updates = {
+        first_name: form.firstName.value.trim(),
+        last_name: form.lastName.value.trim(),
+        phone: form.phone.value.trim(),
+        city: form.city.value.trim(),
+        bio: form.bio.value.trim(),
+      };
+
+      const { error } = await supabase.from('users').update(updates).eq('id', dbUserId);
+      
+      setIsSaving(false);
+      
+      if (error) {
+        alert("❌ Помилка збереження: " + error.message);
+      } else {
+        setUserName(updates.first_name); // Оновлюємо ім'я в шапці/сайдбарі миттєво
+        setUserProfile({ ...userProfile, ...updates });
+        playUiSound('ding', isSoundEnabled);
+        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        alert("✅ Дані успішно збережено!");
+      }
+    };
+
+    // ФУНКЦІЯ: Завантаження аватара (як у Telegram)
+    const handleAvatarUpload = async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      setIsUploading(true);
+      try {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `avatar_${dbUserId}_${Date.now()}.${fileExt}`;
+
+        // 1. Завантажуємо в бакет 'avatars'
+        const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        // 2. Отримуємо публічне посилання
+        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
+
+        // 3. Зберігаємо посилання в таблицю users
+        const { error: updateError } = await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', dbUserId);
+        if (updateError) throw updateError;
+
+        setUserProfile({ ...userProfile, avatar_url: publicUrl });
+        playUiSound('ding', isSoundEnabled);
+        
+      } catch (err) {
+        alert("❌ Помилка завантаження фото: " + err.message);
+      } finally {
+        setIsUploading(false);
+      }
+    };
+
+    // ФУНКЦІЯ: Прив'язка Email
     const handleLinkEmail = async (e) => {
       e.preventDefault();
       const email = e.target.email.value;
@@ -2787,12 +2864,17 @@ function Platform() {
         {renderSidebar()}
         <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
+          {/* КНОПКА ПОВЕРНЕННЯ НАЗАД */}
+          <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Назад до курсів
+          </button>
+
           <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px' }}>
             <span style={{ color: '#4A5568' }}>👤</span> Мій профіль
           </h2>
 
-          {/* ЯКЩО ДАНІ НЕ ПІДВАНТАЖИЛИСЬ - ПОКАЗУЄМО КРУТУ ЗАГЛУШКУ */}
-          {!userName && !dbUserId ? (
+          {!dbUserId ? (
             <div style={{ background: 'linear-gradient(135deg, #FF6B6B 0%, #C92A2A 100%)', padding: '40px', borderRadius: '32px', color: '#fff', textAlign: 'center', boxShadow: '0 10px 30px rgba(201,42,42,0.3)', maxWidth: '600px', margin: '0 auto' }}>
               <div style={{ fontSize: '60px', marginBottom: '15px' }}>👾</div>
               <h3 style={{ fontSize: '28px', margin: '0 0 10px 0', fontWeight: '900' }}>Ой, сталася помилочка!</h3>
@@ -2800,16 +2882,30 @@ function Platform() {
               <button onClick={() => window.location.reload()} style={{ background: '#fff', color: '#C92A2A', border: 'none', padding: '12px 24px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>🔄 Оновити сторінку</button>
             </div>
           ) : (
-            
-            /* ГОЛОВНИЙ ДИЗАЙН ПРОФІЛЮ */
             <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
               
               {/* ЛІВА КОЛОНКА (Особисті дані) */}
               <div style={{ flex: '1 1 500px', background: theme.cardBg, padding: '45px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+                
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '40px' }}>
-                   <div style={{ width: '85px', height: '85px', borderRadius: '50%', background: '#E0A345', color: '#fff', fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold' }}>
-                      {userName ? userName[0].toUpperCase() : 'H'}
-                   </div>
+                   
+                   {/* АВАТАРКА З МОЖЛИВІСТЮ ЗАВАНТАЖЕННЯ */}
+                   <label title="Змінити фото" className="hover-card" style={{ position: 'relative', width: '85px', height: '85px', borderRadius: '50%', background: userProfile.avatar_url ? 'transparent' : '#E0A345', color: '#fff', fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)' }}>
+                      {isUploading ? (
+                        <span style={{ fontSize: '14px' }}>⏳</span>
+                      ) : userProfile.avatar_url ? (
+                        <img src={userProfile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        userName ? userName[0].toUpperCase() : 'H'
+                      )}
+                      
+                      {/* Темна плашка "Камера" при наведенні (через CSS) */}
+                      <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.8 }}>
+                        <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+                      </div>
+                      <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
+                   </label>
+
                    <div>
                       <h3 style={{ margin: '0 0 8px 0', color: theme.text, fontSize: '26px', fontWeight: '900' }}>{userName || 'Гість'}</h3>
                       <span style={{ color: accessStatus === 'approved' ? '#38A169' : '#E53E3E', fontWeight: 'bold', fontSize: '14px' }}>
@@ -2818,36 +2914,39 @@ function Platform() {
                    </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-                  <div>
-                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ім'я</label>
-                     <input type="text" defaultValue={userName || ''} placeholder="Ваше ім'я" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                {/* ФОРМА ОСОБИСТИХ ДАНИХ */}
+                <form onSubmit={handleSaveProfile}>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
+                    <div>
+                       <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ім'я</label>
+                       <input type="text" name="firstName" defaultValue={userProfile.first_name || userName || ''} placeholder="Ваше ім'я" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Прізвище</label>
+                       <input type="text" name="lastName" defaultValue={userProfile.last_name || ''} placeholder="Не вказано" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                    </div>
                   </div>
-                  <div>
-                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Прізвище</label>
-                     <input type="text" placeholder="Не вказано" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
-                  </div>
-                </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
-                  <div>
-                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Телефон / Telegram</label>
-                     <input type="text" placeholder="+380..." style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
+                    <div>
+                       <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Телефон / Telegram</label>
+                       <input type="text" name="phone" defaultValue={userProfile.phone || ''} placeholder="+380..." style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                    </div>
+                    <div>
+                       <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Місто</label>
+                       <input type="text" name="city" defaultValue={userProfile.city || ''} placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                    </div>
                   </div>
-                  <div>
-                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Місто</label>
-                     <input type="text" placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+
+                  <div style={{ marginBottom: '35px' }}>
+                    <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Про мене</label>
+                    <textarea name="bio" rows="3" defaultValue={userProfile.bio || ''} placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
                   </div>
-                </div>
 
-                <div style={{ marginBottom: '35px' }}>
-                  <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Про мене</label>
-                  <textarea rows="3" placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
-                </div>
-
-                <button style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', width: '100%', transition: '0.2s' }}>
-                  Зберегти особисті дані
-                </button>
+                  <button type="submit" disabled={isSaving} className="hover-card" style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', fontSize: '16px', width: '100%', opacity: isSaving ? 0.7 : 1 }}>
+                    {isSaving ? 'Збереження...' : 'Зберегти особисті дані'}
+                  </button>
+                </form>
               </div>
 
               {/* ПРАВА КОЛОНКА */}
@@ -2861,9 +2960,17 @@ function Platform() {
                       <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>Додайте пошту та пароль, щоб заходити на платформу з комп'ютера.</p>
                       
                       <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <input type="email" name="email" defaultValue={userName === 'hackslovak' ? 'hackslovak@gmail.com' : ''} placeholder="Ваша пошта (email)" required style={{ padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                        <input type="password" name="password" placeholder="Новий пароль" required style={{ padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                        <button type="submit" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s', marginTop: '5px' }}>
+                        <input type="email" name="email" defaultValue={userProfile.email || ''} placeholder="Ваша пошта (email)" required style={{ padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                        
+                        {/* ІНПУТ ПАРОЛЯ З ОКОМ */}
+                        <div style={{ position: 'relative' }}>
+                          <input type={showPassword ? "text" : "password"} name="password" placeholder="Новий пароль" required style={{ width: '100%', boxSizing: 'border-box', padding: '16px', paddingRight: '50px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                          <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: 0.6 }}>
+                            {showPassword ? '🙈' : '👁'}
+                          </button>
+                        </div>
+
+                        <button type="submit" className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', marginTop: '5px' }}>
                           Зв'язати акаунти
                         </button>
                       </form>
