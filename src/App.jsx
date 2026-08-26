@@ -5,6 +5,7 @@ import { Reorder } from 'framer-motion';
 import AdminPanel from './AdminPanel';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Landing from './Landing';
+import Login from './Login';
 
 // --- ЗВУКОВИЙ ДВИЖОК ---
 let audioCtx = null;
@@ -3131,6 +3132,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/app" element={<Platform />} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

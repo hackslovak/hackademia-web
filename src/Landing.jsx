@@ -85,6 +85,7 @@ export default function Landing() {
             <div className="container" style={{ paddingTop: 0 }}>
                 <h2 className="section-title"><span>( 02 - Формати та ціни )</span>Оберіть зручний формат навчання</h2>
                 <div className="pricing-grid">
+                    {/* 1. Закритий доступ (За матеріалами) */}
                     <div className="price-card">
                         <div>
                             <span className="badge" style={{ background: '#EBF3FF', color: '#062440' }}>Самостійно</span>
@@ -101,8 +102,61 @@ export default function Landing() {
                             <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate('/app')}>Отримати доступ</button>
                         </div>
                     </div>
+
+                    {/* 2. Рівні А1 / А2 */}
+                    <div className="price-card">
+                        <div>
+                            <span className="badge">Група (до 6 осіб)</span>
+                            <h3>Рівні А1 / А2</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Максимум живої комунікації та гумору у дружній атмосфері.</p>
+                            <ul>
+                                <li>✔ <b>16 занять</b> (2 місяці)</li>
+                                <li>✔ 2 рази на тиждень по 1.5 год</li>
+                                <li>✔ Помісячна оплата</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div className="price">85€ <span>/ місяць</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                        </div>
+                    </div>
+
+                    {/* 3. Рівень В1 (Популярний) */}
+                    <div className="price-card highlight">
+                        <div>
+                            <span className="badge" style={{ background: '#062440', color: '#fff' }}>Популярний</span>
+                            <h3>Рівень В1</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Поглиблене вивчення для тих, хто вже має базові знання.</p>
+                            <ul>
+                                <li>✔ <b>24 заняття</b> (~2.5 місяці)</li>
+                                <li>✔ 2 рази на тиждень по 1.5 год</li>
+                                <li>✔ Чат із вашим ментором</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div className="price">85€ <span>/ місяць</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                        </div>
+                    </div>
+
+                    {/* 4. Індивідуально */}
+                    <div className="price-card">
+                        <div>
+                            <span className="badge">1 особа або пара</span>
+                            <h3>Індивідуально</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Повна персональна адаптація під ваші особисті цілі та графік.</p>
+                            <ul>
+                                <li>✔ <b>Власний гнучкий графік</b></li>
+                                <li>✔ 100% уваги викладача</li>
+                                <li>✔ Записи занять за бажанням</li>
+                            </ul>
+                        </div>
+                        <div>
+                            <div className="price">175€ <span>/ місяць</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                        </div>
+                    </div>
                 </div>
-            </div>
 
             <div className="floating-buttons">
                 <a href="https://t.me/xackademia" target="_blank" rel="noreferrer" className="float-btn" title="Зв'язатися в Telegram">
