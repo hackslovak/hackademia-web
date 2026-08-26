@@ -3162,6 +3162,7 @@ function Platform() {
           <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
           <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
         </div>
+		
 
 {/* ЧИСТИЙ БЛОК ПРИВІТАННЯ ТА КНОПКА ПО ЦЕНТРУ */}
         <div style={{ marginBottom: '30px' }}>
