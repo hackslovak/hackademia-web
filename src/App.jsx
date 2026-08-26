@@ -1107,9 +1107,6 @@ function Platform() {
       try { setMyCards(JSON.parse(savedCards)); } catch(e){}
     }
   }, []);
-  
-  const [pendingCount, setPendingCount] = useState(0);
-  const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
 
   // Додаємо цей useEffect для дзвіночка, щоб він сам перевіряв заявки
   useEffect(() => {
