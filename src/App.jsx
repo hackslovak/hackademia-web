@@ -3108,75 +3108,67 @@ function Platform() {
         {/* СПИСОК КУРСІВ */}
         <div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
-            {effectiveIsAdmin ? (
-              <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'contents', listStyle: 'none' }}>
-                {courses.map((course, idx) => {
-                  const imgUrl = decorImages[idx % decorImages.length];
-                  return (
-                    <Reorder.Item
-                      key={course.id} value={course} 
-                      whileHover={{ scale: 1.02, filter: 'brightness(1.1)', y: -4 }} /* ХОВЕР ДЛЯ АДМІНА */
-                      whileDrag={{ scale: 1.03, zIndex: 50, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.2)" }} 
-                      style={{ 
-                        position: 'relative', overflow: 'hidden', zIndex: 1,
-                        background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', 
-                        color: '#ffffff', padding: '25px', borderRadius: '24px', 
-                        boxShadow: '0 10px 30px rgba(30,58,58,0.12)', 
-                        display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                        minHeight: '180px', cursor: 'grab', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box'
-                      }}
-                    >
-                      <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '140px', height: '140px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
-                      <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
-                        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
-                        {courses.length > 1 && <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>}
-                      </div>
-                      <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
-                        <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
-                        <span onClick={() => setSelectedCourse(course)} style={{ cursor: 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{course.title}</span>
-                      </div>
-                    </Reorder.Item>
-                  );
-                })}
-              </Reorder.Group>
-            ) : (
-              courses.map((course, idx) => {
-                const hasAccess = allowedCourses.includes(course.id);
-                const imgUrl = decorImages[idx % decorImages.length];
-                return (
-                  <div 
-                    key={course.id} 
-                    className={hasAccess ? "hover-card" : ""} /* ХОВЕР ДЛЯ СТУДЕНТА */
-                    style={{ 
-                      position: 'relative', overflow: 'hidden', zIndex: 1,
-                      background: hasAccess ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)') : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
-                      color: hasAccess ? '#ffffff' : theme.textSecondary,
-                      padding: '25px', borderRadius: '24px', 
-                      boxShadow: hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none', 
-                      display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
-                      minHeight: '180px', opacity: hasAccess ? 1 : 0.75, 
-                      border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box',
-                      cursor: hasAccess ? 'pointer' : 'not-allowed'
-                    }}
-                    onClick={() => {
-                      if (hasAccess) setSelectedCourse(course);
-                      else alert(t('lockedAlert'));
-                    }} 
-                  >
-                    {hasAccess && <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '140px', height: '140px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />}
-                    <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasAccess ? '#fff' : theme.textSecondary }}>
-                        {hasAccess ? <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> : <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
-                      </div>
+            {courses.map((course, idx) => {
+              const hasAccess = effectiveIsAdmin || allowedCourses.includes(course.id);
+              const isReorderActive = activeReorderId === course.id;
+              const isDimmed = activeReorderId !== null && activeReorderId !== course.id;
+              const imgUrl = decorImages[idx % decorImages.length];
+
+              return (
+                <div 
+                  key={course.id} 
+                  onPointerDown={(e) => handlePressStart(e, course.id)}
+                  onPointerUp={handlePressEnd}
+                  onPointerLeave={handlePressEnd}
+                  onClick={() => {
+                    if (!isReorderActive && hasAccess) setSelectedCourse(course);
+                    else if (!hasAccess) alert(t('lockedAlert'));
+                  }}
+                  className={hasAccess && !isReorderActive ? "hover-card" : ""}
+                  style={{ 
+                    position: 'relative', overflow: 'hidden', zIndex: isReorderActive ? 10 : 1,
+                    background: hasAccess ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)') : (isDarkMode ? '#2d3748' : '#e2e8f0'), 
+                    color: hasAccess ? '#ffffff' : theme.textSecondary,
+                    padding: '25px', borderRadius: '24px', 
+                    boxShadow: isReorderActive ? '0 0 0 4px #F6AD55, 0 15px 40px rgba(246,173,85,0.4)' : (hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none'), 
+                    display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+                    minHeight: '180px', opacity: isDimmed ? 0.4 : (hasAccess ? 1 : 0.75), 
+                    border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box',
+                    transition: 'all 0.3s ease', transform: isReorderActive ? 'scale(1.02)' : 'scale(1)',
+                    cursor: isReorderActive ? 'default' : (hasAccess ? 'pointer' : 'not-allowed')
+                  }}
+                >
+                  {/* 3D Картинка */}
+                  {hasAccess && <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '140px', height: '140px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />}
+
+                  <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasAccess ? '#fff' : theme.textSecondary }}>
+                      {hasAccess ? <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> : <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
                     </div>
-                    <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
-                      <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
-                      <span style={{ fontWeight: '900', fontSize: '20px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.2', display: 'block' }}>{course.title}</span>
-                    </div>
+
+                    {/* Інтерфейс переміщення для адміна (активна картка) */}
+                    {effectiveIsAdmin && isReorderActive ? (
+                      <div style={{ display: 'flex', gap: '5px' }}>
+                        <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); moveCourse(course.id, 'left'); }} style={{ background: '#F6AD55', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>←</button>
+                        <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); moveCourse(course.id, 'right'); }} style={{ background: '#F6AD55', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>→</button>
+                        <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); setActiveReorderId(null); }} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>✓</button>
+                      </div>
+                    ) : (
+                      effectiveIsAdmin && courses.length > 1 && (
+                        <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>
+                      )
+                    )}
                   </div>
-                );
-              })
-            )}
+
+                  <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
+                    <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
+                    <span style={{ fontWeight: '900', fontSize: '20px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.2', display: 'block' }}>
+                      {course.title}
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
