@@ -1126,16 +1126,16 @@ function Platform() {
 
   const [isEditingCourseTitle, setIsEditingCourseTitle] = useState(false);
   
-// --- ЄДИНИЙ САЙДБАР ДЛЯ ВСІХ ЕКРАНІВ (З СОВОЮ ТА НОВИМИ РОЗДІЛАМИ) ---
+// --- ЄДИНИЙ САЙДБАР ---
   const renderSidebar = () => (
     <div style={{ 
       width: '85px', background: isDarkMode ? '#1a202c' : '#1A3636', color: '#ffffff', 
       display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px',
       boxShadow: '4px 0 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box'
     }}>
-      {/* ЛОГОТИП СОВА 🦉 */}
-      <div title="Hackademia" style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '36px', filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.2))' }}>
-        🦉
+      {/* 1. ЗАМІНА ЛОГОТИПА НА ВЛАСНУ SVG КАРТИНКУ */}
+      <div title="Hackademia" style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <img src="/logo.svg" alt="Hackademia Logo" style={{ width: '45px', height: '45px', objectFit: 'contain' }} />
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', flex: 1 }}>
@@ -2322,7 +2322,7 @@ function Platform() {
     `}</style>
   );
 
-  // --- ЕКРАН ПРОФІЛЮ ---
+// --- ЕКРАН ПРОФІЛЮ ---
   if (globalView === 'profile') {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
@@ -2333,9 +2333,7 @@ function Platform() {
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, maxWidth: '600px' }}>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Ім'я: <b style={{color: theme.text}}>{userName || 'Гість'}</b></p>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Статус доступу: <b style={{color: '#00C853'}}>{accessStatus === 'approved' ? 'Активний' : accessStatus}</b></p>
-            {isAdmin && <span style={{ background: '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
-            <hr style={{ border: 'none', borderTop: `1px solid ${theme.inputBorder}`, margin: '30px 0' }}/>
-            <p style={{color: theme.textSecondary, fontStyle: 'italic'}}>Тут незабаром з'явиться детальна статистика, зміна пароля та сертифікати.</p>
+            {isAdmin && <span style={{ background: '#F6AD55', color: '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
           </div>
         </div>
       </div>
@@ -2352,7 +2350,7 @@ function Platform() {
           <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px' }}>💬 Чат з викладачем</h2>
           <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, height: '50vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
             <span style={{fontSize: '48px'}}>🛠</span>
-            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою та надсилати домашні завдання.</p>
+            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
           </div>
         </div>
       </div>
@@ -2626,317 +2624,65 @@ function Platform() {
     );
   }
   
-  // ЕКРАН 3: Завдання розділу
+  // ЕКРАН 3: Список Завдань у Модулі (Оновлений преміум-дизайн + Плаваюча кнопка Назад)
   if (activeModule) {
     return (
-      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', paddingBottom: '100px' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         <GlobalStyles />
-        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-  
-  {/* Кнопки перемикання мов */}
-  <div style={{ display: 'flex', gap: '4px' }}>
-    {['uk', 'sk', 'en', 'ru'].map((l) => (
-      <button 
-        key={l}
-        onClick={() => changeLang(l)} 
-        style={{ 
-          background: lang === l ? '#FF007F' : theme.inputBg, 
-          color: lang === l ? '#fff' : theme.text, 
-          border: `1px solid ${theme.inputBorder}`, 
-          padding: '4px 7px', 
-          borderRadius: '6px', 
-          fontSize: '10px', 
-          fontWeight: 'bold', 
-          cursor: 'pointer' 
-        }}
-      >
-        {l.toUpperCase()}
-      </button>
-    ))}
-  </div>
-
-  <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-    {isSoundEnabled ? '🔊' : '🔇'}
-  </button>
-  <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-    {isDarkMode ? '☀️' : '🌙'}
-  </button>
-</div>
+        {renderSidebar()}
         
-        <h2 style={{ color: theme.text }}>{activeModule.title}</h2>
+        {/* ПЛАВАЮЧА КНОПКА НАЗАД */}
+        <button 
+          onClick={() => setActiveModule(null)} 
+          className="hover-card"
+          style={{ 
+            position: 'fixed', top: '30px', left: '115px', zIndex: 999, 
+            background: isDarkMode ? 'rgba(26, 32, 44, 0.7)' : 'rgba(255, 255, 255, 0.7)', 
+            backdropFilter: 'blur(12px)', border: `1px solid ${theme.inputBorder}`, 
+            color: theme.text, padding: '12px 20px', borderRadius: '14px', 
+            cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.08)'
+          }}
+        >
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          До модулів
+        </button>
 
-        {/* КНОПКИ ТРЕНУВАННЯ / ТЕСТУ */}
-        {!isTrainingMode && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-            {flashcards.length > 0 && (
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button onClick={() => startTraining(false)} style={{ flex: 1, background: '#3182ce', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                  🎴 Гортати ({flashcards.length})
-                </button>
-                <button onClick={() => startTraining(true)} style={{ flex: 1, background: '#805ad5', color: 'white', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>
-                  📝 Тест
-                </button>
-              </div>
-            )}
-            <button onClick={handleAddMyCard} style={{ width: '100%', background: theme.inputBg, color: theme.text, padding: '12px', borderRadius: '10px', border: `1px dashed ${theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer' }}>
-              ➕ Додати свою картку
-            </button>
+        <div style={{ flex: 1, padding: '100px 60px 40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+          
+          <div style={{ marginBottom: '40px' }}>
+            <span style={{ fontSize: '14px', color: '#F6AD55', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse.title}</span>
+            <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{activeModule.title}</h2>
           </div>
-        )}
 
-        {isTrainingMode ? (
-          <div style={{ background: theme.cardBg, padding: '25px', borderRadius: '16px', boxShadow: '0 8px 25px rgba(0,0,0,0.08)', textAlign: 'center', border: `1px solid ${theme.inputBorder}` }}>
-            {isQuizFinished ? (
-              <div>
-                <h3 style={{ color: theme.text }}>🎉 Тренування завершено!</h3>
-                <p style={{ fontSize: '18px', margin: '20px 0', color: theme.textSecondary }}>Твій результат: <b style={{ color: theme.text }}>{quizScore}</b> з <b style={{ color: theme.text }}>{flashcards.length}</b></p>
-                <button onClick={() => setIsTrainingMode(false)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Повернутися до завдань</button>
+          {/* СІТКА ЗАВДАНЬ */}
+          <div style={{ maxWidth: '900px' }}>
+            {tasks.length === 0 ? (
+              <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', border: `1px dashed ${theme.inputBorder}`, textAlign: 'center' }}>
+                <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>У цьому модулі ще немає завдань.</p>
               </div>
             ) : (
-              <div>
-                <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '15px' }}>Картка {trainingIndex + 1} із {flashcards.length}</p>
-                
-                {!isTestView ? (
-                  <div>
-                    <div className="card-3d-container" onClick={toggleTrainingFlashcard}>
-                      <div className={`card-3d-inner ${isTrainingFlipped ? 'flipped' : ''}`}>
-                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
-                          <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова сторона (натисни для оберту)</span>
-                          <span style={{ fontSize: '26px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{flashcards[trainingIndex].content}</span>
-                        </div>
-                        <div className="card-face card-front" style={getCardStyle(trainingIndex, isDarkMode, false)}>
-                          <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px', color: theme.textSecondary }}>Лицьова (натисни)</span>
-                          <span style={{ fontSize: '26px', fontWeight: 'bold' }}>{flashcards[trainingIndex].content}</span>
-                          {/* КНОПКА ОЗВУЧКИ */}
-                          <button onClick={(e) => { e.stopPropagation(); speakSlovak(flashcards[trainingIndex].content); }} style={{ background: 'transparent', border: 'none', fontSize: '30px', marginTop: '15px', cursor: 'pointer' }}>🔊</button>
-                        </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {tasks.map((task, idx) => (
+                  <div key={task.id} className="hover-card" style={{ background: theme.cardBg, padding: '25px 30px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                      <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(246,173,85,0.15)', color: '#F6AD55', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '900' }}>
+                        {idx + 1}
                       </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
-                      <button onClick={() => { setIsTrainingFlipped(false); setTrainingIndex(prev => Math.max(0, prev - 1)); }} disabled={trainingIndex === 0} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, cursor: 'pointer' }}>← Попередня</button>
-                      <button onClick={() => { setIsTrainingFlipped(false); if (trainingIndex + 1 < flashcards.length) setTrainingIndex(prev => prev + 1); else setIsQuizFinished(true); }} style={{ flex: 1, padding: '10px', borderRadius: '8px', background: '#3182ce', color: 'white', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Наступна →</button>
-                    </div>
-                  </div>
-                ) : (
-                  <div>
-                    <div style={{ background: theme.inputBg, padding: '20px', borderRadius: '12px', marginBottom: '20px', border: `1px solid ${theme.inputBorder}` }}>
-                      <h3 style={{ fontSize: '24px', margin: '0', color: theme.text }}>
-                        {/* КНОПКА ОЗВУЧКИ */}
-                        <button onClick={(e) => { e.stopPropagation(); speakSlovak(flashcards[trainingIndex].content); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
-                        {flashcards[trainingIndex].content}
-                      </h3>
-                    </div>
-
-                    {selectedQuizAnswer !== null && (
-                      <div style={{ padding: '15px', borderRadius: '10px', marginBottom: '15px', background: selectedQuizAnswer === flashcards[trainingIndex].correct_answer ? (isDarkMode ? '#22543D' : '#E8F5E9') : (isDarkMode ? '#742A2A' : '#FFEBEE') }}>
-                        {selectedQuizAnswer === flashcards[trainingIndex].correct_answer ? (
-                          <span style={{ color: isDarkMode ? '#9AE6B4' : '#2E7D32', fontWeight: 'bold', fontSize: '16px' }}>✅ Правильно!</span>
-                        ) : (
-                          <span style={{ color: isDarkMode ? '#FEB2B2' : '#C62828', fontWeight: 'bold', fontSize: '16px' }}>❌ Невірно!<br/><span style={{ fontSize: '14px', fontWeight: 'normal' }}>Правильна відповідь: <b>{flashcards[trainingIndex].correct_answer}</b></span></span>
-                        )}
-                      </div>
-                    )}
-
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-                      {quizOptions.map((opt, idx) => {
-                        const isCorrect = opt === flashcards[trainingIndex].correct_answer;
-                        const isSelected = selectedQuizAnswer === opt;
-                        
-                        let btnBg = theme.inputBg;
-                        let btnColor = theme.text;
-                        let borderColor = theme.inputBorder;
-
-                        if (selectedQuizAnswer !== null) {
-                          if (isCorrect) { 
-                            btnBg = '#00C853'; btnColor = 'white'; borderColor = '#00C853'; 
-                          } else if (isSelected) { 
-                            btnBg = '#F44336'; btnColor = 'white'; borderColor = '#F44336'; 
-                          } else {
-                            btnBg = isDarkMode ? '#2d3748' : '#f8fafc';
-                            btnColor = isDarkMode ? '#718096' : '#a0aec0';
-                          }
-                        }
-
-                        return (
-                          <button key={idx} onClick={() => handleQuizAnswer(opt)} disabled={selectedQuizAnswer !== null} style={{ background: btnBg, color: btnColor, border: `2px solid ${borderColor}`, padding: '15px', borderRadius: '10px', fontSize: '16px', fontWeight: 'bold', cursor: selectedQuizAnswer === null ? 'pointer' : 'default', transition: 'all 0.2s' }}>
-                            {opt}
-                          </button>
-                        );
-                      })}
-                    </div>
-
-                    {selectedQuizAnswer !== null && (
-                      <button onClick={nextTrainingCard} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>Далі →</button>
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <>
-            {effectiveIsAdmin && (
-              <div style={{ background: theme.adminBg, padding: '20px', borderRadius: '12px', marginBottom: '20px', border: `2px dashed ${theme.adminBorder}` }}>
-                <h4 style={{ margin: '0 0 15px 0', color: theme.adminBorder }}>🛠 Додати завдання</h4>
-                <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-                  <select value={newTaskType} onChange={e => setNewTaskType(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '8px' }}>
-                    <option value="text">📖 Текст / Фото / Аудіо</option>
-                    <option value="video">📺 Відео</option>
-                    <option value="quiz">📝 Тест</option>
-                    <option value="flashcard">🎴 Флеш-картка (Словник)</option>
-                  </select>
-                  <select value={newTaskDifficulty} onChange={e => setNewTaskDifficulty(e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '8px' }}>
-                    <option value="easy">🟢 Легко</option>
-                    <option value="medium">🟡 Середньо</option>
-                    <option value="hard">🔴 Складно</option>
-                  </select>
-                </div>
-                
-                <textarea 
-                  placeholder={newTaskType === 'flashcard' ? "Лицьова сторона (наприклад: слово українською)..." : "Текст завдання або посилання на медіа..."}
-                  value={newTaskContent} 
-                  onChange={e => setNewTaskContent(e.target.value)} 
-                  autoComplete="off"
-                  style={{ width: '100%', padding: '12px', borderRadius: '8px', minHeight: '80px', marginBottom: '10px', boxSizing: 'border-box' }} 
-                />
-
-                {(newTaskType === 'quiz' || newTaskType === 'flashcard') && (
-                  <input 
-                    type="text" 
-                    placeholder={newTaskType === 'flashcard' ? "Зворотна сторона (Переклад або пояснення)..." : "Правильна відповідь..."}
-                    value={newTaskCorrectAnswer} 
-                    onChange={e => setNewTaskCorrectAnswer(e.target.value)} 
-                    autoComplete="off"
-                    style={{ width: '100%', padding: '12px', borderRadius: '8px', marginBottom: '10px', boxSizing: 'border-box' }} 
-                  />
-                )}
-
-                {newTaskType !== 'flashcard' && (
-                  <div style={{ background: theme.cardBg, padding: '12px', borderRadius: '8px', marginBottom: '15px', border: `1px solid ${theme.inputBorder}`, textAlign: 'left' }}>
-                    <div style={{ marginBottom: '10px' }}>
-                      <label style={{ fontSize: '12px', color: theme.textSecondary, display: 'block', marginBottom: '4px' }}>📎 Додати зображення:</label>
-                      <input type="file" accept="image/*" onChange={handleImageUpload} style={{ fontSize: '12px', color: theme.text }} />
-                    </div>
-                    <div style={{ marginBottom: '10px' }}>
-                      <label style={{ fontSize: '12px', color: theme.textSecondary, display: 'block', marginBottom: '4px' }}>🎧 Завантажити аудіофайл (MP3/WAV):</label>
-                      <input type="file" accept="audio/*" onChange={handleAudioUpload} style={{ fontSize: '12px', color: theme.text }} />
-                    </div>
-                    <div>
-                      <label style={{ fontSize: '12px', color: theme.textSecondary, display: 'block', marginBottom: '4px' }}>🎙 Записати голос з мікрофона:</label>
-                      {isRecording ? (
-                        <button onClick={stopRecording} style={{ background: '#F44336', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>⏹ Зупинити запис</button>
-                      ) : (
-                        <button onClick={startRecording} style={{ background: '#3182ce', color: 'white', border: 'none', padding: '8px 14px', borderRadius: '6px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>🔴 Почати запис голосу</button>
-                      )}
-                    </div>
-                  </div>
-                )}
-                
-                <button onClick={handleAddTask} style={{ width: '100%', background: '#FF007F', color: 'white', padding: '15px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer', marginBottom: '10px' }}>+ Опублікувати</button>
-              </div>
-            )}
-
-            {isLoadingTasks ? (
-              <p style={{ color: theme.text }}>Завантаження...</p>
-            ) : tasks.length === 0 ? (
-              <div style={{ color: theme.textSecondary, fontSize: '13px', fontStyle: 'italic', textAlign: 'center', margin: '30px auto', padding: '20px', background: theme.cardBg, borderRadius: '12px', lineHeight: '1.6', maxWidth: '400px', border: `1px dashed ${theme.inputBorder}` }}>
-                📂 У цьому розділі ще немає завдань.<br/>Ви можете додавати текстові матеріали, YouTube-відео, аудіофайли, записувати голос напряму з мікрофона, а також створювати інтерактивні тести та флешкартки!
-              </div>
-            ) : (
-              allTasksToRender.map((task, index) => {
-                const diff = difficultyConfig[task.difficulty || 'medium'];
-                const isCompleted = completedTasks.includes(task.id);
-                const isEditing = editingTaskId === task.id;
-                const isFlipped = flippedCards[task.id];
-
-                return (
-                  <div key={task.id} style={{ background: theme.cardBg, padding: '20px', borderRadius: '12px', marginTop: '15px', boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isDarkMode ? `1px solid ${theme.inputBorder}` : 'none' }}>
-                    {effectiveIsAdmin && isEditing ? (
                       <div>
-                        <select value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }}>
-                          <option value="easy">🟢 Легко</option>
-                          <option value="medium">🟡 Середньо</option>
-                          <option value="hard">🔴 Складно</option>
-                        </select>
-                        <textarea value={editContent} onChange={e => setEditContent(e.target.value)} style={{ width: '100%', padding: '10px', minHeight: '80px', marginBottom: '10px' }} />
-                        {(task.type === 'quiz' || task.type === 'flashcard') && <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} style={{ width: '100%', padding: '10px', marginBottom: '10px' }} />}
-                        <button onClick={() => handleSaveEdit(task.id)} style={{ background: '#00C853', color: 'white', padding: '10px', border: 'none', marginRight: '5px' }}>Зберегти</button>
-                        <button onClick={() => setEditingTaskId(null)} style={{ background: '#ccc', padding: '10px', border: 'none' }}>Скасувати</button>
+                        <h4 style={{ margin: '0 0 5px 0', fontSize: '20px', color: theme.text, fontWeight: '800' }}>{task.title}</h4>
+                        <span style={{ fontSize: '13px', color: theme.textSecondary }}>{task.type === 'flashcards' ? '🗂 Флешкартки' : '📝 Тест'}</span>
                       </div>
-                    ) : (
-                      <>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                          <h4 style={{ margin: 0, color: theme.text }}>
-                            {task.type === 'video' ? '📺 Відео' : task.type === 'quiz' ? '📝 Тест' : task.type === 'flashcard' ? '🎴 Словник' : '📖 Матеріал'} {index + 1}
-                          </h4>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <span style={{ background: diff.color, color: 'white', padding: '4px 10px', borderRadius: '12px', fontSize: '12px' }}>{diff.label}</span>
-                            {effectiveIsAdmin && (
-                              <>
-                                <button onClick={() => { setEditingTaskId(task.id); setEditContent(task.content); setEditAnswer(task.correct_answer || ''); setEditDifficulty(task.difficulty || 'medium'); }} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '6px', padding: '5px', color: theme.text }}>✏️</button>
-                                <button onClick={() => handleDeleteTask(task.id)} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '6px', padding: '5px' }}>🗑</button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                        
-                        {task.type === 'flashcard' ? (
-                          <div>
-                            <div className="card-3d-container" onClick={() => toggleFlashcard(task.id)}>
-                              <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`}>
-                                {/* БІЛА ЛИЦЬОВА СТОРОНА */}
-                                <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
-                                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>🔄 Натисни</span>
-                                  <span style={{ fontSize: '22px', fontWeight: 'bold' }}>{task.content}</span>
-                                  {/* КНОПКА ОЗВУЧКИ */}
-                                  <button onClick={(e) => { e.stopPropagation(); speakSlovak(task.content); }} style={{ background: 'transparent', border: 'none', fontSize: '26px', marginTop: '10px', cursor: 'pointer' }}>🔊</button>
-                                </div>
-                                {/* КОЛЬОРОВИЙ ГРАДІЄНТ НА ЗВОРОТІ */}
-                                <div className="card-face card-back" style={getCardStyle(index, isDarkMode, true)}>
-                                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px', color: isDarkMode ? '#e2e8f0' : '#4a5568' }}>Переклад</span>
-                                  <span style={{ fontSize: '22px', fontWeight: 'bold', textShadow: isDarkMode ? '0 2px 4px rgba(0,0,0,0.5)' : 'none' }}>{task.correct_answer}</span>
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
-                              {isCompleted ? (
-                                <div style={{ flex: 1, background: isDarkMode ? '#22543D' : '#E8F5E9', color: isDarkMode ? '#9AE6B4' : '#2E7D32', padding: '10px', textAlign: 'center', fontWeight: 'bold', borderRadius: '8px' }}>✅ Вивчено (+{diff.points} балів)</div>
-                              ) : (
-                                <button onClick={() => handleCompleteFlashcard(task)} style={{ flex: 1, background: '#00C853', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>✅ Я вивчив(ла) це слово</button>
-                              )}
-                              
-                              {/* КНОПКА ВИДАЛЕННЯ ДЛЯ ВЛАСНОЇ КАРТКИ УЧНЯ */}
-                              {task.isCustom && (
-                                <button onClick={() => handleDeleteMyCard(task.id)} style={{ background: '#ffebee', color: '#c62828', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>
-                                  🗑 Видалити
-                                </button>
-                              )}
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <div style={{ color: theme.text }}>{renderContent(task.content)}</div>
-                            {task.type === 'quiz' && (
-                              <div style={{ marginTop: '15px' }}>
-                                {isCompleted ? <div style={{ background: isDarkMode ? '#22543D' : '#E8F5E9', color: isDarkMode ? '#9AE6B4' : '#2E7D32', padding: '10px', textAlign: 'center', fontWeight: 'bold', borderRadius: '8px' }}>✅ Виконано (+{diff.points} балів)</div> : (
-                                  <>
-                                    <input type="text" placeholder="Твоя відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({ ...userAnswers, [task.id]: e.target.value })} autoComplete="off" style={{ width: '100%', padding: '10px', marginBottom: '10px', boxSizing: 'border-box', borderRadius: '8px' }} />
-                                    <button onClick={() => handleAnswerSubmit(task)} style={{ width: '100%', background: '#00C853', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Перевірити</button>
-                                  </>
-                                )}
-                              </div>
-                            )}
-                          </>
-                        )}
-                      </>
+                    </div>
+                    {effectiveIsAdmin && (
+                      <button onClick={(e) => { e.stopPropagation(); handleDeleteTask(task.id); }} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer' }}>🗑</button>
                     )}
                   </div>
-                );
-              })
+                ))}
+              </div>
             )}
-          </>
-        )}
+          </div>
+        </div>
       </div>
     );
   }
@@ -2950,15 +2696,20 @@ function Platform() {
         
         <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          {/* Верхня міні-панель */}
+          {/* Верхня міні-панель (ОНОВЛЕНІ ТЕПЛІ КОЛЬОРИ ДЛЯ МОВИ) */}
           <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
             <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
               {['uk', 'sk', 'en', 'ru'].map((l) => (
-                <button key={l} onClick={() => changeLang(l)} style={{ background: lang === l ? '#2B6CB0' : 'transparent', color: lang === l ? '#fff' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>{l.toUpperCase()}</button>
+                <button 
+                  key={l} onClick={() => changeLang(l)} 
+                  style={{ background: lang === l ? '#F6AD55' : 'transparent', color: lang === l ? '#1A3636' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+                >
+                  {l.toUpperCase()}
+                </button>
               ))}
             </div>
-            <button onClick={toggleSound} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-            <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+            <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+            <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer' }}>{isDarkMode ? '☀️' : '🌙'}</button>
           </div>
 
           <button onClick={() => setSelectedCourse(null)} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', marginBottom: '20px', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px', padding: 0 }}>
@@ -2978,10 +2729,13 @@ function Platform() {
               </div>
             )}
 
+            {/* ОНОВЛЕНИЙ ТЕПЛИЙ КОЛІР ДЛЯ КНОПКИ СТВОРЕННЯ МОДУЛЯ */}
             {effectiveIsAdmin && (
               <div style={{ display: 'flex', gap: '10px', background: theme.adminBg, padding: '10px', borderRadius: '16px', border: `1px dashed ${theme.adminBorder}` }}>
                 <input type="text" placeholder="Назва (напр., Тиждень 1)" value={newModuleTitle} onChange={e => setNewModuleTitle(e.target.value)} style={{ padding: '10px 15px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, width: '200px' }} />
-                <button onClick={handleAddModule} style={{ background: '#2B6CB0', color: 'white', padding: '10px 20px', border: 'none', fontWeight: 'bold', cursor: 'pointer', borderRadius: '10px' }}>+ Створити модуль</button>
+                <button onClick={handleAddModule} className="hover-card" style={{ background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', color: '#1A3636', padding: '10px 20px', border: 'none', fontWeight: '900', cursor: 'pointer', borderRadius: '10px' }}>
+                  + Створити модуль
+                </button>
               </div>
             )}
           </div>
@@ -3030,25 +2784,7 @@ function Platform() {
     );
   }
 
-  // Функція для повторного запиту прямо з Web App
-  const handleReapplyWeb = async () => {
-    if (!telegramId) return;
-    try {
-      const { error } = await supabase
-        .from('users')
-        .update({ access_status: 'pending' })
-        .eq('telegram_id', telegramId);
-        
-      if (error) throw error;
-      
-      setAccessStatus('pending'); // Миттєво міняємо екран на "Заявка на розгляді"
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } catch (err) {
-      alert("❌ Сталася помилка: " + err.message);
-    }
-  };
-  
-  // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ---
+  // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ТА МАСИВ КАРТИНОК ---
   if (accessStatus === 'loading') {
     return <div style={{ textAlign: 'center', padding: '50px', color: theme.text, background: theme.bg, minHeight: '100vh' }}>Завантаження...</div>;
   }
@@ -3074,7 +2810,7 @@ function Platform() {
         <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
           Ваш запит на доступ надіслано головному адміністратору.
           <br /><br />
-          Щойно адміністратор підтвердить вашу заявку, оновіть цю сторінку!
+          Чтойно адміністратор підтвердить вашу заявку, оновіть цю сторінку!
         </p>
         <button onClick={() => window.location.reload()} style={{ background: '#00C853', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
           🔄 Оновити сторінку
@@ -3091,24 +2827,18 @@ function Platform() {
           Ваш доступ до платформи скасовано. <br/><br/>
           Щоб відновити доступ, придбайте новий курс або лекцію. Після оплати натисніть кнопку нижче, щоб надіслати запит адміністратору.
         </p>
-        <button 
-          onClick={handleReapplyWeb} 
-          style={{ background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', boxShadow: '0 4px 10px rgba(49,130,206,0.3)' }}
-        >
+        <button onClick={handleReapplyWeb} style={{ background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', boxShadow: '0 4px 10px rgba(49,130,206,0.3)' }}>
           🔄 Надіслати запит повторно
         </button>
       </div>
     );
   }
 
-  // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
-  
-  // --- МАСИВ КРУТИХ 3D КАРТИНОК ДЛЯ КУРСІВ (Зі стоку Unsplash) ---
   const decorImages = [
-    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop', // 1
-    'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop', // 2
-    'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=400&auto=format&fit=crop', // 3
-    'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop'  // 4 (Нова, робоча 3D абстракція)
+    'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=400&auto=format&fit=crop',
+    'https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop'
   ];
 
 
