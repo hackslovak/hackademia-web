@@ -1098,18 +1098,6 @@ function Platform() {
   }
 
   // (Далі йдуть інші екрани: admin_panel, spaced, sniper, false_friends, activeModule, selectedCourse тощо)
-  
-  const [newCourseTitle, setNewCourseTitle] = useState("");
-
-  const [modules, setModules] = useState([]);
-  const [activeModule, setActiveModule] = useState(null);
-  
-  const [tasks, setTasks] = useState([]);
-  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
-
-  const [newModuleTitle, setNewModuleTitle] = useState('');
-  const [editingModuleId, setEditingModuleId] = useState(null);
-  const [editModuleTitleText, setEditModuleTitleText] = useState('');
 
   const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
