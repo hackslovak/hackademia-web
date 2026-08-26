@@ -1080,6 +1080,18 @@ function Platform() {
 
   // --- 3. ТЕПЕР БЕЗПЕЧНО РОБИТИ УМОВНІ ПОВЕРНЕННЯ (ЕКРАНИ) ---
 
+  const handlePressStart = (e, id) => {
+    if (!effectiveIsAdmin) return;
+    pressTimer.current = setTimeout(() => {
+      setActiveReorderId(id);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
+    }, 500);
+  };
+
+  const handlePressEnd = () => {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+  };
+  
   // --- ЄДИНИЙ САЙДБАР ---
   const renderSidebar = () => (
     <div style={{ 
