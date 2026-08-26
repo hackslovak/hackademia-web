@@ -2939,66 +2939,58 @@ function Platform() {
 
   // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-// ЕКРАН 1: Головна сторінка вибору курсів
-  return (
-    
-	<div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+// Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-  {/* Кнопка повернення на лендінг */}
-  <button 
-    onClick={() => navigate('/')} 
-    style={{ 
-      background: theme.inputBg, 
-      color: theme.text, 
-      border: `1px solid ${theme.inputBorder}`, 
-      padding: '5px 10px', 
-      borderRadius: '6px', 
-      fontSize: '11px', 
-      fontWeight: 'bold', 
-      cursor: 'pointer' 
-    }}
-    title="Повернутися на головну сторінку сайту"
-  >
-    🏠 Головна
-  </button>
-
-  {/* Кнопки перемикання мов */}
-  <div style={{ display: 'flex', gap: '4px' }}>
-    {['uk', 'sk', 'en', 'ru'].map((l) => (
-      <button 
-        key={l}
-        onClick={() => changeLang(l)} 
-        style={{ 
-          background: lang === l ? '#FF007F' : theme.inputBg, 
-          color: lang === l ? '#fff' : theme.text, 
-          border: `1px solid ${theme.inputBorder}`, 
-          padding: '4px 7px', 
-          borderRadius: '6px', 
-          fontSize: '10px', 
-          fontWeight: 'bold', 
-          cursor: 'pointer' 
-        }}
-      >
-        {l.toUpperCase()}
-      </button>
-    ))}
-  </div>
-
-  <button onClick={toggleSound} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-    {isSoundEnabled ? '🔊' : '🔇'}
-  </button>
-  <button onClick={toggleTheme} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer' }}>
-    {isDarkMode ? '☀️' : '🌙'}
-  </button>
-</div>
-	
-	<div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
+  // ЕКРАН 1: Головна сторінка вибору курсів
+  return (
+    <div style={{ textAlign: 'center', padding: '30px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
       <GlobalStyles />
       
+      {/* ВЕРХНЯ ПАНЕЛЬ НАВІГАЦІЇ */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div></div>
+        
+        {/* Кнопка повернення на лендінг */}
+        <button 
+          onClick={() => navigate('/')} 
+          style={{ 
+            background: theme.inputBg, 
+            color: theme.text, 
+            border: `1px solid ${theme.inputBorder}`, 
+            padding: '5px 10px', 
+            borderRadius: '6px', 
+            fontSize: '11px', 
+            fontWeight: 'bold', 
+            cursor: 'pointer' 
+          }}
+          title="Повернутися на головну сторінку сайту"
+        >
+          🏠 Головна
+        </button>
+
         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
           
+          {/* Кнопки перемикання мов */}
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {['uk', 'sk', 'en', 'ru'].map((l) => (
+              <button 
+                key={l}
+                onClick={() => changeLang(l)} 
+                style={{ 
+                  background: lang === l ? '#FF007F' : theme.inputBg, 
+                  color: lang === l ? '#fff' : theme.text, 
+                  border: `1px solid ${theme.inputBorder}`, 
+                  padding: '4px 7px', 
+                  borderRadius: '6px', 
+                  fontSize: '10px', 
+                  fontWeight: 'bold', 
+                  cursor: 'pointer' 
+                }}
+              >
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+
           {/* НОВИЙ ДЗВІНОЧОК АДМІНА */}
           {effectiveIsAdmin && (
             <div 
@@ -3092,7 +3084,7 @@ function Platform() {
                 background: theme.cardBg, padding: '20px', borderRadius: '12px', marginBottom: '15px', 
                 boxShadow: '0 4px 10px rgba(0,0,0,0.05)', display: 'flex', justifyContent: 'space-between', 
                 alignItems: 'center', border: `1px solid ${theme.inputBorder}`,
-                opacity: hasAccess ? 1 : 0.5, // Закриті курси напівпрозорі
+                opacity: hasAccess ? 1 : 0.5,
                 transition: 'opacity 0.3s'
               }}>
                 <span 
@@ -3113,7 +3105,6 @@ function Platform() {
           })
         )}
       </div>
-	  
 	  
       {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (НЕЗАЛЕЖНО ВІД КУРСІВ) */}
       <div style={{ maxWidth: '400px', margin: '25px auto', display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -3175,7 +3166,7 @@ function Platform() {
           top: '40px',
           left: '50%',
           transform: 'translateX(-50%)',
-          background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', // Теплий пастельний градієнт
+          background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)',
           color: '#2C3E50',
           padding: '12px 25px',
           borderRadius: '20px',
@@ -3224,6 +3215,7 @@ function Platform() {
     </div>
   );
 }
+	  
 
 // --- НОВИЙ ГОЛОВНИЙ КОМПОНЕНТ (РОУТЕР) ---
 function App() {
