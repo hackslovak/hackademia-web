@@ -948,11 +948,11 @@ function speakSlovak(text) {
 }
 
 function Platform() {
-  const navigate = useNavigate(); // <--- ОСЬ ЦЕЙ РЯДОК ВИРІШУЄ ПРОБЛЕМУ
+  const navigate = useNavigate();
   // --- БАЗОВІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(true); // <--- ПОКИ ЩО ПОСТАВИЛІ True ТУТ ДЛЯ ТЕСТУ!
   const [accessStatus, setAccessStatus] = useState('loading'); // 'loading', 'pending', 'approved', 'rejected', 'no_auth' 
   const [telegramId, setTelegramId] = useState(null);
   const [allowedCourses, setAllowedCourses] = useState([]);
