@@ -1245,6 +1245,21 @@ function Platform() {
   }, [globalView, sniperStatus, isSoundEnabled]);
  
   
+  // Додай цей маленький useEffect на початку платформи, щоб профіль завантажувався одразу
+  useEffect(() => {
+    async function loadInitialProfile() {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data } = await supabase.from('users').select('*').eq('email', session.user.email).maybeSingle();
+        if (data) {
+          setUserProfile(data);
+          if (data.first_name) setUserName(data.first_name);
+        }
+      }
+    }
+    loadInitialProfile();
+  }, []);
+  
   useEffect(() => {
     async function initUser() {
       // 1. ШВИДКИЙ КЕШ (додаємо цей рядок, щоб не викидало при кнопці "Назад")
