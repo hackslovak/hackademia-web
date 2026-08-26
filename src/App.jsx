@@ -2941,12 +2941,12 @@ function Platform() {
   
 // Якщо accessStatus === 'approved', код піде далі і покаже Головну сторінку
   
-  // ЕКРАН 1: Головна сторінка вибору курсів
+  // ЕКРАН 1: Головна сторінка вибору курсів (у стилі Visual 360 з лівим сайдбаром)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (як у Visual 360) */}
+      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (у стилі Visual 360) */}
       <div style={{ 
         width: '260px', 
         background: isDarkMode ? '#1a202c' : '#1E3A3A', // Глибокий теплий темний зелено-синій відтінок
@@ -2973,7 +2973,7 @@ function Platform() {
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            📚 Курси
+            📚 {t('selectCourse')}
           </button>
 
           <button 
@@ -2982,7 +2982,7 @@ function Platform() {
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            🔄 Інтервальне
+            {t('repeatToday')}
           </button>
 
           <button 
@@ -2991,7 +2991,7 @@ function Platform() {
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            🎯 Снайпер
+            {t('sniperGame')}
           </button>
 
           <button 
@@ -3000,7 +3000,7 @@ function Platform() {
             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
             onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
           >
-            🎭 Фальшиві слова
+            {t('falseFriends')}
           </button>
 
           {effectiveIsAdmin && (
@@ -3015,7 +3015,7 @@ function Platform() {
           )}
         </div>
 
-        {/* Нижня частина сайдбару (Кнопка виходу / Головна сайту) */}
+        {/* Нижня частина сайдбару */}
         <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
           <button 
             onClick={() => navigate('/')} 
@@ -3026,8 +3026,8 @@ function Platform() {
         </div>
       </div>
 
-      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи) */}
-      <div style={{ flex: 1, padding: '40px 50px', overflowY: 'auto', boxSizing: 'border-box' }}>
+      {/* 2. ПРАВА ЧАСТИНА (Основний контент платформи у просторому стилі) */}
+      <div style={{ flex: 1, padding: '40px 50px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
         
         {/* Верхня міні-панель (Мови, Тема, Звук) */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '30px', gap: '15px' }}>
@@ -3064,7 +3064,7 @@ function Platform() {
         </div>
 
         {/* Заголовок сторінки */}
-        <div style={{ textAlign: 'left', marginBottom: '40px' }}>
+        <div style={{ marginBottom: '40px' }}>
           <h1 style={{ color: theme.text, fontSize: '36px', margin: '0 0 8px 0' }}>{t('title')}</h1>
           {userName && <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>{t('greeting')}, <b>{userName}</b>!</p>}
           
@@ -3080,13 +3080,13 @@ function Platform() {
         </div>
 
         {effectiveIsAdmin && (
-          <div style={{ marginBottom: '30px', textAlign: 'left' }}>
+          <div style={{ marginBottom: '30px' }}>
             <button onClick={handleAddCourse} style={{ background: '#2B6CB0', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(43,108,176,0.3)' }}>+ Створити новий курс</button>
           </div>
         )}
 
         {/* СПИСОК КУРСІВ (Великі картки у стилі Visual 360 з м'якими кутами) */}
-        <div style={{ maxWidth: '800px', textAlign: 'left' }}>
+        <div style={{ maxWidth: '800px', marginBottom: '40px' }}>
           <h3 style={{ color: theme.text, fontSize: '22px', marginBottom: '20px' }}>{t('selectCourse')}</h3>
           
           {effectiveIsAdmin && courses.length > 1 && (
@@ -3152,65 +3152,41 @@ function Platform() {
           )}
         </div>
 
-      </div>
-    </div>
-  );
-	  
-      {/* ГЛОБАЛЬНІ ІНТЕРАКТИВНІ БЛОКИ (Ширші кнопки для ПК) */}
-      <div style={{ maxWidth: '650px', margin: '35px auto', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        <button 
-          onClick={startSpacedRepetition}
-          style={{ background: 'linear-gradient(135deg, #3182ce 0%, #63b3ed 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(49,130,206,0.3)' }}
-        >
-          <span>{t('repeatToday')}</span>
-        </button>
-
-        <button 
-          onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }}
-          style={{ background: 'linear-gradient(135deg, #805ad5 0%, #d6bcfa 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(128,90,213,0.3)' }}
-        >
-          <span>{t('sniperGame')}</span>
-        </button>
-        <button 
-          onClick={startFalseFriends} 
-          style={{ background: 'linear-gradient(135deg, #ed8936 0%, #f6ad55 100%)', color: 'white', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', fontSize: '17px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', boxShadow: '0 6px 16px rgba(237,137,54,0.3)' }}
-        >
-          <span>{t('falseFriends')}</span>
-        </button>
-      </div>
-
-      {isAdmin && (
-        <div style={{ marginTop: '50px', opacity: 0.7, fontSize: '13px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '15px' }}>
-          {effectiveIsAdmin && (
-            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', color: theme.textSecondary }}>
-              <span>Додати адміна:</span>
-              <input 
-                type="number" 
-                placeholder="Telegram ID" 
-                value={newAdminTelegramId} 
-                onChange={e => setNewAdminTelegramId(e.target.value)} 
-                style={{ padding: '8px 12px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, fontSize: '14px', width: '130px' }} 
-              />
-              <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '6px', padding: '8px 14px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+        {/* НИЖНІ КЕРУЮЧІ ПАНЕЛІ ТА ІНФО ДЛЯ АДМІНА */}
+        {isAdmin && (
+          <div style={{ marginTop: '50px', opacity: 0.8, fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '30px' }}>
+            {effectiveIsAdmin && (
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: theme.textSecondary }}>
+                <span>Додати адміна:</span>
+                <input 
+                  type="number" 
+                  placeholder="Telegram ID" 
+                  value={newAdminTelegramId} 
+                  onChange={e => setNewAdminTelegramId(e.target.value)} 
+                  style={{ padding: '8px 12px', borderRadius: '6px', fontSize: '14px', width: '140px' }} 
+                />
+                <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '6px', padding: '8px 16px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+              </div>
+            )}
+            
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                ☁️ Зробити бекап у хмару
+              </button>
+              
+              <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                ❓ Довідка
+              </button>
+              
+              <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
+                🔄 Відновити останній бекап
+              </button>
             </div>
-          )}
-          
-          <div style={{ display: 'flex', gap: '12px', flexWrap: '300px', justifyContent: 'center' }}>
-            <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #00C853', color: '#00C853', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
-              ☁️ Зробити бекап у хмару
-            </button>
-            
-            <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #3182ce', color: '#3182ce', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
-              ❓ Довідка
-            </button>
-            
-            <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #d32f2f', color: '#d32f2f', padding: '8px 18px', borderRadius: '8px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>
-              🔄 Відновити останній бекап
-            </button>
           </div>
-        </div>
-      )}
-    
+        )}
+
+      </div>
+
       {/* ПЛАВАЮЧА МОТИВАЦІЙНА ПЛАШКА */}
       {toast && (
         <div style={{
@@ -3235,24 +3211,22 @@ function Platform() {
 	  
 	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
 	  
-{/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
+	  {/* ПЛАВАЮЧЕ СПОВІЩЕННЯ ДЛЯ АДМІНА */}
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
         <div style={{
           position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999,
           background: theme.cardBg, padding: '24px', borderRadius: '18px',
-          boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #FF007F`,
+          boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #2B6CB0`,
           maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite'
         }}>
           <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px' }}>🚨 Увага!</h4>
           <p style={{ margin: '0 0 18px 0', fontSize: '15px', color: theme.textSecondary, lineHeight: '1.4' }}>
-            Нещодавно ви додали учн{studentsNeedingCourses.length > 1 ? 'ів' : 'я'}: 
-            <b style={{ color: theme.text }}> {studentsNeedingCourses.map(s => s.first_name || 'Без імені').join(', ')}</b>. <br/><br/>
-            Який курс та групу бажаєте їм призначити?
+            Нещодавно ви додали учня. Який курс та групу бажаєте йому призначити?
           </p>
           <div style={{ display: 'flex', gap: '12px' }}>
             <button 
               onClick={() => setGlobalView('admin_panel')} 
-              style={{ flex: 1, background: '#FF007F', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
+              style={{ flex: 1, background: '#2B6CB0', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}
             >
               ⚙️ Налаштувати
             </button>
@@ -3266,8 +3240,24 @@ function Platform() {
         </div>
       )}
     </div>
-  ); // <--- Закінчення return компонента Platform
-} // <--- ОБОВ'ЯЗКОВО: Закінчення самісінької функції Platform()
+  );
+}
+
+// --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Landing />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/app" element={<Platform />} />
+        <Route path="*" element={<Navigate to="/" />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+
+export default App;
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
