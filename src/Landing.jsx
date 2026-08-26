@@ -24,33 +24,12 @@ export default function Landing() {
         <div className="landing-body">
             <header>
                 <a href="#" className="logo">
-                    <svg viewBox="0 0 500 500" style={{ width: '45px', height: '45px' }}>
-                        <circle cx="250" cy="250" r="215" fill="#38BA9B" opacity="0.25" stroke="#062440" strokeWidth="6" />
-                        <path d="M 155,45 A 205,205 0 0,1 345,45" fill="none" stroke="#38BA9B" strokeWidth="18" strokeLinecap="round" />
-                        <path d="M 45,230 A 205,205 0 0,1 70,150" fill="none" stroke="#062440" strokeWidth="16" strokeLinecap="round" />
-                        <path d="M 455,230 A 205,205 0 0,1 430,310" fill="none" stroke="#062440" strokeWidth="16" strokeLinecap="round" />
-                        <polygon points="250,95 380,130 250,165 120,130" fill="#062440" />
-                        <rect x="205" y="150" width="90" height="25" fill="#031626" rx="4" />
-                        <path d="M 345,138 L 345,190 Q 345,198 353,198 L 353,198" fill="none" stroke="#38BA9B" strokeWidth="4" />
-                        <circle cx="353" cy="198" r="4.5" fill="#38BA9B" />
-                        <path d="M 170,175 L 135,130 L 210,170 Z" fill="#062440" />
-                        <path d="M 330,175 L 365,130 L 290,170 Z" fill="#062440" />
-                        <ellipse cx="250" cy="285" rx="115" ry="125" fill="#062440" />
-                        <ellipse cx="250" cy="295" rx="90" ry="105" fill="#082d4d" />
-                        <ellipse cx="250" cy="310" rx="65" ry="85" fill="#ffffff" />
-                        <circle cx="198" cy="230" r="42" fill="#ffffff" stroke="#062440" strokeWidth="4" />
-                        <circle cx="302" cy="230" r="42" fill="#ffffff" stroke="#062440" strokeWidth="4" />
-                        <circle cx="203" cy="230" r="21" fill="#38BA9B" />
-                        <circle cx="297" cy="230" r="21" fill="#38BA9B" />
-                        <circle cx="209" cy="225" r="7.5" fill="#ffffff" />
-                        <circle cx="303" cy="225" r="7.5" fill="#ffffff" />
-                        <polygon points="250,240 238,272 262,272" fill="#38BA9B" />
-                        <rect x="115" y="350" width="270" height="24" rx="4" fill="#38BA9B" />
-                        <polygon points="115,350 93,362 115,374" fill="#062440" />
-                        <rect x="385" y="350" width="18" height="24" rx="2" fill="#062440" />
-                        <path d="M 203,350 L 203,366 M 211,350 L 211,366 M 219,350 L 219,366" stroke="#38BA9B" strokeWidth="4.5" strokeLinecap="round" />
-                        <path d="M 281,350 L 281,366 M 289,350 L 289,366 M 297,350 L 297,366" stroke="#38BA9B" strokeWidth="4.5" strokeLinecap="round" />
-                    </svg>
+                    {/* ТУТ ТЕПЕР ТВОЯ СОВА! */}
+                    <img 
+                        src="/logo-a1.jpg" 
+                        alt="Hackademia Logo" 
+                        style={{ width: '50px', height: '50px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #FF4B2B' }} 
+                    />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
                 <button className="header-btn" onClick={toggleChat}>Зв'язатися</button>
@@ -189,7 +168,7 @@ export default function Landing() {
                         <div className="chat-avatar">H</div>
                         <div>
                             <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Асистент Hackademia</div>
-                            <div style={{ fontSize: '0.75rem', color: '#38BA9B' }}>Онлайн</div>
+                            <div style={{ fontSize: '0.75rem', color: '#FF4B2B' }}>Онлайн</div>
                         </div>
                     </div>
                     <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
