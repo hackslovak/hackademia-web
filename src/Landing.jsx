@@ -22,12 +22,57 @@ export default function Landing() {
 
     return (
         <div className="landing-body">
+            {/* Додаткові стилі адаптивності для мобільних екранів */}
+            <style>{`
+                .landing-body {
+                    overflow-x: hidden;
+                }
+                .hero h1 {
+                    font-size: clamp(32px, 8vw, 64px) !important;
+                    line-height: 1.15 !important;
+                }
+                .section-title {
+                    font-size: clamp(22px, 5vw, 36px) !important;
+                    word-break: break-word;
+                }
+                @media (max-width: 768px) {
+                    .landing-body {
+                        padding: 0 10px;
+                    }
+                    header {
+                        padding: 15px 20px !important;
+                    }
+                    .hero {
+                        padding: 40px 15px !important;
+                    }
+                    .container {
+                        padding: 30px 15px !important;
+                    }
+                    .about-grid, .pricing-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    .extra-box {
+                        grid-template-columns: 1fr !important;
+                        padding: 20px !important;
+                    }
+                    .chat-modal {
+                        width: calc(100% - 30px) !important;
+                        right: 15px !important;
+                        bottom: 80px !important;
+                    }
+                    .floating-buttons {
+                        bottom: 15px !important;
+                        right: 15px !important;
+                    }
+                }
+            `}</style>
+
             <header>
                 <a href="#" className="logo">
                     <img 
                         src="/logo-main.svg" 
                         alt="Hackademia Logo" 
-                        style={{ width: '65px', height: '65px', objectFit: 'contain' }} 
+                        style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
                     />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
@@ -139,7 +184,7 @@ export default function Landing() {
                 <div className="extra-box">
                     <div>
                         <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>✨ Всі формати включають:</h4>
-                        <ul style={{ listStyle: 'none' }}>
+                        <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>💬 <b>Постійний чат</b> з особистим ментором</li>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>🎥 <b>Відеозаписи всіх занять</b></li>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>📚 <b>Авторські капсули</b> та ілюстровані воркбуки</li>

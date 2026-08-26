@@ -951,18 +951,15 @@ function speakSlovak(text) {
 function Platform() {
   const navigate = useNavigate();
   
-  // --- РОЗУМНА МУЛЬТИЯЗИЧНІСТЬ ---
+  // --- 1. ВСІ СТАНИ (HOOKS) ЗАВЖДИ ОГОЛОШУЮТЬСЯ НА ПОЧАТКУ ---
   const [lang, setLang] = useState(() => {
-    // 1. Перевіряємо, чи користувач вже обирав мову раніше
     const saved = localStorage.getItem('hack_lang');
     if (saved) return saved;
-    
-    // 2. Якщо ні — автоматично визначаємо мову його браузера/гаджета
     const browserLang = navigator.language || navigator.userLanguage || 'uk';
     if (browserLang.startsWith('sk')) return 'sk';
     if (browserLang.startsWith('en')) return 'en';
     if (browserLang.startsWith('ru')) return 'ru';
-    return 'uk'; // За замовчуванням українська
+    return 'uk';
   });
 
   const changeLang = (newLang) => {
@@ -973,196 +970,97 @@ function Platform() {
 
   const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
   
-  // --- ДАЛІ ЙДУТЬ ТВОЇ ЗВИЧАЙНІ СТАНИ ---
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(true); // <--- ПОКИ ЩО ПОСТАВИЛІ True ТУТ ДЛЯ ТЕСТУ!
-  const [accessStatus, setAccessStatus] = useState('loading'); // 'loading', 'pending', 'approved', 'rejected', 'no_auth' 
+  const [isAdmin, setIsAdmin] = useState(true);
+  const [accessStatus, setAccessStatus] = useState('loading'); 
   const [telegramId, setTelegramId] = useState(null);
   const [allowedCourses, setAllowedCourses] = useState([]);
   
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  
   const effectiveIsAdmin = isAdmin && !isPreviewMode;
-  
-  // --- ПЕРЕВІРКА ДОСТУПУ ДО ОКРЕМИХ КУРСІВ ---
-  useEffect(() => {
-    if (!telegramId || effectiveIsAdmin) return; // Адміни бачать усе
-    
-    async function fetchAllowedCourses() {
-      const { data } = await supabase
-        .from('user_courses')
-        .select('course_id')
-        .eq('user_telegram_id', telegramId);
-        
-      if (data) {
-        setAllowedCourses(data.map(d => d.course_id));
-      }
-    }
-    
-    fetchAllowedCourses();
-    const interval = setInterval(fetchAllowedCourses, 10000); // Оновлюємо кожні 10 сек (на випадок, якщо адмін дав доступ)
-    return () => clearInterval(interval);
-  }, [telegramId, effectiveIsAdmin]);
-  
-  // --- НОВІ СТАНИ ДЛЯ ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ТА СНАЙПЕРА ---
-  const [globalView, setGlobalView] = useState(null); // 'spaced' або 'sniper'
-  
-  // Стани для Інтервального повторення
+
+  const [globalView, setGlobalView] = useState(null); 
   const [spacedCards, setSpacedCards] = useState([]);
   const [spacedIndex, setSpacedIndex] = useState(0);
   const [isSpacedFlipped, setIsSpacedFlipped] = useState(false);
 
-  // Стани для міні-гри "Діакритичний снайпер"
   const [sniperCards, setSniperCards] = useState([]);
   const [sniperIndex, setSniperIndex] = useState(0);
   const [sniperInput, setSniperInput] = useState('');
   const [sniperScore, setSniperScore] = useState(0);
   const [sniperTimeLeft, setSniperTimeLeft] = useState(5);
-  
-  // НОВІ СТАНИ: Статус гри (меню, гра, кінець) та Життя (ХП)
   const [sniperStatus, setSniperStatus] = useState('menu'); 
   const [sniperHp, setSniperHp] = useState(5);
   
-  
-  // Стани для міні-гри "Фальшиві друзі"
   const [ffCards, setFfCards] = useState([]);
   const [ffIndex, setFfIndex] = useState(0);
   const [ffScore, setFfScore] = useState(0);
   const [ffSelected, setFfSelected] = useState(null);
   const [ffCurrentOptions, setFfCurrentOptions] = useState([]);
   const [isFfOver, setIsFfOver] = useState(false);
-  const [ffShowTranslation, setFfShowTranslation] = useState(false); // НОВИЙ СТАН ДЛЯ СПОЙЛЕРА
+  const [ffShowTranslation, setFfShowTranslation] = useState(false);
 
-  // --- ТЕМА ТА ЗВУК ---
   const [isDarkMode, setIsDarkMode] = useState(false);
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
-  
-  // --- МОТИВАЦІЙНІ ФРАЗИ ---
   const [toast, setToast] = useState(null);
 
-  const motivationalPhrases = [
-    "Вау, як легко! ✨",
-    "Чудова робота! 🫶",
-    "У тебе все вийде! 🚀",
-    "Ти молодець! 💛",
-    "Просто супер! 🎉",
-    "Так тримати! 🌟",
-    "Неймовірно! 🌸"
-  ];
-
-  function showMotivation() {
-    const phrase = motivationalPhrases[Math.floor(Math.random() * motivationalPhrases.length)];
-    setToast(phrase);
-    setTimeout(() => setToast(null), 3000); // Плашка зникне через 3 секунди
-  }
-
-  // Об'єкт із кольорами для швидкого перемикання теми (Пастельний редизайн)
-  const theme = {
-    bg: isDarkMode ? '#1a202c' : '#F4F7F6', // М'який пастельний сіро-м'ятний фон
-    cardBg: isDarkMode ? '#2d3748' : '#ffffff',
-    text: isDarkMode ? '#f7fafc' : '#2D3748',
-    textSecondary: isDarkMode ? '#a0aec0' : '#718096',
-    inputBg: isDarkMode ? '#4a5568' : '#EDF2F7',
-    inputBorder: isDarkMode ? '#718096' : '#E2E8F0',
-    
-    // БРЕНДОВІ ТЕПЛІ КОЛЬОРИ (замість кричущого рожевого)
-    primary: '#2B6CB0',       // Теплий глибокий синій/акцент (або можна замінити на м'ятний/охристий)
-    primaryHover: '#2C5282',
-    accentWarm: '#D69E2E',    // Теплий золотистий/охристий акцент
-    adminBg: isDarkMode ? '#2c3e50' : '#FEFCBF',
-    adminBorder: isDarkMode ? '#d69e2e' : '#ECC94B',
-  };
-
   const [newAdminTelegramId, setNewAdminTelegramId] = useState('');
-
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
 
-  // === ВСТАВЛЯЄМО ЛОГІКУ РЕОРДЕРУ СЮДИ ===
   const [activeReorderId, setActiveReorderId] = useState(null);
   const pressTimer = React.useRef(null);
 
-  const handlePressStart = (e, id) => {
-    if (!effectiveIsAdmin) return;
-    pressTimer.current = setTimeout(() => {
-      setActiveReorderId(id);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('heavy');
-    }, 500);
-  };
-
-  const handlePressEnd = () => {
-    if (pressTimer.current) clearTimeout(pressTimer.current);
-  };
-
-  const moveCourse = (courseId, direction) => {
-    setCourses(prev => {
-      const idx = prev.findIndex(c => c.id === courseId);
-      if (idx < 0) return prev;
-      let newIdx = direction === 'left' ? idx - 1 : idx + 1;
-      if (newIdx < 0 || newIdx >= prev.length) return prev;
-      const newArr = [...prev];
-      [newArr[idx], newArr[newIdx]] = [newArr[newIdx], newArr[idx]];
-      
-      const updates = newArr.map((c, i) => ({ id: c.id, title: c.title, order_index: i }));
-      supabase.from('courses').upsert(updates).then();
-      return newArr;
-    });
-    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-  };
-
-  useEffect(() => {
-    if (!activeReorderId) return;
-    const handleKeyDown = (e) => {
-      if (e.key === 'ArrowLeft') moveCourse(activeReorderId, 'left');
-      if (e.key === 'ArrowRight') moveCourse(activeReorderId, 'right');
-      if (e.key === 'Escape' || e.key === 'Enter') setActiveReorderId(null);
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [activeReorderId]);
-  // === КІНЕЦЬ ЛОГІКИ РЕОРДЕРУ ===
-
   const [isEditingCourseTitle, setIsEditingCourseTitle] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState("");
+
+  const [modules, setModules] = useState([]);
+  const [activeModule, setActiveModule] = useState(null);
   
-// --- ЄДИНИЙ САЙДБАР ---
-  const renderSidebar = () => (
-    <div style={{ 
-      width: '85px', background: isDarkMode ? '#1a202c' : '#1A3636', color: '#ffffff', 
-      display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px',
-      boxShadow: '4px 0 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box'
-    }}>
-      {/* ЗБІЛЬШЕНИЙ ЛОГОТИП-СОВА SVG */}
-      <div title="Hackademia" style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <img src="/logo.svg" alt="Hackademia Logo" style={{ width: '52px', height: '52px', objectFit: 'contain' }} />
-      </div>
+  const [tasks, setTasks] = useState([]);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', flex: 1 }}>
-        <button title={t('selectCourse')} onClick={() => { setSelectedCourse(null); setActiveModule(null); setGlobalView(null); }} className={`hover-menu-btn ${(selectedCourse === null && globalView === null && activeModule === null) ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-        </button>
-        <button title="Мій профіль" onClick={() => { setGlobalView('profile'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'profile' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        </button>
-        <button title="Чат зі школою" onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-        </button>
-      </div>
+  const [newModuleTitle, setNewModuleTitle] = useState('');
+  const [editingModuleId, setEditingModuleId] = useState(null);
+  const [editModuleTitleText, setEditModuleTitleText] = useState('');
 
-      <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-        {effectiveIsAdmin && (
-          <button title="Адмін-панель" onClick={() => { setGlobalView('admin_panel'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'admin_panel' ? 'active' : ''}`} style={{ position: 'relative', width: '100%', border: 'none', color: '#F6AD55', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            {pendingCount > 0 && <span style={{ position: 'absolute', top: '2px', right: '6px', background: '#FF007F', color: 'white', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pendingCount}</span>}
-          </button>
-        )}
-        <button title="На сайт школи" onClick={() => navigate('/')} className="hover-menu-btn" style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        </button>
-      </div>
-    </div>
-  );
+  const [newTaskType, setNewTaskType] = useState('text');
+  const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
+  const [newTaskContent, setNewTaskContent] = useState('');
+  const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
+
+  const [userAnswers, setUserAnswers] = useState({});
+  const [completedTasks, setCompletedTasks] = useState([]);
+  const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
+  const [myCards, setMyCards] = useState([]);
+  
+  const [pendingCount, setPendingCount] = useState(0);
+  const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
+
+  const [flippedCards, setFlippedCards] = useState({});
+  const [isTrainingMode, setIsTrainingMode] = useState(false);
+  const [isTestView, setIsTestView] = useState(false); 
+  const [trainingIndex, setTrainingIndex] = useState(0);
+  const [isTrainingFlipped, setIsTrainingFlipped] = useState(false);
+  const [quizOptions, setQuizOptions] = useState([]);
+  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState(null);
+  const [quizScore, setQuizScore] = useState(0);
+  const [isQuizFinished, setIsQuizFinished] = useState(false);
+
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState(null);
+
+  const [editingTaskId, setEditingTaskId] = useState(null);
+  const [editContent, setEditContent] = useState('');
+  const [editAnswer, setEditAnswer] = useState('');
+  const [editDifficulty, setEditDifficulty] = useState('medium');
+
+  // --- 2. УСІ useEffect ТАХОЖ ВИЩЕ УСІХ УМОВНІХ РЕНДЕРІВ ---
+  // (тут розміщуються твої useEffect для ініціалізації юзера, завантаження курсів тощо)
+
+  // --- 3. ТЕПЕР БЕЗПЕЧНО РОБИТИ УМОВНІ ПОВЕРНЕННЯ (ЕКРАНИ) ---
 
   // --- ЕКРАН ПРОФІЛЮ ---
   if (globalView === 'profile') {
@@ -1198,6 +1096,8 @@ function Platform() {
       </div>
     );
   }
+
+  // (Далі йдуть інші екрани: admin_panel, spaced, sniper, false_friends, activeModule, selectedCourse тощо)
   
   const [newCourseTitle, setNewCourseTitle] = useState("");
 
@@ -2325,8 +2225,22 @@ function Platform() {
     `}</style>
   );
 
-// --- ЕКРАН ПРОФІЛЮ ---
+// --- ЕКРАН ПРОФІЛЮ (З можливістю прив'язки Email та Пароля) ---
   if (globalView === 'profile') {
+    const handleLinkEmail = async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const password = e.target.password.value;
+      
+      const { error } = await supabase.auth.updateUser({ email, password });
+      if (error) {
+        alert("❌ Помилка прив'язки: " + error.message);
+      } else {
+        alert("✅ Пошту та пароль успішно прив'язано до вашого акаунта!");
+        window.location.reload();
+      }
+    };
+
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         <GlobalStyles />
@@ -2336,7 +2250,22 @@ function Platform() {
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)', border: `1px solid ${theme.inputBorder}`, maxWidth: '600px' }}>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Ім'я: <b style={{color: theme.text}}>{userName || 'Гість'}</b></p>
             <p style={{color: theme.textSecondary, fontSize: '18px'}}>Статус доступу: <b style={{color: '#00C853'}}>{accessStatus === 'approved' ? 'Активний' : accessStatus}</b></p>
-            {isAdmin && <span style={{ background: '#F6AD55', color: '#1A3636', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
+            {isAdmin && <span style={{ background: '#FF7B54', color: '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: 'bold' }}>ADMIN</span>}
+            
+            <hr style={{ border: 'none', borderTop: `1px solid ${theme.inputBorder}`, margin: '30px 0' }}/>
+            
+            <h3 style={{ color: theme.text, fontSize: '20px', marginBottom: '15px' }}>🔐 Прив'язати пошту та пароль</h3>
+            <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '20px' }}>
+              Якщо ви увійшли через Telegram, ви можете додати до свого акаунта email і пароль, щоб заходити на платформу з будь-якого комп'ютера чи браузера.
+            </p>
+
+            <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              <input type="email" name="email" placeholder="Ваша пошта (email)..." required style={{ padding: '12px 16px', borderRadius: '10px', fontSize: '15px' }} />
+              <input type="password" name="password" placeholder="Придумайте пароль..." required style={{ padding: '12px 16px', borderRadius: '10px', fontSize: '15px' }} />
+              <button type="submit" style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#ffffff', padding: '12px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>
+                Зберегти та прив'язати 💾
+              </button>
+            </form>
           </div>
         </div>
       </div>

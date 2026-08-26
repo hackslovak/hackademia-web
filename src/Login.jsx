@@ -103,9 +103,14 @@ export default function Login() {
 
         <div style={{ marginTop: '30px', borderTop: '1px solid #E2E8F0', paddingTop: '20px', textAlign: 'center' }}>
           <p style={{ fontSize: '12px', color: '#A0AEC0', marginBottom: '10px' }}>Або увійдіть через Telegram (Mini App)</p>
-          <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#EBF3FF', color: '#3182ce', padding: '10px 20px', borderRadius: '10px', textDecoration: 'none', fontWeight: 'bold', fontSize: '13px' }}>
-            Відкрити бота 🚀
-          </a>
+          <a 
+  href="https://t.me/hackademiapp_bot" 
+  target="_blank" 
+  rel="noreferrer"
+  style={{ display: 'inline-block', background: '#2B6CB0', color: 'white', padding: '14px 28px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}
+>
+  Відкрити бота 🚀
+</a>
         </div>
         
         {/* Кнопка повернення на головну */}
