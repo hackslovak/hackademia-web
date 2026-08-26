@@ -1931,7 +1931,7 @@ function Platform() {
     if (!file) return;
 
     if (!window.confirm(`⚠️ УВАГА! Це відновить базу з локального файлу "${file.name}". Поточні дані будуть оновлені/перезаписані. Продовжити?`)) {
-      e.target.value = ''; // очищаємо інпут
+      e.target.value = ''; 
       return;
     }
     
@@ -1952,12 +1952,8 @@ function Platform() {
         if (tErr) throw tErr;
       }
 
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        window.Telegram.WebApp.showAlert(`✅ Успішно відновлено з файлу: ${file.name}`);
-      } else {
-        alert(`✅ Успішно відновлено з файлу: ${file.name}`);
-      }
+      // Використовуємо звичайний універсальний alert замість Telegram-віконця
+      alert(`✅ Успішно відновлено з файлу: ${file.name}`);
       
       fetchCourses();
       setSelectedCourse(null);
@@ -1967,7 +1963,7 @@ function Platform() {
       console.error(err);
       alert("❌ Помилка читання або відновлення з файлу: " + err.message);
     } finally {
-      e.target.value = ''; // скидаємо інпут
+      e.target.value = ''; 
     }
   }
   
