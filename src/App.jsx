@@ -1151,24 +1151,6 @@ function Platform() {
   };
 
   // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
-  const [flippedCards, setFlippedCards] = useState({});
-  
-  const [isTrainingMode, setIsTrainingMode] = useState(false);
-  const [isTestView, setIsTestView] = useState(false); // false = просто гортати, true = тест з варіантами
-  const [trainingIndex, setTrainingIndex] = useState(0);
-  const [isTrainingFlipped, setIsTrainingFlipped] = useState(false);
-  const [quizOptions, setQuizOptions] = useState([]);
-  const [selectedQuizAnswer, setSelectedQuizAnswer] = useState(null);
-  const [quizScore, setQuizScore] = useState(0);
-  const [isQuizFinished, setIsQuizFinished] = useState(false);
-
-  const [isRecording, setIsRecording] = useState(false);
-  const [mediaRecorder, setMediaRecorder] = useState(null);
-
-  const [editingTaskId, setEditingTaskId] = useState(null);
-  const [editContent, setEditContent] = useState('');
-  const [editAnswer, setEditAnswer] = useState('');
-  const [editDifficulty, setEditDifficulty] = useState('medium');
 
   const difficultyConfig = {
     easy: { color: '#00C853', label: '🟢 Легко', points: 10 },
