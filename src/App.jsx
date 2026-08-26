@@ -2947,76 +2947,81 @@ function Platform() {
     'https://images.unsplash.com/photo-1634986666676-ec8fd922cdfd?q=80&w=400&auto=format&fit=crop'  // 3D хвилі
   ];
 
-// ЕКРАН 1: Головна сторінка вибору курсів (Преміальний дизайн з іконками та 3D)
+// ЕКРАН 1: Головна сторінка вибору курсів (Мінімалістичний дашборд з іконками)
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       <GlobalStyles />
       
-      {/* 1. ЛІВИЙ ВЕРТИКАЛЬНИЙ САЙДБАР (Нові великі іконки, Профіль, Чат) */}
+      {/* 1. ЛІВИЙ ВУЗЬКИЙ САЙДБАР (Тільки іконки з підказками при наведенні) */}
       <div style={{ 
-        width: '280px', 
+        width: '85px', 
         background: isDarkMode ? '#1a202c' : '#1A3636', 
         color: '#ffffff', 
         display: 'flex', 
         flexDirection: 'column', 
-        padding: '30px 20px',
+        alignItems: 'center',
+        padding: '30px 12px',
         boxShadow: '4px 0 20px rgba(0,0,0,0.08)',
         position: 'sticky',
         top: 0,
         height: '100vh',
         boxSizing: 'border-box'
       }}>
-        {/* Логотип */}
-        <div style={{ fontSize: '24px', fontWeight: '900', marginBottom: '40px', letterSpacing: '0.5px', color: '#F6AD55', display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <svg width="32" height="32" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-          Hackademia
+        {/* Логотип-іконка */}
+        <div title="Hackademia" style={{ color: '#F6AD55', marginBottom: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <svg width="34" height="34" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
         </div>
 
-        {/* Меню навігації (ВЕЛИКІ SVG іконки, оновлені розділи) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', flex: 1 }}>
+        {/* Меню навігації (Іконки) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', width: '100%', flex: 1 }}>
           <button 
+            title={t('selectCourse')}
             onClick={() => { setSelectedCourse(null); setGlobalView(null); }}
-            style={{ background: (selectedCourse === null && globalView === null) ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '16px', transition: '0.2s' }}
+            style={{ width: '100%', background: (selectedCourse === null && globalView === null) ? 'rgba(255,255,255,0.15)' : 'transparent', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
           >
             <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
-            {t('selectCourse')}
           </button>
 
           <button 
+            title="Мій профіль"
             onClick={() => alert('Розділ "Профіль" в розробці')}
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '16px', transition: '0.2s' }}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
           >
             <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-            Профіль
           </button>
 
           <button 
+            title="Чат зі школою"
             onClick={() => alert('Розділ "Чат" в розробці')}
-            style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '14px 18px', borderRadius: '12px', cursor: 'pointer', fontSize: '16px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '16px', transition: '0.2s' }}
+            style={{ width: '100%', background: 'transparent', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
           >
             <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-            Чат
           </button>
         </div>
 
-        {/* Нижня частина сайдбару (Адмін-панель та На головну) */}
-        <div style={{ borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        {/* Нижня частина сайдбару */}
+        <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
           {effectiveIsAdmin && (
             <button 
+              title={`Адмін-панель ${pendingCount > 0 ? `(${pendingCount} нових заявок)` : ''}`}
               onClick={() => setGlobalView('admin_panel')}
-              style={{ background: globalView === 'admin_panel' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: '#F6AD55', textAlign: 'left', padding: '10px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '12px', transition: '0.2s' }}
+              style={{ position: 'relative', width: '100%', background: globalView === 'admin_panel' ? 'rgba(255,255,255,0.1)' : 'transparent', border: 'none', color: '#F6AD55', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}
             >
-              <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              Адмін-панель {pendingCount > 0 && `(${pendingCount})`}
+              <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+              {pendingCount > 0 && (
+                <span style={{ position: 'absolute', top: '2px', right: '6px', background: '#FF007F', color: 'white', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  {pendingCount}
+                </span>
+              )}
             </button>
           )}
 
           <button 
+            title="Повернутися на сайт школи"
             onClick={() => navigate('/')} 
-            style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', padding: '12px 18px', borderRadius: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: 'bold', width: '100%', textAlign: 'left', display: 'flex', alignItems: 'center', gap: '12px' }}
+            style={{ width: '100%', background: 'rgba(255,255,255,0.08)', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
           >
-            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-            На сайт школи
+            <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
           </button>
         </div>
       </div>
@@ -3040,34 +3045,30 @@ function Platform() {
           <button onClick={toggleTheme} style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '42px', height: '42px', borderRadius: '50%', fontSize: '18px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>{isDarkMode ? '☀️' : '🌙'}</button>
         </div>
 
-        {/* Заголовок сторінки */}
-        <div style={{ marginBottom: '40px' }}>
-          <h1 style={{ color: theme.text, fontSize: '38px', fontWeight: '900', margin: '0 0 10px 0', letterSpacing: '-0.5px' }}>{t('title')}</h1>
-          {userName && <p style={{ color: theme.textSecondary, fontSize: '17px', margin: 0 }}>{t('greeting')}, <b>{userName}</b>!</p>}
-          
-          {isAdmin && (
-            <span 
-              onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick}
-              style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '14px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}
-            >
-              {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
-            </span>
+        {/* ЧИСТИЙ БЛОК ПРИВІТАННЯ ТА КНОПКИ СТВОРЕННЯ */}
+        <div style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+          <div>
+            {userName && <p style={{ color: theme.textSecondary, fontSize: '22px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userName}</b>! 👋</p>}
+            
+            {isAdmin && (
+              <span 
+                onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick}
+                style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '12px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}
+              >
+                {isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}
+              </span>
+            )}
+          </div>
+
+          {effectiveIsAdmin && (
+            <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '16px 32px', border: 'none', borderRadius: '14px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(43,108,176,0.3)', transition: 'transform 0.2s' }}>
+              + Створити новий курс
+            </button>
           )}
         </div>
 
-        {/* СПИСОК КУРСІВ (Великі картки + Кнопка на одному рівні) */}
-        <div style={{ maxWidth: '950px', marginBottom: '40px' }}>
-          
-          {/* Об'єднаний заголовок та кнопка "Створити курс" */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-            <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', margin: 0 }}>{t('selectCourse')}</h3>
-            {effectiveIsAdmin && (
-              <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '12px 24px', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(43,108,176,0.3)', transition: 'transform 0.2s' }}>
-                + Створити новий курс
-              </button>
-            )}
-          </div>
-          
+        {/* СПИСОК КУРСІВ (Відразу починається без зайвих текстів) */}
+        <div style={{ maxWidth: '950px', marginBottom: '50px' }}>
           {effectiveIsAdmin && courses.length > 1 && (
             <p style={{ fontSize: '14px', color: theme.textSecondary, fontStyle: 'italic', marginBottom: '20px' }}>
               💡 Затисни і потягни блок курсу, щоб змінити його позицію
@@ -3081,7 +3082,6 @@ function Platform() {
                 return (
                   <Reorder.Item
                     key={course.id} value={course} 
-                    /* Виправлення багу з перетягуванням: додано zIndex: 50 під час тяги */
                     whileDrag={{ scale: 1.03, zIndex: 50, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.2)" }} 
                     style={{ 
                       position: 'relative', overflow: 'hidden', zIndex: 1,
@@ -3155,7 +3155,7 @@ function Platform() {
           )}
         </div>
 
-        {/* ПОВЕРНУТІ ІНТЕРАКТИВНІ БЛОКИ (Тренажери) у преміум-стилі */}
+        {/* ТРЕНАЖЕРИ */}
         <div style={{ maxWidth: '950px', marginBottom: '40px' }}>
           <h3 style={{ color: theme.text, fontSize: '24px', fontWeight: '800', marginBottom: '20px' }}>Тренажери та ігри</h3>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px' }}>
