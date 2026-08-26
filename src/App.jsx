@@ -2705,7 +2705,12 @@ function Platform() {
               {['uk', 'sk', 'en', 'ru'].map((l) => (
                 <button 
                   key={l} onClick={() => changeLang(l)} 
-                  style={{ background: lang === l ? '#F6AD55' : 'transparent', color: lang === l ? '#1A3636' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
+                  style={{ 
+  background: lang === l ? '#F6AD55' : 'transparent', 
+  color: lang === l ? '#1A3636' : theme.text, 
+  border: 'none', padding: '6px 12px', borderRadius: '8px', 
+  fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' 
+}}
                 >
                   {l.toUpperCase()}
                 </button>
@@ -2872,7 +2877,17 @@ function Platform() {
             {userName && <p style={{ color: theme.textSecondary, fontSize: '24px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userName}</b>! 👋</p>}
             {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#2B6CB0', color: 'white', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(43,108,176,0.2)' }}>{isPreviewMode ? '👤 Учень (Превью)' : 'ADMIN'}</span>}
           </div>
-          {effectiveIsAdmin && <button onClick={handleAddCourse} style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #3182ce 100%)', color: 'white', padding: '14px 28px', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '15px', cursor: 'pointer', boxShadow: '0 4px 15px rgba(43,108,176,0.3)', transition: 'transform 0.2s' }}>+ Створити новий курс</button>}
+          {effectiveIsAdmin && <button onClick={handleAddCourse} style={{ 
+  background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', 
+  color: '#1A3636', 
+  padding: '14px 28px', 
+  border: 'none', 
+  borderRadius: '12px', 
+  fontWeight: '900', 
+  fontSize: '15px', 
+  cursor: 'pointer', 
+  boxShadow: '0 4px 15px rgba(246,173,85,0.3)' 
+}}>+ Створити новий курс</button>}
         </div>
 
         {/* СПИСОК КУРСІВ */}
