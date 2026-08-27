@@ -953,28 +953,19 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [messages, setMessages] = React.useState([]);
   const [chatText, setChatText] = React.useState('');
   const [chatUsers, setChatUsers] = React.useState([]);
-  const [searchQuery, setSearchQuery] = React.useState(''); // СТАН ДЛЯ ПОШУКУ
+  const [searchQuery, setSearchQuery] = React.useState('');
   const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
   const messagesEndRef = React.useRef(null);
-  const getDisplayName = (u) => {
-    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim();
-    if (fullName && fullName !== 'undefined') return fullName;
-    if (u.email) return u.email.split('@')[0];
-    if (u.telegram_id) return `TG: ${u.telegram_id}`;
-    return 'Невідомий учень';
-  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Адмін отримує список всіх учнів (додано last_name та telegram_id для пошуку)
   React.useEffect(() => {
     if (isAdmin) {
       supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id')
         .neq('role', 'admin')
         .then(({data}) => {
-         // Відсіюємо відверто пусті дублікати без імені та email
          if (data) {
            const validUsers = data.filter(u => u.first_name || u.email);
            setChatUsers(validUsers);
@@ -983,7 +974,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     }
   }, [isAdmin]);
 
-  // Завантаження повідомлень вибраного чату
   const fetchMessages = async () => {
     if (!activeChatUserId) return;
     const { data } = await supabase
@@ -994,7 +984,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     if (data) setMessages(data);
   };
 
-  // Авто-оновлення чату кожні 3 секунди
   React.useEffect(() => {
     fetchMessages();
     setTimeout(scrollToBottom, 300);
@@ -1019,7 +1008,14 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
   };
 
-  // --- ЛОГІКА ПОШУКУ УЧНІВ ---
+  const getDisplayName = (u) => {
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+    if (fullName && fullName !== 'undefined') return fullName;
+    if (u.email) return u.email.split('@')[0];
+    if (u.telegram_id) return `TG: ${u.telegram_id}`;
+    return 'Невідомий учень';
+  };
+
   const filteredUsers = chatUsers.filter(u => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
@@ -1044,15 +1040,13 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
       <div style={{ flex: 1, background: theme.cardBg, borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, display: 'flex', overflow: 'hidden' }}>
         
-        {/* ЛІВА ПАНЕЛЬ (ТІЛЬКИ ДЛЯ АДМІНА) */}
         {isAdmin && (
           <div style={{ width: '300px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
             <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>
               Список учнів
-              {/* ПОЛЕ ПОШУКУ */}
               <input 
                 type="text" 
-                placeholder="🔍 Пошук (ім'я, email, TG ID)..." 
+                placeholder="🔍 Пошук..." 
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text, fontSize: '13px', boxSizing: 'border-box' }}
@@ -1069,9 +1063,8 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                     </div>
                     <div style={{ overflow: 'hidden' }}>
                       <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                        <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-  {getDisplayName(u)}
-</div>
+                        {getDisplayName(u)}
+                      </div>
                       {(u.email || u.telegram_id) && (
                         <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {u.email || `TG: ${u.telegram_id}`}
@@ -1085,7 +1078,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
           </div>
         )}
 
-        {/* ПРАВА ПАНЕЛЬ (САМ ЧАТ) */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.bg }}>
           {!activeChatUserId ? (
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '16px' }}>👈 Виберіть учня зліва, щоб почати діалог</div>
@@ -1112,7 +1104,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* ПОЛЕ ВВОДУ */}
               <form onSubmit={sendMessage} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
                 <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} placeholder="Написати повідомлення..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
                 <button type="submit" className="hover-card" disabled={!chatText.trim()} style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: chatText.trim() ? 'pointer' : 'not-allowed', opacity: chatText.trim() ? 1 : 0.5 }}>
