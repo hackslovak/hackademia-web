@@ -3065,14 +3065,24 @@ function Platform() {
       }
     };
 
-    // ФУНКЦІЯ: Прив'язка Email
+    // ФУНКЦІЯ: Прив'язка Email (Виправлена)
     const handleLinkEmail = async (e) => {
       e.preventDefault();
-      const email = e.target.email.value;
+      const email = e.target.email.value.trim();
       const password = e.target.password.value;
+      
+      // 1. Оновлюємо систему авторизації
       const { error } = await supabase.auth.updateUser({ email, password });
-      if (error) alert("❌ Помилка: " + error.message);
-      else { alert("✅ Дані доступу (пошта та пароль) успішно оновлено!"); window.location.reload(); }
+      if (error) {
+        alert("❌ Помилка: " + error.message);
+        return;
+      }
+      
+      // 2. ВАЖЛИВО: Записуємо цей email у твій рядок в базі, щоб не створювався дублікат профілю!
+      await supabase.from('users').update({ email: email }).eq('id', dbUserId);
+      
+      alert("✅ Дані доступу (пошта та пароль) успішно оновлено!"); 
+      window.location.reload();
     };
 
     return (
