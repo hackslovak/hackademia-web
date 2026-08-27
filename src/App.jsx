@@ -3108,28 +3108,63 @@ function Platform() {
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ім'я</label>
-                       <input type="text" name="firstName" defaultValue={userProfile.first_name || userName || ''} placeholder="Ваше ім'я" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                       <input 
+                         type="text" 
+                         name="firstName" 
+                         value={userProfile.first_name || userName || ''} 
+                         onChange={e => setUserProfile({...userProfile, first_name: e.target.value})} 
+                         placeholder="Ваше ім'я" 
+                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
+                       />
                     </div>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Прізвище</label>
-                       <input type="text" name="lastName" defaultValue={userProfile.last_name || ''} placeholder="Не вказано" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                       <input 
+                         type="text" 
+                         name="lastName" 
+                         value={userProfile.last_name || ''} 
+                         onChange={e => setUserProfile({...userProfile, last_name: e.target.value})} 
+                         placeholder="Не вказано" 
+                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
+                       />
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Телефон / Telegram</label>
-                       <input type="text" name="phone" defaultValue={userProfile.phone || ''} placeholder="+380..." style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                       <input 
+                         type="text" 
+                         name="phone" 
+                         value={userProfile.phone || ''} 
+                         onChange={e => setUserProfile({...userProfile, phone: e.target.value})} 
+                         placeholder="+380..." 
+                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
+                       />
                     </div>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Місто</label>
-                       <input type="text" name="city" defaultValue={userProfile.city || ''} placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
+                       <input 
+                         type="text" 
+                         name="city" 
+                         value={userProfile.city || ''} 
+                         onChange={e => setUserProfile({...userProfile, city: e.target.value})} 
+                         placeholder="Наприклад, Братислава" 
+                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
+                       />
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '35px' }}>
                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Про мене</label>
-                    <textarea name="bio" rows="3" defaultValue={userProfile.bio || ''} placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
+                    <textarea 
+                      name="bio" 
+                      rows="3" 
+                      value={userProfile.bio || ''} 
+                      onChange={e => setUserProfile({...userProfile, bio: e.target.value})} 
+                      placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" 
+                      style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}
+                    ></textarea>
                   </div>
 
                   <button type="submit" disabled={isSaving} className="hover-card" style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', fontSize: '16px', width: '100%', opacity: isSaving ? 0.7 : 1, position: 'relative', zIndex: 30 }}>
