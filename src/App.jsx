@@ -1489,6 +1489,38 @@ function Platform() {
         fetchCourses();
         return;
       }
+	  
+	  async function registerTelegramUser(user) {
+        setTelegramId(user.id);
+        const savedAdmin = localStorage.getItem('hack_is_admin');
+        if (savedAdmin === 'true') setIsAdmin(true);
+
+        // Зберігаємо також username (нікнейм у телеграмі)
+        const { data } = await supabase
+          .from('users')
+          .upsert({ 
+            telegram_id: user.id, 
+            first_name: user.first_name,
+            username: user.username || null // <-- ДОДАЛИ НІКНЕЙМ
+          }, { onConflict: 'telegram_id' })
+          .select()
+          .single();
+          
+        if (data) {
+          setDbUserId(data.id);
+          if (data.role === 'admin') {
+            setIsAdmin(true);
+            setAccessStatus('approved');
+            localStorage.setItem('hack_is_admin', 'true');
+          } else {
+            if (savedAdmin === 'true') {
+              localStorage.removeItem('hack_is_admin');
+              setIsAdmin(false);
+            }
+            setAccessStatus(data.access_status || 'pending');
+          }
+        }
+      }
 
       // 2. Якщо сесії поштою немає, перевіряємо Telegram (стара логіка)
       async function registerTelegramUser(user) {

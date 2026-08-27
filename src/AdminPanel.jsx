@@ -48,6 +48,15 @@ const AdminPanel = () => {
     fetchAllData();
   }, []);
 
+  const getDisplayName = (u) => {
+    if (u.username) return `@${u.username}`; // Пріоритет на телеграм нікнейм!
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+    if (fullName && fullName !== 'undefined') return fullName;
+    if (u.email) return u.email.split('@')[0];
+    if (u.telegram_id) return `ID: ${u.telegram_id}`;
+    return 'Невідомий учень';
+  };
+  
   const handleCreateGroup = async (e) => {
     e.preventDefault();
     if (!newGroupName.trim()) return;
