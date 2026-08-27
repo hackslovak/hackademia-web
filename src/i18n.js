@@ -8,18 +8,14 @@ export const translations = {
     chatBtn: "Чат зі школою", adminPanel: "Адмін-панель", toSchool: "На сайт школи",
     contactBtn: "Зв'язатися",
     
-    // Landing - Hero
+    // Landing
     heroLabel: "( Школа онлайн )", heroTitle1: "ВИВЧАЙ СЛОВАЦЬКУ", heroTitle2: "З HACKADEMIA",
     heroSub: "Новий, крутий формат навчання у нашій школі. Старт нових груп вже незабаром!",
     heroBtnAuth: "Повернутися до навчання 🚀", heroBtnNoAuth: "Увійти до платформи",
-    
-    // Landing - About
     aboutLabel: "( 01 - Про нас )", aboutTitle: "Сучасна онлайн-школа словацької мови",
     about1Title: "🎓 Вступ до ВНЗ Словаччини", about1Text: "Готуємо до вступу та допомагаємо з повною адаптацією на новому місці.",
     about2Title: "💡 Інноваційний підхід", about2Text: "Інтерактивні матеріали, гейміфікація та максимальна кількість розмовної практики.",
     about3Title: "🤝 Спільнота однодумців", about3Text: "Жодної нудної субординації — лише дружня атмосфера, гумор і постійна підтримка ментора.",
-    
-    // Landing - Pricing
     priceLabel: "( 02 - Формати та ціни )", priceTitle: "Оберіть зручний формат навчання",
     price1Badge: "Самостійно", price1Title: "Закритий доступ", price1Sub: "Навчання за матеріалами платформи у власному темпі без викладача.",
     price1Li1: "Повний доступ", price1Li1_2: "до всіх курсів і модулів", price1Li2: "Інтерактивні завдання та тести", price1Li3: "Навчання у власному темпі",
@@ -31,21 +27,27 @@ export const translations = {
     price3Li1: "24 заняття", price3Li1_2: "(~2.5 місяці)", price3Li2: "2 рази на тиждень по 1.5 год", price3Li3: "Чат із вашим ментором",
     price4Badge: "1 особа або пара", price4Title: "Індивідуально", price4Sub: "Повна персональна адаптація під ваші особисті цілі та графік.",
     price4Li1: "Власний гнучкий графік", price4Li2: "100% уваги викладача", price4Li3: "Записи занять за бажанням",
-    
-    // Landing - Extra & Footer & Chat
     extraTitle1: "✨ Всі формати включають:", extraLi1: "💬 Постійний чат з особистим ментором", extraLi2: "🎥 Відеозаписи всіх занять", extraLi3: "📚 Авторські капсули та ілюстровані воркбуки",
     extraTitle2: "🕊️ Як почати навчання?", extraText: "Ви можете записатися на безкоштовне пробне заняття або отримати доступ до платформи матеріалів. Оплату здійснюєте лише тоді, коли переконаєтеся, що вам усе подобається!",
     footerDesc: "Сучасна онлайн-школа словацької мови", footerRights: "© 2026 Hackademia. Всі права захищено.",
     chatAssistant: "Асистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше повідомлення...", chatAlert: "Введіть текст повідомлення!",
-    chatGreeting: "Вітаю! 👋 Я ваш віртуальний асистент Hackademia. Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера в Telegram!"
+    chatGreeting: "Вітаю! 👋 Я ваш віртуальний асистент Hackademia. Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера в Telegram!",
+
+    // Login Page
+    loginTitle: "Вхід на платформу", loginSub: "З поверненням! Раді бачити тебе знову 💛",
+    emailLabel: "Email", passwordLabel: "Пароль", loginBtn: "Увійти",
+    noAccount: "Ще немає акаунту?", registerLink: "Зареєструватися",
+    hasAccount: "Вже є акаунт?", loginLink: "Увійти",
+    orTelegram: "Або увійдіть через Telegram (Mini App)",
+    openBotBtn: "Відкрити бота 🚀", backToHome: "Повернутися на головну",
+    regTitle: "Реєстрація", regSub: "Створіть акаунт, щоб почати навчання 🚀", regBtn: "Зареєструватися"
   },
   sk: {
     greeting: "Ahoj", selectCourse: "Kurzy", lockedAlert: "Tento kurz je momentálne nedostupný.",
     repeatToday: "Opakovať dnes (Intervalové)", sniperGame: "Diakritický ostreľovač",
     falseFriends: "Falošní priatelia", loggedIn: "Prihlásený.", logout: "Odhlásiť sa",
     admin: "ADMINISTRÁTOR", studentPreview: "👤 Študent (Náhľad)", myProfile: "Môj profil",
-    chatBtn: "Chat so školou", adminPanel: "Admin panel", toSchool: "Na stránku školy",
-    contactBtn: "Kontaktovať",
+    chatBtn: "Chat so školou", adminPanel: "Admin panel", toSchool: "Na stránku školy", contactBtn: "Kontaktovať",
     heroLabel: "( Online škola )", heroTitle1: "UČ SA SLOVENČINU", heroTitle2: "S HACKADEMIA",
     heroSub: "Nový, skvelý formát výučby v našej škole. Štart nových skupín už čoskoro!",
     heroBtnAuth: "Späť na štúdium 🚀", heroBtnNoAuth: "Vstúpiť do platformy",
@@ -68,15 +70,23 @@ export const translations = {
     extraTitle2: "🕊️ Ako začať študovať?", extraText: "Môžete sa prihlásiť na bezplatnú skúšobnú lekciu alebo získať prístup k platforme materiálov. Platíte len vtedy, keď sa presvedčíte, že sa vám všetko páči!",
     footerDesc: "Moderná online škola slovenského jazyka", footerRights: "© 2026 Hackademia. Všetky práva vyhradené.",
     chatAssistant: "Asistent Hackademia", chatOnline: "Online", chatPlaceholder: "Vaša správa...", chatAlert: "Zadajte text správy!",
-    chatGreeting: "Dobrý deň! 👋 Som váš virtuálny asistent Hackademia. Napíšte svoju otázku nižšie a okamžite poletí k nášmu manažérovi na Telegram!"
+    chatGreeting: "Dobrý deň! 👋 Som váš virtuálny asistent Hackademia. Napíšte svoju otázku nižšie a okamžite poletí k nášmu manažérovi na Telegram!",
+    
+    // Login Page
+    loginTitle: "Prihlásenie do platformy", loginSub: "Vitajte späť! Radi ťa opäť vidíme 💛",
+    emailLabel: "Email", passwordLabel: "Heslo", loginBtn: "Prihlásiť sa",
+    noAccount: "Ešte nemáte účet?", registerLink: "Zaregistrovať sa",
+    hasAccount: "Už máte účet?", loginLink: "Prihlásiť sa",
+    orTelegram: "Alebo sa prihláste cez Telegram (Mini App)",
+    openBotBtn: "Otvoriť bota 🚀", backToHome: "Späť na hlavnú stránku",
+    regTitle: "Registrácia", regSub: "Vytvorte si účet a začnite sa učiť 🚀", regBtn: "Zaregistrovať sa"
   },
   en: {
     greeting: "Hello", selectCourse: "Courses", lockedAlert: "This course is currently locked.",
     repeatToday: "Review Today (Spaced)", sniperGame: "Diacritical Sniper",
     falseFriends: "False Friends", loggedIn: "Logged in.", logout: "Log out",
     admin: "ADMINISTRATOR", studentPreview: "👤 Student (Preview)", myProfile: "My Profile",
-    chatBtn: "School Chat", adminPanel: "Admin Panel", toSchool: "To School Site",
-    contactBtn: "Contact",
+    chatBtn: "School Chat", adminPanel: "Admin Panel", toSchool: "To School Site", contactBtn: "Contact",
     heroLabel: "( Online School )", heroTitle1: "LEARN SLOVAK", heroTitle2: "WITH HACKADEMIA",
     heroSub: "A new, cool format of studying at our school. New groups starting soon!",
     heroBtnAuth: "Back to Studies 🚀", heroBtnNoAuth: "Enter Platform",
@@ -99,15 +109,23 @@ export const translations = {
     extraTitle2: "🕊️ How to start studying?", extraText: "You can sign up for a free trial lesson or get access to the materials platform. You only pay when you are sure you like everything!",
     footerDesc: "Modern online school of the Slovak language", footerRights: "© 2026 Hackademia. All rights reserved.",
     chatAssistant: "Hackademia Assistant", chatOnline: "Online", chatPlaceholder: "Your message...", chatAlert: "Please enter a message!",
-    chatGreeting: "Hello! 👋 I am your virtual Hackademia assistant. Type your question below and it will instantly fly to our Telegram manager!"
+    chatGreeting: "Hello! 👋 I am your virtual Hackademia assistant. Type your question below and it will instantly fly to our Telegram manager!",
+    
+    // Login Page
+    loginTitle: "Log in to platform", loginSub: "Welcome back! Glad to see you again 💛",
+    emailLabel: "Email", passwordLabel: "Password", loginBtn: "Log In",
+    noAccount: "Don't have an account?", registerLink: "Sign up",
+    hasAccount: "Already have an account?", loginLink: "Log in",
+    orTelegram: "Or log in via Telegram (Mini App)",
+    openBotBtn: "Open bot 🚀", backToHome: "Back to home",
+    regTitle: "Registration", regSub: "Create an account to start learning 🚀", regBtn: "Sign up"
   },
   ru: {
     greeting: "Привет", selectCourse: "Курсы", lockedAlert: "Этот курс сейчас недоступен.",
     repeatToday: "Повторить сегодня (Интервальное)", sniperGame: "Диакритический снайпер",
     falseFriends: "Ложные друзья", loggedIn: "Вход выполнен.", logout: "Выйти",
     admin: "АДМИНИСТРАТОР", studentPreview: "👤 Ученик (Превью)", myProfile: "Мой профиль",
-    chatBtn: "Чат со школой", adminPanel: "Админ-панель", toSchool: "На сайт школы",
-    contactBtn: "Связаться",
+    chatBtn: "Чат со школой", adminPanel: "Админ-панель", toSchool: "На сайт школы", contactBtn: "Связаться",
     heroLabel: "( Онлайн школа )", heroTitle1: "ИЗУЧАЙ СЛОВАЦКИЙ", heroTitle2: "С HACKADEMIA",
     heroSub: "Новый, крутой формат обучения в нашей школе. Старт новых групп уже скоро!",
     heroBtnAuth: "Вернуться к учебе 🚀", heroBtnNoAuth: "Войти на платформу",
@@ -130,6 +148,15 @@ export const translations = {
     extraTitle2: "🕊️ Как начать обучение?", extraText: "Вы можете записаться на бесплатное пробное занятие или получить доступ к платформе материалов. Оплату производите только тогда, когда убедитесь, что вам всё нравится!",
     footerDesc: "Современная онлайн-школа словацкого языка", footerRights: "© 2026 Hackademia. Все права защищены.",
     chatAssistant: "Ассистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше сообщение...", chatAlert: "Введите текст сообщения!",
-    chatGreeting: "Привет! 👋 Я ваш виртуальный ассистент Hackademia. Напишите свой вопрос ниже, и он мгновенно полетит к нашему менеджеру в Telegram!"
+    chatGreeting: "Привет! 👋 Я ваш виртуальный ассистент Hackademia. Напишите свой вопрос ниже, и он мгновенно полетит к нашему менеджеру в Telegram!",
+    
+    // Login Page
+    loginTitle: "Вход на платформу", loginSub: "С возвращением! Рады видеть тебя снова 💛",
+    emailLabel: "Email", passwordLabel: "Пароль", loginBtn: "Войти",
+    noAccount: "Еще нет аккаунта?", registerLink: "Зарегистрироваться",
+    hasAccount: "Уже есть аккаунт?", loginLink: "Войти",
+    orTelegram: "Или войдите через Telegram (Mini App)",
+    openBotBtn: "Открыть бота 🚀", backToHome: "Вернуться на главную",
+    regTitle: "Регистрация", regSub: "Создайте аккаунт, чтобы начать обучение 🚀", regBtn: "Зарегистрироваться"
   }
 };

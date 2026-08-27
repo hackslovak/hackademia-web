@@ -1,125 +1,109 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
+import { translations } from './i18n';
 
 export default function Login() {
-  const navigate = useNavigate();
-  const [isSignUp, setIsSignUp] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isRegister, setIsRegister] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const navigate = useNavigate();
+
+  // Підтягуємо мову, яку користувач вибрав на лендінгу
+  const lang = localStorage.getItem('hack_lang') || 'uk';
+  const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
   const handleAuth = async (e) => {
     e.preventDefault();
     setLoading(true);
-    setError(null);
-
-    try {
-      if (isSignUp) {
-        // Реєстрація нового користувача
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
-        alert("🎉 Реєстрація успішна! Тепер ви можете увійти.");
-        setIsSignUp(false); // Перемикаємо на форму входу
-        setPassword('');
-      } else {
-        // Вхід існуючого користувача
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
-        // Якщо успішно, перекидаємо на навчальну платформу
-        navigate('/app');
+    if (isRegister) {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if (error) alert("❌ " + error.message);
+      else {
+         alert("✅ Успішно! Тепер можете увійти.");
+         setIsRegister(false);
       }
-    } catch (err) {
-      setError(err.message === "Invalid login credentials" ? "Неправильний email або пароль." : err.message);
-    } finally {
-      setLoading(false);
+    } else {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) alert("❌ " + error.message);
+      else navigate('/app');
     }
+    setLoading(false);
   };
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', justifyContent: 'center', alignItems: 'center', backgroundColor: '#F7FAF9', fontFamily: "'Montserrat', sans-serif", padding: '20px' }}>
-      
-      <div style={{ background: '#fff', padding: '40px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', width: '100%', maxWidth: '400px', borderTop: '6px solid #38BA9B' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', backgroundColor: '#F4F7F6', fontFamily: 'sans-serif', padding: '20px' }}>
+      <div style={{ background: '#fff', width: '100%', maxWidth: '400px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.08)', overflow: 'hidden', textAlign: 'center', paddingBottom: '30px' }}>
         
-        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-          <h2 style={{ color: '#062440', fontSize: '28px', fontWeight: '900', marginBottom: '10px' }}>
-            {isSignUp ? 'Створення акаунту' : 'Вхід на платформу'}
+        {/* Оранжева шапка замість зеленої */}
+        <div style={{ height: '8px', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', width: '100%' }}></div>
+        
+        <div style={{ padding: '40px 30px 10px 30px' }}>
+          <h2 style={{ margin: '0 0 10px 0', fontSize: '28px', color: '#1A202C', fontWeight: '900' }}>
+            {isRegister ? t('regTitle') : t('loginTitle')}
           </h2>
-          <p style={{ color: '#7F8C8D', fontSize: '14px' }}>
-            {isSignUp ? 'Приєднуйся до Hackademia вже зараз!' : 'З поверненням! Раді бачити тебе знову 💛'}
+          <p style={{ color: '#718096', fontSize: '14px', margin: '0 0 30px 0' }}>
+            {isRegister ? t('regSub') : t('loginSub')}
           </p>
-        </div>
 
-        {error && (
-          <div style={{ background: '#FFF5F5', color: '#E53E3E', padding: '12px', borderRadius: '10px', marginBottom: '20px', fontSize: '14px', textAlign: 'center', fontWeight: 'bold' }}>
-            {error}
+          <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '20px', textAlign: 'left' }}>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#4A5568', marginBottom: '8px' }}>{t('emailLabel')}</label>
+              <input 
+                type="email" 
+                required 
+                value={email} 
+                onChange={e => setEmail(e.target.value)} 
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#EDF2F7', color: '#2D3748', fontSize: '15px', boxSizing: 'border-box' }} 
+              />
+            </div>
+            <div>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: 'bold', color: '#4A5568', marginBottom: '8px' }}>{t('passwordLabel')}</label>
+              <input 
+                type="password" 
+                required 
+                value={password} 
+                onChange={e => setPassword(e.target.value)} 
+                style={{ width: '100%', padding: '14px', borderRadius: '12px', border: 'none', background: '#EDF2F7', color: '#2D3748', fontSize: '15px', boxSizing: 'border-box' }} 
+              />
+            </div>
+            
+            <button 
+                type="submit" 
+                disabled={loading} 
+                style={{ 
+                    background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', 
+                    color: '#fff', border: 'none', padding: '16px', borderRadius: '12px', 
+                    fontSize: '16px', fontWeight: 'bold', cursor: loading ? 'wait' : 'pointer', 
+                    marginTop: '10px', boxShadow: '0 4px 15px rgba(255,123,84,0.3)', transition: '0.2s' 
+                }}
+            >
+              {loading ? '...' : (isRegister ? t('regBtn') : t('loginBtn'))}
+            </button>
+          </form>
+
+          <div style={{ marginTop: '25px', fontSize: '14px', color: '#718096' }}>
+            {isRegister ? t('hasAccount') : t('noAccount')}{' '}
+            <span onClick={() => setIsRegister(!isRegister)} style={{ color: '#E0A345', fontWeight: 'bold', cursor: 'pointer' }}>
+              {isRegister ? t('loginLink') : t('registerLink')}
+            </span>
           </div>
-        )}
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#2C3E50', marginBottom: '5px' }}>Email</label>
-            <input 
-              type="email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="twój.email@gmail.com" 
-              required
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0', backgroundColor: '#F0F4F8', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }}
-            />
+          <div style={{ margin: '30px 0', borderTop: '1px solid #E2E8F0', position: 'relative' }}>
+            <span style={{ position: 'absolute', top: '-10px', left: '50%', transform: 'translateX(-50%)', background: '#fff', padding: '0 15px', fontSize: '12px', color: '#A0AEC0' }}>
+              {t('orTelegram')}
+            </span>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '13px', fontWeight: '700', color: '#2C3E50', marginBottom: '5px' }}>Пароль</label>
-            <input 
-              type="password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Мінімум 6 символів" 
-              required
-              style={{ width: '100%', padding: '14px', borderRadius: '12px', border: '1px solid #E2E8F0', backgroundColor: '#F0F4F8', fontSize: '15px', outline: 'none', boxSizing: 'border-box' }}
-            />
-          </div>
+          <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" style={{ display: 'inline-block', width: '100%', background: '#2B6CB0', color: '#fff', padding: '14px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold', fontSize: '15px', boxSizing: 'border-box', marginBottom: '20px' }}>
+            {t('openBotBtn')}
+          </a>
 
-          <button 
-            type="submit" 
-            disabled={loading}
-            style={{ width: '100%', background: '#38BA9B', color: '#fff', padding: '15px', borderRadius: '12px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: loading ? 'not-allowed' : 'pointer', marginTop: '10px', transition: '0.3s', boxShadow: '0 4px 15px rgba(56,186,155,0.3)' }}
-          >
-            {loading ? 'Зачекайте...' : (isSignUp ? 'Зареєструватися' : 'Увійти')}
-          </button>
-        </form>
-
-        <div style={{ textAlign: 'center', marginTop: '25px', fontSize: '14px', color: '#7F8C8D' }}>
-          {isSignUp ? 'Вже маєте акаунт? ' : 'Ще немає акаунту? '}
-          <span 
-            onClick={() => { setIsSignUp(!isSignUp); setError(null); }} 
-            style={{ color: '#38BA9B', fontWeight: 'bold', cursor: 'pointer' }}
-          >
-            {isSignUp ? 'Увійти' : 'Зареєструватися'}
+          <span onClick={() => navigate('/')} style={{ color: '#A0AEC0', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}>
+            &lt; {t('backToHome')}
           </span>
         </div>
-
-        <div style={{ marginTop: '30px', borderTop: '1px solid #E2E8F0', paddingTop: '20px', textAlign: 'center' }}>
-          <p style={{ fontSize: '12px', color: '#A0AEC0', marginBottom: '10px' }}>Або увійдіть через Telegram (Mini App)</p>
-          <a 
-  href="https://t.me/hackademiapp_bot" 
-  target="_blank" 
-  rel="noreferrer"
-  style={{ display: 'inline-block', background: '#2B6CB0', color: 'white', padding: '14px 28px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold' }}
->
-  Відкрити бота 🚀
-</a>
-        </div>
-        
-        {/* Кнопка повернення на головну */}
-        <div style={{ textAlign: 'center', marginTop: '20px' }}>
-             <button onClick={() => navigate('/')} style={{ background: 'transparent', border: 'none', color: '#A0AEC0', fontSize: '13px', cursor: 'pointer', textDecoration: 'underline' }}>
-                 ← Повернутися на головну
-             </button>
-        </div>
-
       </div>
     </div>
   );
