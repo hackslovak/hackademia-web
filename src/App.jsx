@@ -3402,6 +3402,7 @@ useEffect(() => {
   
 
   return (
+   <>
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
       {renderGlobalStyles()}
       {renderSidebar()}
@@ -3588,9 +3589,8 @@ useEffect(() => {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
-}
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
