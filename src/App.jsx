@@ -3452,21 +3452,39 @@ useEffect(() => {
                         <span style={{ opacity: 0.7 }}>⚙️</span> Технічна інформація
                       </h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '12px' }}>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '12px', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
                           <b style={{ color: isAdmin ? '#E0A345' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
                         </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram ID</span>
-                          <b style={{ color: theme.text, fontSize: '14px' }}>{telegramId || 'Не підключено'}</b>
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
+                          
+                          {/* Якщо юзер зайшов через Telegram — показуємо, що підключено. Якщо ні — красиву кнопку! */}
+                          {window.Telegram?.WebApp?.initDataUnsafe?.user ? (
+                            <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              ✅ Підключено
+                            </b>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <a 
+                                href="https://t.me/hackademiapp_bot" 
+                                target="_blank" 
+                                rel="noreferrer"
+                                className="hover-card"
+                                title="Підключіть Telegram для входу в 1 клік без пароля!"
+                                style={{ background: '#3182ce', color: '#fff', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(49,130,206,0.2)' }}
+                              >
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                Підключити бот
+                              </a>
+                            </div>
+                          )}
+
                         </div>
                       </div>
                   </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     );
   }
 
