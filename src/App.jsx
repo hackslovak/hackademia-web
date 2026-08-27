@@ -948,6 +948,35 @@ function speakSlovak(text) {
   });
 }
 
+// --- ЛОГІКА ЗЛИТТЯ АКАУНТІВ (MERGE) ---
+  const [mergePrompt, setMergePrompt] = useState(null);
+
+  const confirmMerge = async () => {
+    try {
+      // 1. Видаляємо пустий тимчасовий Telegram-акаунт (якщо він встиг створитися), щоб не було помилок UNIQUE
+      await supabase.from('users').delete().eq('telegram_id', mergePrompt.tgId).neq('id', mergePrompt.authUserId);
+
+      // 2. Записуємо Telegram ID в основний акаунт з поштою
+      await supabase.from('users').update({
+        telegram_id: mergePrompt.tgId,
+        username: mergePrompt.tgUsername
+      }).eq('id', mergePrompt.authUserId);
+
+      setMergePrompt(null);
+      window.location.reload(); // Перезавантажуємо сторінку, щоб підтягнувся єдиний об'єднаний профіль
+    } catch (e) {
+      alert("Помилка об'єднання: " + e.message);
+    }
+  };
+
+  const cancelMerge = async () => {
+    // Якщо юзер натиснув "Ні", ми виходимо з пошти, щоб він лишився тільки під Telegram
+    await supabase.auth.signOut();
+    localStorage.removeItem('hack_auth_cache');
+    setMergePrompt(null);
+    window.location.reload();
+  };
+
 // --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---
 function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [messages, setMessages] = React.useState([]);
@@ -1430,99 +1459,44 @@ function Platform() {
     loadInitialProfile();
   }, []);
   
-  useEffect(() => {
+useEffect(() => {
     async function initUser() {
-      // 1. ШВИДКИЙ КЕШ (додаємо цей рядок, щоб не викидало при кнопці "Назад")
+      // 1. ШВИДКИЙ КЕШ
       const cachedStatus = localStorage.getItem('hack_auth_cache');
       if (cachedStatus) setAccessStatus(cachedStatus);
 
-      // 2. Далі йде твоя робоча перевірка сесії (її НЕ міняємо)
+      // 2. Отримуємо дані з обох джерел
       const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session) {
-        const emailUser = session.user;
-        setUserName(emailUser.email.split('@')[0]);
-        localStorage.setItem('hack_auth_cache', 'approved');
-        
-        // Шукаємо юзера за email (тепер колонка точно існуватиме)
-        let { data: userData, error: selectError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('email', emailUser.email)
-          .maybeSingle(); // Використовуємо maybeSingle, щоб не падало, якщо юзера ще нема
-          
-        if (!userData) {
-          // Якщо в таблиці його ще немає, створюємо запис
-          const fakeTelegramId = Math.floor(Math.random() * 1000000000) + 1000000000; // Фейковий ID для пошти, щоб БД не сварилася
-          
-          const { data: newUserData, error: insertError } = await supabase
-            .from('users')
-            .insert({ 
-              email: emailUser.email, 
-              first_name: emailUser.email.split('@')[0], 
-              access_status: 'approved',
-              telegram_id: fakeTelegramId // <-- ДОДАНО ДЛЯ ВИРІШЕННЯ ПОМИЛКИ
-            })
-            .select()
-            .single();
-            
-          if (insertError) {
-            console.error("Помилка створення юзера:", insertError.message);
-          }
-          userData = newUserData;
-        }
-        
-       if (userData) {
-          setDbUserId(userData.id);
-          setAccessStatus(userData.access_status || 'approved');
-          
-          // ЗАЛІЗОБЕТОННЕ ПРАВИЛО: якщо це твоя пошта або в базі role === admin, робимо адміном!
-          if (userData.role === 'admin' || emailUser.email === 'hackslovak@gmail.com') {
-            setIsAdmin(true);
-            localStorage.setItem('hack_is_admin', 'true');
-          }
-        } else {
-          // Запасний варіант, якщо створення в базу не вдалося, але сесія є
-          setAccessStatus('approved');
-        }
-        
-        fetchCourses();
-        return;
-      }
-	  
-	  async function registerTelegramUser(user) {
-        setTelegramId(user.id);
-        const savedAdmin = localStorage.getItem('hack_is_admin');
-        if (savedAdmin === 'true') setIsAdmin(true);
+      const tg = window.Telegram?.WebApp;
+      const tgUser = tg?.initDataUnsafe?.user;
 
-        // Зберігаємо також username (нікнейм у телеграмі)
-        const { data } = await supabase
-          .from('users')
-          .upsert({ 
-            telegram_id: user.id, 
-            first_name: user.first_name,
-            username: user.username || null // <-- ДОДАЛИ НІКНЕЙМ
-          }, { onConflict: 'telegram_id' })
-          .select()
-          .single();
-          
-        if (data) {
-          setDbUserId(data.id);
-          if (data.role === 'admin') {
-            setIsAdmin(true);
-            setAccessStatus('approved');
-            localStorage.setItem('hack_is_admin', 'true');
-          } else {
-            if (savedAdmin === 'true') {
-              localStorage.removeItem('hack_is_admin');
-              setIsAdmin(false);
-            }
-            setAccessStatus(data.access_status || 'pending');
-          }
-        }
+      // Налаштовуємо Telegram UI
+      if (tg) {
+        tg.ready();
+        tg.expand();
+        if (tg.colorScheme === 'dark') setIsDarkMode(true);
       }
 
-      // 2. Якщо сесії поштою немає, перевіряємо Telegram (стара логіка)
+      // =========================================================
+      // ПЕРЕВІРКА НА ЗБІГ АКАУНТІВ (MERGE)
+      // =========================================================
+      if (session && tgUser) {
+        const { data: authDbUser } = await supabase.from('users').select('telegram_id').eq('id', session.user.id).maybeSingle();
+
+        if (authDbUser && authDbUser.telegram_id !== tgUser.id) {
+          setMergePrompt({
+            email: session.user.email,
+            tgId: tgUser.id,
+            tgName: tgUser.first_name,
+            tgUsername: tgUser.username,
+            authUserId: session.user.id
+          });
+          return; // ЗУПИНЯЄМО ЗАВАНТАЖЕННЯ, чекаємо відповіді від юзера
+        }
+      }
+      // =========================================================
+
+      // --- ФУНКЦІЯ РЕЄСТРАЦІЇ TELEGRAM ---
       async function registerTelegramUser(user) {
         setTelegramId(user.id);
         const savedAdmin = localStorage.getItem('hack_is_admin');
@@ -1530,48 +1504,79 @@ function Platform() {
 
         const { data } = await supabase
           .from('users')
-          .upsert({ telegram_id: user.id, first_name: user.first_name }, { onConflict: 'telegram_id' })
+          .upsert({
+            telegram_id: user.id,
+            first_name: user.first_name,
+            username: user.username || null
+          }, { onConflict: 'telegram_id' })
           .select()
           .single();
-          
+
         if (data) {
           setDbUserId(data.id);
           if (data.role === 'admin') {
             setIsAdmin(true);
             setAccessStatus('approved');
             localStorage.setItem('hack_is_admin', 'true');
-            localStorage.setItem('hack_auth_cache', 'approved'); // <-- ЗАПАМ'ЯТОВУЄМО ВХІД АДМІНА
+            localStorage.setItem('hack_auth_cache', 'approved');
           } else {
-            const savedAdmin = localStorage.getItem('hack_is_admin');
             if (savedAdmin === 'true') {
               localStorage.removeItem('hack_is_admin');
               setIsAdmin(false);
             }
             setAccessStatus(data.access_status || 'pending');
-            
-            // <-- ЗАПАМ'ЯТОВУЄМО ВХІД УЧНЯ, ЯКЩО ВІН СХВАЛЕНИЙ
             if (data.access_status === 'approved') {
-               localStorage.setItem('hack_auth_cache', 'approved'); 
+               localStorage.setItem('hack_auth_cache', 'approved');
             }
           }
         }
-
-      const tg = window.Telegram?.WebApp;
-      if (tg) { 
-        tg.ready(); 
-        tg.expand();
-        if (tg.colorScheme === 'dark') setIsDarkMode(true);
       }
 
-      if (tg?.initDataUnsafe?.user) {
-        setUserName(tg.initDataUnsafe.user.first_name);
-        registerTelegramUser(tg.initDataUnsafe.user);
+      // 3. РОЗПОДІЛ ЛОГІКИ ВХОДУ
+      if (session) {
+        const emailUser = session.user;
+        setUserName(emailUser.email.split('@')[0]);
+        localStorage.setItem('hack_auth_cache', 'approved');
+
+        let { data: userData } = await supabase
+          .from('users')
+          .select('*')
+          .eq('email', emailUser.email)
+          .maybeSingle();
+
+        if (!userData) {
+          const fakeTelegramId = Math.floor(Math.random() * 1000000000) + 1000000000;
+          const { data: newUserData } = await supabase
+            .from('users')
+            .insert({
+              email: emailUser.email,
+              first_name: emailUser.email.split('@')[0],
+              access_status: 'approved',
+              telegram_id: fakeTelegramId
+            })
+            .select()
+            .single();
+          userData = newUserData;
+        }
+
+        if (userData) {
+          setDbUserId(userData.id);
+          setAccessStatus(userData.access_status || 'approved');
+          if (userData.role === 'admin' || emailUser.email === 'hackslovak@gmail.com') {
+            setIsAdmin(true);
+            localStorage.setItem('hack_is_admin', 'true');
+          }
+        } else {
+          setAccessStatus('approved');
+        }
+        fetchCourses();
+      } else if (tgUser) {
+        setUserName(tgUser.first_name);
+        registerTelegramUser(tgUser);
+        fetchCourses();
       } else {
-        // Якщо це не Telegram і не веб-сесія через пошту — відправляємо на сторінку логіну замість блокування!
-        window.location.href = '/login'; // Переконайся, що у тебе підключено useNavigate усередині Platform, або використовуй window.location.href = '/login';
+        window.location.href = '/login';
       }
-
-      fetchCourses();
     }
 
     initUser();
