@@ -948,6 +948,139 @@ function speakSlovak(text) {
   });
 }
 
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---
+function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
+  const [messages, setMessages] = React.useState([]);
+  const [chatText, setChatText] = React.useState('');
+  const [chatUsers, setChatUsers] = React.useState([]);
+  // Якщо адмін - чат не вибрано. Якщо учень - його чат вибрано одразу.
+  const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
+  const messagesEndRef = React.useRef(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Адмін отримує список всіх учнів
+  React.useEffect(() => {
+    if (isAdmin) {
+      supabase.from('users').select('id, first_name, avatar_url, email, role')
+        .neq('role', 'admin')
+        .then(({data}) => {
+         if (data) setChatUsers(data);
+      });
+    }
+  }, [isAdmin]);
+
+  // Завантаження повідомлень вибраного чату
+  const fetchMessages = async () => {
+    if (!activeChatUserId) return;
+    const { data } = await supabase
+      .from('messages')
+      .select('*')
+      .eq('user_id', activeChatUserId)
+      .order('created_at', { ascending: true });
+    if (data) setMessages(data);
+  };
+
+  // Авто-оновлення чату кожні 3 секунди
+  React.useEffect(() => {
+    fetchMessages();
+    setTimeout(scrollToBottom, 300);
+    const interval = setInterval(fetchMessages, 3000);
+    return () => clearInterval(interval);
+  }, [activeChatUserId]);
+
+  const sendMessage = async (e) => {
+    e.preventDefault();
+    if (!chatText.trim() || !activeChatUserId) return;
+    
+    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim() };
+    setChatText(''); // Миттєво очищаємо поле
+    
+    await supabase.from('messages').insert([newMsg]);
+    fetchMessages();
+    setTimeout(scrollToBottom, 100);
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  };
+
+  const formatTime = (iso) => {
+    return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
+  };
+
+  return (
+    <div style={{ flex: 1, padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '20px', flexShrink: 0 }}>
+        <button onClick={onBack} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+          Назад
+        </button>
+        <h2 style={{ color: theme.text, fontSize: '32px', margin: 0, fontWeight: '900' }}>
+          <span style={{ opacity: 0.8 }}>💬</span> {t('chatBtn')}
+        </h2>
+      </div>
+
+      <div style={{ flex: 1, background: theme.cardBg, borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, display: 'flex', overflow: 'hidden' }}>
+        
+        {/* ЛІВА ПАНЕЛЬ (ТІЛЬКИ ДЛЯ АДМІНА) */}
+        {isAdmin && (
+          <div style={{ width: '300px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
+            <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>Список учнів</div>
+            <div style={{ overflowY: 'auto', flex: 1 }}>
+              {chatUsers.map(u => (
+                <div key={u.id} onClick={() => setActiveChatUserId(u.id)} className="hover-card" style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}>
+                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: u.avatar_url ? 'transparent' : '#E0A345', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
+                    {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
+                  </div>
+                  <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px' }}>{u.first_name || u.email || 'Учень'}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* ПРАВА ПАНЕЛЬ (САМ ЧАТ) */}
+        <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.bg }}>
+          {!activeChatUserId ? (
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '16px' }}>👈 Виберіть учня зліва, щоб почати діалог</div>
+          ) : (
+            <>
+              <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                {messages.length === 0 ? (
+                  <div style={{ textAlign: 'center', color: theme.textSecondary, margin: 'auto', fontSize: '15px' }}>Тут поки порожньо. Напишіть першими! 👋</div>
+                ) : (
+                  messages.map(msg => {
+                    const isMine = msg.sender_id === dbUserId;
+                    return (
+                      <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
+                        <div style={{ maxWidth: '75%', padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5' }}>
+                          {msg.text}
+                        </div>
+                        <span style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '6px', margin: isMine ? '0 10px 0 0' : '0 0 0 10px' }}>
+                          {formatTime(msg.created_at)}
+                        </span>
+                      </div>
+                    )
+                  })
+                )}
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* ПОЛЕ ВВОДУ */}
+              <form onSubmit={sendMessage} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
+                <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} placeholder="Написати повідомлення..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
+                <button type="submit" className="hover-card" disabled={!chatText.trim()} style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: chatText.trim() ? 'pointer' : 'not-allowed', opacity: chatText.trim() ? 1 : 0.5 }}>
+                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                </button>
+              </form>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Platform() {
   const navigate = useNavigate();
   
@@ -2979,15 +3112,13 @@ function Platform() {
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         {renderGlobalStyles()}
         {renderSidebar()}
-        <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          <h2 style={{ color: theme.text, fontSize: '32px', marginBottom: '30px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span style={{ opacity: 0.8 }}>💬</span> Чат з викладачем
-          </h2>
-          <div style={{ background: theme.cardBg, padding: '60px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', height: '60vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px' }}>
-            <svg width="64" height="64" fill="none" stroke={theme.textSecondary} strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.7 }}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            <p style={{color: theme.textSecondary, fontSize: '18px', textAlign: 'center', lineHeight: '1.6'}}>Розділ чату знаходиться в розробці.<br/>Скоро тут можна буде спілкуватися з підтримкою.</p>
-          </div>
-        </div>
+        <ChatView 
+          dbUserId={dbUserId} 
+          isAdmin={effectiveIsAdmin} 
+          theme={theme} 
+          t={t} 
+          onBack={() => setGlobalView(null)} 
+        />
       </div>
     );
   }
