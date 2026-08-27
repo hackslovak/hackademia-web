@@ -1920,8 +1920,6 @@ function Platform() {
 
   async function handleCloudBackup() {
     try {
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      
       const { data: allCourses } = await supabase.from('courses').select('*');
       const { data: allModules } = await supabase.from('modules').select('*');
       const { data: allTasks } = await supabase.from('tasks').select('*');
@@ -1941,18 +1939,47 @@ function Platform() {
       const { error } = await supabase.storage.from('Backups').upload(fileName, fileData);
       if (error) throw error;
 
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("☁️ Бекап успішно збережено у хмару Supabase!");
-      } else {
-        alert("☁️ Бекап успішно збережено у хмару!");
-      }
+      alert("☁️ Бекап успішно збережено у хмару Supabase!");
     } catch (err) {
       console.error(err);
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("❌ Помилка збереження у хмару: " + err.message);
-      } else {
-        alert("❌ Помилка збереження у хмару: " + err.message);
+      alert("❌ Помилка збереження у хмару: " + err.message);
+    }
+  }
+
+  async function handleCloudRestore() {
+    if (!window.confirm("⚠️ УВАГА! Це відновить базу з ОСТАННЬОГО хмарного бекапу. Поточні дані будуть перезаписані. Продовжити?")) return;
+    
+    try {
+      const { data: files, error: listError } = await supabase.storage.from('Backups').list();
+      if (listError) throw listError;
+      
+      if (!files || files.length === 0) {
+        alert("У хмарі ще немає жодного бекапу!");
+        return;
       }
+
+      // Шукаємо найновіший файл
+      const latestFile = files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
+      
+      const { data: fileData, error: downloadError } = await supabase.storage.from('Backups').download(latestFile.name);
+      if (downloadError) throw downloadError;
+
+      const text = await fileData.text();
+      const data = JSON.parse(text);
+
+      if (data.courses && data.courses.length > 0) await supabase.from('courses').upsert(data.courses);
+      if (data.modules && data.modules.length > 0) await supabase.from('modules').upsert(data.modules);
+      if (data.tasks && data.tasks.length > 0) await supabase.from('tasks').upsert(data.tasks);
+
+      alert(`✅ Успішно відновлено з хмарного файлу: ${latestFile.name}`);
+      
+      fetchCourses();
+      setSelectedCourse(null);
+      setActiveModule(null);
+      
+    } catch (err) {
+      console.error(err);
+      alert("❌ Помилка відновлення: " + err.message);
     }
   }
 
