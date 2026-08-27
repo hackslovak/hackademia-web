@@ -948,35 +948,6 @@ function speakSlovak(text) {
   });
 }
 
-// --- ЛОГІКА ЗЛИТТЯ АКАУНТІВ (MERGE) ---
-  const [mergePrompt, setMergePrompt] = useState(null);
-
-  const confirmMerge = async () => {
-    try {
-      // 1. Видаляємо пустий тимчасовий Telegram-акаунт (якщо він встиг створитися), щоб не було помилок UNIQUE
-      await supabase.from('users').delete().eq('telegram_id', mergePrompt.tgId).neq('id', mergePrompt.authUserId);
-
-      // 2. Записуємо Telegram ID в основний акаунт з поштою
-      await supabase.from('users').update({
-        telegram_id: mergePrompt.tgId,
-        username: mergePrompt.tgUsername
-      }).eq('id', mergePrompt.authUserId);
-
-      setMergePrompt(null);
-      window.location.reload(); // Перезавантажуємо сторінку, щоб підтягнувся єдиний об'єднаний профіль
-    } catch (e) {
-      alert("Помилка об'єднання: " + e.message);
-    }
-  };
-
-  const cancelMerge = async () => {
-    // Якщо юзер натиснув "Ні", ми виходимо з пошти, щоб він лишився тільки під Telegram
-    await supabase.auth.signOut();
-    localStorage.removeItem('hack_auth_cache');
-    setMergePrompt(null);
-    window.location.reload();
-  };
-
 // --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---
 function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [messages, setMessages] = React.useState([]);
@@ -1149,6 +1120,26 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
 function Platform() {
   const navigate = useNavigate();
+
+  // ВСТАВЛЯТИ СЮДИ:
+  // --- ЛОГІКА ЗЛИТТЯ АКАУНТІВ (MERGE) ---
+  const [mergePrompt, setMergePrompt] = useState(null);
+
+  const confirmMerge = async () => {
+    try {
+      await supabase.from('users').delete().eq('telegram_id', mergePrompt.tgId).neq('id', mergePrompt.authUserId);
+      await supabase.from('users').update({ telegram_id: mergePrompt.tgId, username: mergePrompt.tgUsername }).eq('id', mergePrompt.authUserId);
+      setMergePrompt(null);
+      window.location.reload(); 
+    } catch (e) { alert("Помилка об'єднання: " + e.message); }
+  };
+
+  const cancelMerge = async () => {
+    await supabase.auth.signOut();
+    localStorage.removeItem('hack_auth_cache');
+    setMergePrompt(null);
+    window.location.reload();
+  };
   
   // --- 1. ВСІ СТАНИ (HOOKS) ЗАВЖДИ ОГОЛОШУЮТЬСЯ НА ПОЧАТКУ ---
   const [lang, setLang] = useState(() => {
@@ -3435,11 +3426,11 @@ useEffect(() => {
                       
                       <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                         <input 
-  type="email" 
-  value={profileEmail} 
-  disabled // <--- ДОДАЙ ОЦЕ
-  style={{ ...styles, opacity: 0.6, cursor: 'not-allowed' }} // Можеш трохи приглушити колір
-/>
+                          type="email" 
+                          value={userProfile.email || ''} 
+                          disabled
+                          style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }}
+                        />
                         
                         {/* ІНПУТ ПАРОЛЯ З ОКОМ */}
                         <div style={{ position: 'relative' }}>
@@ -3754,7 +3745,6 @@ useEffect(() => {
     </div>
   );
 }
-
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
