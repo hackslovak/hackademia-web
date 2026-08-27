@@ -953,21 +953,32 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [messages, setMessages] = React.useState([]);
   const [chatText, setChatText] = React.useState('');
   const [chatUsers, setChatUsers] = React.useState([]);
-  // Якщо адмін - чат не вибрано. Якщо учень - його чат вибрано одразу.
+  const [searchQuery, setSearchQuery] = React.useState(''); // СТАН ДЛЯ ПОШУКУ
   const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
   const messagesEndRef = React.useRef(null);
+  const getDisplayName = (u) => {
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.trim();
+    if (fullName && fullName !== 'undefined') return fullName;
+    if (u.email) return u.email.split('@')[0];
+    if (u.telegram_id) return `TG: ${u.telegram_id}`;
+    return 'Невідомий учень';
+  };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // Адмін отримує список всіх учнів
+  // Адмін отримує список всіх учнів (додано last_name та telegram_id для пошуку)
   React.useEffect(() => {
     if (isAdmin) {
-      supabase.from('users').select('id, first_name, avatar_url, email, role')
+      supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id')
         .neq('role', 'admin')
         .then(({data}) => {
-         if (data) setChatUsers(data);
+         // Відсіюємо відверто пусті дублікати без імені та email
+         if (data) {
+           const validUsers = data.filter(u => u.first_name || u.email);
+           setChatUsers(validUsers);
+         }
       });
     }
   }, [isAdmin]);
@@ -996,7 +1007,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     if (!chatText.trim() || !activeChatUserId) return;
     
     const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim() };
-    setChatText(''); // Миттєво очищаємо поле
+    setChatText(''); 
     
     await supabase.from('messages').insert([newMsg]);
     fetchMessages();
@@ -1007,6 +1018,17 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const formatTime = (iso) => {
     return new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
   };
+
+  // --- ЛОГІКА ПОШУКУ УЧНІВ ---
+  const filteredUsers = chatUsers.filter(u => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
+    const email = (u.email || '').toLowerCase();
+    const tgId = (u.telegram_id || '').toString();
+    
+    return fullName.includes(q) || email.includes(q) || tgId.includes(q);
+  });
 
   return (
     <div style={{ flex: 1, padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden' }}>
@@ -1025,16 +1047,40 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
         {/* ЛІВА ПАНЕЛЬ (ТІЛЬКИ ДЛЯ АДМІНА) */}
         {isAdmin && (
           <div style={{ width: '300px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
-            <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>Список учнів</div>
+            <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>
+              Список учнів
+              {/* ПОЛЕ ПОШУКУ */}
+              <input 
+                type="text" 
+                placeholder="🔍 Пошук (ім'я, email, TG ID)..." 
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text, fontSize: '13px', boxSizing: 'border-box' }}
+              />
+            </div>
             <div style={{ overflowY: 'auto', flex: 1 }}>
-              {chatUsers.map(u => (
-                <div key={u.id} onClick={() => setActiveChatUserId(u.id)} className="hover-card" style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}>
-                  <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: u.avatar_url ? 'transparent' : '#E0A345', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden' }}>
-                    {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
+              {filteredUsers.length === 0 ? (
+                <div style={{ padding: '20px', textAlign: 'center', color: theme.textSecondary, fontSize: '13px' }}>Нікого не знайдено 🕵️‍♂️</div>
+              ) : (
+                filteredUsers.map(u => (
+                  <div key={u.id} onClick={() => setActiveChatUserId(u.id)} className="hover-card" style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: u.avatar_url ? 'transparent' : '#E0A345', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
+                      {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
+                    </div>
+                    <div style={{ overflow: 'hidden' }}>
+                      <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                        <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+  {getDisplayName(u)}
+</div>
+                      {(u.email || u.telegram_id) && (
+                        <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {u.email || `TG: ${u.telegram_id}`}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px' }}>{u.first_name || u.email || 'Учень'}</div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </div>
         )}

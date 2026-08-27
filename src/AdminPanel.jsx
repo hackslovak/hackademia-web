@@ -127,7 +127,11 @@ const AdminPanel = () => {
           {pendingUsers.map((user) => (
             <div key={user.telegram_id} style={{ border: '1px solid #e0e0e0', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'white' }}>
               <div>
-                <strong style={{ fontSize: '18px', display: 'block', marginBottom: '4px' }}>{user.first_name || 'Без імені'}</strong>
+                <strong style={{ fontSize: '18px', display: 'block', marginBottom: '4px' }}>
+  {user.first_name || user.last_name 
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() 
+    : (user.email ? user.email.split('@')[0] : 'Невідомий учень')}
+</strong>
                 <span style={{ fontSize: '13px', color: '#888', background: '#f0f0f0', padding: '2px 6px', borderRadius: '4px' }}>ID: {user.telegram_id}</span>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -173,7 +177,11 @@ const AdminPanel = () => {
           {approvedUsers.map((user) => (
             <div key={user.telegram_id} style={{ border: '1px solid #e0e0e0', padding: '15px', borderRadius: '12px', background: '#f8fafc', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <strong style={{ fontSize: '16px', display: 'block' }}>{user.first_name || 'Без імені'}</strong>
+                <strong style={{ fontSize: '16px', display: 'block' }}>
+  {user.first_name || user.last_name 
+    ? `${user.first_name || ''} ${user.last_name || ''}`.trim() 
+    : (user.email ? user.email.split('@')[0] : 'Невідомий учень')}
+</strong>
                 <span style={{ fontSize: '12px', color: '#888' }}>ID: {user.telegram_id}</span>
               </div>
 
