@@ -1138,22 +1138,22 @@ function Platform() {
         <button title={t('selectCourse')} onClick={() => { setSelectedCourse(null); setActiveModule(null); setGlobalView(null); }} className={`hover-menu-btn ${(selectedCourse === null && globalView === null && activeModule === null) ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
         </button>
-        <button title="Мій профіль" onClick={() => { setGlobalView('profile'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'profile' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button title={t('myProfile')} onClick={() => { setGlobalView('profile'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'profile' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
-        <button title="Чат зі школою" onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button title={t('chatBtn')} onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       </div>
 
       <div style={{ width: '100%', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
         {effectiveIsAdmin && (
-          <button title="Адмін-панель" onClick={() => { setGlobalView('admin_panel'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'admin_panel' ? 'active' : ''}`} style={{ position: 'relative', width: '100%', border: 'none', color: '#F6AD55', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <button title={t('adminPanel')} onClick={() => { setGlobalView('admin_panel'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'admin_panel' ? 'active' : ''}`} style={{ position: 'relative', width: '100%', border: 'none', color: '#F6AD55', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
             {pendingCount > 0 && <span style={{ position: 'absolute', top: '2px', right: '6px', background: '#FF007F', color: 'white', fontSize: '10px', fontWeight: 'bold', width: '16px', height: '16px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{pendingCount}</span>}
           </button>
         )}
-        <button title="На сайт школи" onClick={() => navigate('/')} className="hover-menu-btn" style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <button title={t('toSchool')} onClick={() => navigate('/')} className="hover-menu-btn" style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         </button>
       </div>
@@ -2836,8 +2836,8 @@ function Platform() {
           <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
           
           {/* НОВА КНОПКА ВИХОДУ */}
-          <button onClick={handleLogout} className="hover-card" title="Вийти з акаунта" style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
-            Вийти
+          <button onClick={handleLogout} className="hover-card" title={t('logout')} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            {t('logout')}
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>
@@ -3322,7 +3322,7 @@ function Platform() {
               </div>
               <div>
                 {userName && <p style={{ color: theme.textSecondary, fontSize: '26px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userProfile.first_name || userName}</b>! 👋</p>}
-                {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? '👤 Учень (Превью)' : '🛡 АДМІНІСТРАТОР'}</span>}
+                {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? t('studentPreview') : t('admin')}</span>}
               </div>
             </div>
 

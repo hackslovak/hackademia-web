@@ -80,3 +80,74 @@ export const translations = {
     incorrect: "❌ Неверно!"
   }
 };
+
+export const translations = {
+  uk: {
+    greeting: "Привіт",
+    selectCourse: "Курси",
+    lockedAlert: "Цей курс наразі недоступний.",
+    repeatToday: "Повторити сьогодні (Інтервальне)",
+    sniperGame: "Діакритичний снайпер",
+    falseFriends: "Фальшиві слова",
+    loggedIn: "Вхід виконано.",
+    logout: "Вийти",
+    admin: "АДМІНІСТРАТОР",
+    studentPreview: "👤 Учень (Превью)",
+    myProfile: "Мій профіль",
+    chatBtn: "Чат зі школою",
+    adminPanel: "Адмін-панель",
+    toSchool: "На сайт школи",
+    contactBtn: "Зв'язатися"
+  },
+  sk: {
+    greeting: "Ahoj",
+    selectCourse: "Kurzy",
+    lockedAlert: "Tento kurz je momentálne nedostupný.",
+    repeatToday: "Opakovať dnes (Intervalové)",
+    sniperGame: "Diakritický ostreľovač",
+    falseFriends: "Falošní priatelia",
+    loggedIn: "Prihlásený.",
+    logout: "Odhlásiť sa",
+    admin: "ADMINISTRÁTOR",
+    studentPreview: "👤 Študent (Náhľad)",
+    myProfile: "Môj profil",
+    chatBtn: "Chat so školou",
+    adminPanel: "Admin panel",
+    toSchool: "Na stránku školy",
+    contactBtn: "Kontaktovať"
+  },
+  en: {
+    greeting: "Hello",
+    selectCourse: "Courses",
+    lockedAlert: "This course is currently locked.",
+    repeatToday: "Review Today (Spaced)",
+    sniperGame: "Diacritical Sniper",
+    falseFriends: "False Friends",
+    loggedIn: "Logged in.",
+    logout: "Log out",
+    admin: "ADMINISTRATOR",
+    studentPreview: "👤 Student (Preview)",
+    myProfile: "My Profile",
+    chatBtn: "School Chat",
+    adminPanel: "Admin Panel",
+    toSchool: "To School Site",
+    contactBtn: "Contact"
+  },
+  ru: {
+    greeting: "Привет",
+    selectCourse: "Курсы",
+    lockedAlert: "Этот курс сейчас недоступен.",
+    repeatToday: "Повторить сегодня (Интервальное)",
+    sniperGame: "Диакритический снайпер",
+    falseFriends: "Ложные друзья",
+    loggedIn: "Вход выполнен.",
+    logout: "Выйти",
+    admin: "АДМИНИСТРАТОР",
+    studentPreview: "👤 Ученик (Превью)",
+    myProfile: "Мой профиль",
+    chatBtn: "Чат со школой",
+    adminPanel: "Админ-панель",
+    toSchool: "На сайт школы",
+    contactBtn: "Связаться"
+  }
+};

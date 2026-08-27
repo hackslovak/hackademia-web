@@ -1,12 +1,32 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import './Landing.css'; 
+import { supabase } from './supabase'; // ДОДАЛИ СЮДИ
+import { translations } from './i18n'; // ДОДАЛИ СЮДИ
+import './Landing.css';
 
 export default function Landing() {
     const navigate = useNavigate();
     
-    // ДОДАЄМО ПЕРЕВІРКУ СЕСІЇ
+    // --- ЛОГІКА МОВИ (СПІЛЬНА З ПЛАТФОРМОЮ) ---
+    const [lang, setLang] = useState(() => {
+        return localStorage.getItem('hack_lang') || 'uk';
+    });
+    const changeLang = (newLang) => {
+        setLang(newLang);
+        localStorage.setItem('hack_lang', newLang);
+    };
+    const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
+
+    // --- ЛОГІКА АВТОРИЗАЦІЇ ТА ВИХОДУ ---
     const isAuth = localStorage.getItem('hack_auth_cache') === 'approved';
+    
+    const handleLogout = async () => {
+        if (window.confirm(t('logout') + "?")) {
+            await supabase.auth.signOut();
+            localStorage.removeItem('hack_auth_cache');
+            window.location.reload(); // Перезавантажуємо сторінку
+        }
+    };
     
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
@@ -71,16 +91,48 @@ export default function Landing() {
                 }
             `}</style>
 
-            <header>
+            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <a href="#" className="logo">
-                    <img 
-                        src="/logo-main.svg" 
-                        alt="Hackademia Logo" 
-                        style={{ width: '50px', height: '50px', objectFit: 'contain' }} 
-                    />
+                    <img src="/logo-main.svg" alt="Hackademia Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
-                <button className="header-btn" onClick={toggleChat}>Зв'язатися</button>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginLeft: 'auto' }}>
+                    
+                    {/* Перемикач мов */}
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        {['uk', 'sk', 'en', 'ru'].map(l => (
+                            <span 
+                                key={l} 
+                                onClick={() => changeLang(l)} 
+                                style={{ 
+                                    cursor: 'pointer', 
+                                    color: lang === l ? '#E0A345' : 'rgba(255,255,255,0.4)', 
+                                    fontSize: '13px', 
+                                    fontWeight: lang === l ? 'bold' : 'normal',
+                                    transition: 'color 0.2s'
+                                }}
+                            >
+                                {l.toUpperCase()}
+                            </span>
+                        ))}
+                    </div>
+
+                    {/* Кнопка виходу (мінімалістична) */}
+                    {isAuth && (
+                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '5px' }}>
+                            <span>{t('loggedIn')}</span>
+                            <span 
+                                onClick={handleLogout} 
+                                style={{ color: '#fff', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.3)', paddingBottom: '1px' }}
+                            >
+                                {t('logout')}
+                            </span>
+                        </div>
+                    )}
+
+                    <button className="header-btn" onClick={toggleChat}>{t('contactBtn')}</button>
+                </div>
             </header>
 
             <section className="hero">
