@@ -3194,16 +3194,12 @@ useEffect(() => {
     );
   }
 
-  // --- ЕКРАН ПРОФІЛЮ (Повністю функціональний) ---
+// --- ЕКРАН ПРОФІЛЮ (Повністю функціональний) ---
   if (globalView === 'profile') {
-    
-
-    // ФУНКЦІЯ: Збереження особистих даних із миттєвим глобальним оновленням
     const handleSaveProfile = async (e) => {
       e.preventDefault();
       setIsSaving(true);
       const form = e.target;
-      
       const updates = {
         first_name: form.firstName.value.trim(),
         last_name: form.lastName.value.trim(),
@@ -3211,55 +3207,34 @@ useEffect(() => {
         city: form.city.value.trim(),
         bio: form.bio.value.trim(),
       };
-
-      // Зберігаємо за унікальним id або email
-      const { error } = await supabase
-        .from('users')
-        .update(updates)
-        .eq('id', dbUserId);
-      
+      const { error } = await supabase.from('users').update(updates).eq('id', dbUserId);
       setIsSaving(false);
-      
       if (error) {
         alert("❌ Помилка збереження: " + error.message);
       } else {
         setUserName(updates.first_name); 
         setUserProfile(prev => ({ ...prev, ...updates }));
-        
-        // Зберігаємо також у localStorage, щоб головна сторінка бачила зміни без перезавантаження
         localStorage.setItem('hack_user_name', updates.first_name);
-        
         playUiSound('ding', isSoundEnabled);
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        
         alert("✅ Дані успішно збережено!");
       }
     };
 
-    // ФУНКЦІЯ: Завантаження аватара (як у Telegram)
     const handleAvatarUpload = async (e) => {
       const file = e.target.files[0];
       if (!file) return;
-
       setIsUploading(true);
       try {
         const fileExt = file.name.split('.').pop();
         const fileName = `avatar_${dbUserId}_${Date.now()}.${fileExt}`;
-
-        // 1. Завантажуємо в бакет 'avatars'
         const { error: uploadError } = await supabase.storage.from('avatars').upload(fileName, file);
         if (uploadError) throw uploadError;
-
-        // 2. Отримуємо публічне посилання
         const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(fileName);
-
-        // 3. Зберігаємо посилання в таблицю users
         const { error: updateError } = await supabase.from('users').update({ avatar_url: publicUrl }).eq('id', dbUserId);
         if (updateError) throw updateError;
-
         setUserProfile({ ...userProfile, avatar_url: publicUrl });
         playUiSound('ding', isSoundEnabled);
-        
       } catch (err) {
         alert("❌ Помилка завантаження фото: " + err.message);
       } finally {
@@ -3267,22 +3242,16 @@ useEffect(() => {
       }
     };
 
-    // ФУНКЦІЯ: Прив'язка Email (Виправлена)
     const handleLinkEmail = async (e) => {
       e.preventDefault();
       const email = e.target.email.value.trim();
       const password = e.target.password.value;
-      
-      // 1. Оновлюємо систему авторизації
       const { error } = await supabase.auth.updateUser({ email, password });
       if (error) {
         alert("❌ Помилка: " + error.message);
         return;
       }
-      
-      // 2. ВАЖЛИВО: Записуємо цей email у твій рядок в базі, щоб не створювався дублікат профілю!
       await supabase.from('users').update({ email: email }).eq('id', dbUserId);
-      
       alert("✅ Дані доступу (пошта та пароль) успішно оновлено!"); 
       window.location.reload();
     };
@@ -3293,7 +3262,6 @@ useEffect(() => {
         {renderSidebar()}
         <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          {/* КНОПКА ПОВЕРНЕННЯ НАЗАД */}
           <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Назад до курсів
@@ -3313,12 +3281,9 @@ useEffect(() => {
           ) : (
             <div style={{ display: 'flex', gap: '30px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
               
-              {/* ЛІВА КОЛОНКА (Особисті дані) */}
+              {/* ЛІВА КОЛОНКА */}
               <div style={{ flex: '1 1 500px', background: theme.cardBg, padding: '45px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', position: 'relative', zIndex: 10 }}>
-                
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginBottom: '40px' }}>
-                   
-                   {/* АВАТАРКА З ІДЕАЛЬНИМ АВТО-КАДРУВАННЯМ */}
                    <label title="Змінити фото" className="hover-card" style={{ position: 'relative', width: '85px', height: '85px', borderRadius: '50%', background: userProfile.avatar_url ? 'transparent' : '#E0A345', color: '#fff', fontSize: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', cursor: 'pointer', overflow: 'hidden', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)' }}>
                       {isUploading ? (
                         <span style={{ fontSize: '14px' }}>⏳</span>
@@ -3327,13 +3292,11 @@ useEffect(() => {
                       ) : (
                         userName ? userName[0].toUpperCase() : 'H'
                       )}
-                      
                       <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '30%', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0.8 }}>
                         <svg width="16" height="16" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
                       </div>
                       <input type="file" accept="image/*" onChange={handleAvatarUpload} style={{ display: 'none' }} />
                    </label>
-
                    <div>
                       <h3 style={{ margin: '0 0 8px 0', color: theme.text, fontSize: '26px', fontWeight: '900' }}>{userName || 'Гість'}</h3>
                       <span style={{ color: accessStatus === 'approved' ? '#38A169' : '#E53E3E', fontWeight: 'bold', fontSize: '14px' }}>
@@ -3342,68 +3305,32 @@ useEffect(() => {
                    </div>
                 </div>
 
-                {/* ФОРМА ОСОБИСТИХ ДАНИХ */}
                 <form onSubmit={handleSaveProfile} style={{ position: 'relative', zIndex: 20 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ім'я</label>
-                       <input 
-                         type="text" 
-                         name="firstName" 
-                         value={userProfile.first_name || userName || ''} 
-                         onChange={e => setUserProfile({...userProfile, first_name: e.target.value})} 
-                         placeholder="Ваше ім'я" 
-                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
-                       />
+                       <input type="text" name="firstName" value={userProfile.first_name || userName || ''} onChange={e => setUserProfile({...userProfile, first_name: e.target.value})} placeholder="Ваше ім'я" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
                     </div>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Прізвище</label>
-                       <input 
-                         type="text" 
-                         name="lastName" 
-                         value={userProfile.last_name || ''} 
-                         onChange={e => setUserProfile({...userProfile, last_name: e.target.value})} 
-                         placeholder="Не вказано" 
-                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
-                       />
+                       <input type="text" name="lastName" value={userProfile.last_name || ''} onChange={e => setUserProfile({...userProfile, last_name: e.target.value})} placeholder="Не вказано" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
                     </div>
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '25px' }}>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Телефон / Telegram</label>
-                       <input 
-                         type="text" 
-                         name="phone" 
-                         value={userProfile.phone || ''} 
-                         onChange={e => setUserProfile({...userProfile, phone: e.target.value})} 
-                         placeholder="+380..." 
-                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
-                       />
+                       <input type="text" name="phone" value={userProfile.phone || ''} onChange={e => setUserProfile({...userProfile, phone: e.target.value})} placeholder="+380..." style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
                     </div>
                     <div>
                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Місто</label>
-                       <input 
-                         type="text" 
-                         name="city" 
-                         value={userProfile.city || ''} 
-                         onChange={e => setUserProfile({...userProfile, city: e.target.value})} 
-                         placeholder="Наприклад, Братислава" 
-                         style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} 
-                       />
+                       <input type="text" name="city" value={userProfile.city || ''} onChange={e => setUserProfile({...userProfile, city: e.target.value})} placeholder="Наприклад, Братислава" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', fontSize: '15px' }} />
                     </div>
                   </div>
 
                   <div style={{ marginBottom: '35px' }}>
                     <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Про мене</label>
-                    <textarea 
-                      name="bio" 
-                      rows="3" 
-                      value={userProfile.bio || ''} 
-                      onChange={e => setUserProfile({...userProfile, bio: e.target.value})} 
-                      placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" 
-                      style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}
-                    ></textarea>
+                    <textarea name="bio" rows="3" value={userProfile.bio || ''} onChange={e => setUserProfile({...userProfile, bio: e.target.value})} placeholder="Які ваші цілі у вивченні мови? Який поточний рівень?" style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px', fontFamily: 'inherit' }}></textarea>
                   </div>
 
                   <button type="submit" disabled={isSaving} className="hover-card" style={{ background: '#E0A345', color: '#ffffff', padding: '18px 24px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: isSaving ? 'wait' : 'pointer', fontSize: '16px', width: '100%', opacity: isSaving ? 0.7 : 1, position: 'relative', zIndex: 30 }}>
@@ -3414,8 +3341,6 @@ useEffect(() => {
 
               {/* ПРАВА КОЛОНКА */}
               <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                  
-                  {/* Блок Доступ / Зміна паролю */}
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                       <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
@@ -3425,28 +3350,19 @@ useEffect(() => {
                       </p>
                       
                       <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <input 
-                          type="email" 
-                          value={userProfile.email || ''} 
-                          disabled
-                          style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }}
-                        />
-                        
-                        {/* ІНПУТ ПАРОЛЯ З ОКОМ */}
+                        <input type="email" value={userProfile.email || ''} disabled style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }} />
                         <div style={{ position: 'relative' }}>
                           <input type={showPassword ? "text" : "password"} name="password" placeholder="Введіть новий пароль" required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', paddingRight: '50px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
                           <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: 0.6 }}>
                             {showPassword ? '🙈' : '👁'}
                           </button>
                         </div>
-
                         <button type="submit" className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s', marginTop: '5px' }}>
                           Оновити дані доступу
                         </button>
                       </form>
                   </div>
 
-                  {/* Блок Технічна інформація */}
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                       <h3 style={{ margin: '0 0 25px 0', fontSize: '18px', color: theme.textSecondary, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ opacity: 0.7 }}>⚙️</span> Технічна інформація
@@ -3458,7 +3374,6 @@ useEffect(() => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
-                          
                           {userProfile?.telegram_id ? (
                             <div style={{ textAlign: 'right' }}>
                               <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
@@ -3468,14 +3383,7 @@ useEffect(() => {
                             </div>
                           ) : (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <a 
-                                href="https://t.me/hackademiapp_bot" 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="hover-card"
-                                title="Підключіть Telegram для входу в 1 клік без пароля!"
-                                style={{ background: '#3182ce', color: '#fff', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(49,130,206,0.2)' }}
-                              >
+                              <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" className="hover-card" title="Підключіть Telegram для входу в 1 клік без пароля!" style={{ background: '#3182ce', color: '#fff', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(49,130,206,0.2)' }}>
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                                 Підключити бот
                               </a>
@@ -3489,8 +3397,161 @@ useEffect(() => {
           )}
         </div>
       </div>
+    );
+  }
 
-      {/* МОДАЛЬНЕ ВІКНО ОБ'ЄДНАННЯ АКАУНТІВ */}
+  return (
+    <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
+      {renderGlobalStyles()}
+      {renderSidebar()}
+      
+      <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
+          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
+            {['uk', 'sk', 'en', 'ru'].map((l) => (
+              <button key={l} onClick={() => changeLang(l)} className="hover-card" style={{ background: lang === l ? '#E0A345' : 'transparent', color: lang === l ? '#fff' : theme.text, border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
+                {l.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          
+          <button onClick={handleLogout} className="hover-card" title={t('logout')} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            {t('logout')}
+            <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          </button>
+        </div>
+
+        <div style={{ marginBottom: '30px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+              <div className="hover-card" onClick={() => setGlobalView('profile')} title="Перейти в профіль" style={{ width: '65px', height: '65px', borderRadius: '50%', background: userProfile.avatar_url ? 'transparent' : '#E0A345', color: '#fff', fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)', cursor: 'pointer', flexShrink: 0 }}>
+                {userProfile.avatar_url ? (
+                  <img src={userProfile.avatar_url} alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+                ) : (
+                  userName ? userName[0].toUpperCase() : 'H'
+                )}
+              </div>
+              <div>
+                {userName && <p style={{ color: theme.textSecondary, fontSize: '26px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userProfile.first_name || userName}</b>! 👋</p>}
+                {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? t('studentPreview') : t('admin')}</span>}
+              </div>
+            </div>
+          </div>
+
+          {effectiveIsAdmin && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '25px' }}>
+              <button onClick={handleAddCourse} className="hover-card" style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#ffffff', padding: '12px 24px', border: 'none', borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', boxShadow: '0 6px 20px rgba(255,123,84,0.3)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                + Створити новий курс
+              </button>
+            </div>
+          )}
+        </div>
+
+        <div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
+            {effectiveIsAdmin ? (
+              <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'contents', listStyle: 'none' }}>
+                {courses.map((course, idx) => {
+                  const imgUrl = decorImages[idx % decorImages.length];
+                  const isReorderActive = activeReorderId === course.id;
+                  const isDimmed = activeReorderId !== null && activeReorderId !== course.id;
+                  return (
+                    <Reorder.Item key={course.id} value={course} onPointerDown={(e) => handlePressStart(e, course.id)} onPointerUp={handlePressEnd} onPointerLeave={handlePressEnd} onClick={() => { if (!isReorderActive) setSelectedCourse(course); }} whileHover={{ scale: isReorderActive ? 1.02 : 1.02, filter: 'brightness(1.1)', y: isReorderActive ? 0 : -4 }} whileDrag={{ scale: 1.03, zIndex: 50, boxShadow: "0px 20px 40px rgba(0, 0, 0, 0.2)" }} style={{ position: 'relative', overflow: 'hidden', zIndex: isReorderActive ? 10 : 1, background: isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: isReorderActive ? '0 0 0 4px #F6AD55, 0 15px 40px rgba(246,173,85,0.4)' : '0 10px 30px rgba(30,58,58,0.12)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '180px', opacity: isDimmed ? 0.4 : 1, border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box', cursor: isReorderActive ? 'default' : 'pointer', transition: 'all 0.3s ease', transform: isReorderActive ? 'scale(1.02)' : 'scale(1)' }}>
+                      <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '140px', height: '140px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
+                      <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', width: '100%' }}>
+                        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px' }}><svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg></div>
+                        {effectiveIsAdmin && isReorderActive ? (
+                          <div style={{ display: 'flex', gap: '5px' }}>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); moveCourse(course.id, 'left'); }} style={{ background: '#F6AD55', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>←</button>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); moveCourse(course.id, 'right'); }} style={{ background: '#F6AD55', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>→</button>
+                            <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); setActiveReorderId(null); }} style={{ background: 'rgba(255,255,255,0.2)', color: '#fff', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontWeight: 'bold' }}>✓</button>
+                          </div>
+                        ) : (
+                          courses.length > 1 && <button onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); handleDeleteCourse(course.id); }} style={{ background: 'rgba(255,255,255,0.15)', color: '#ff8080', border: 'none', borderRadius: '10px', padding: '6px 10px', cursor: 'pointer', fontSize: '14px' }}>🗑</button>
+                        )}
+                      </div>
+                      <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
+                        <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
+                        <span onClick={() => { if (!isReorderActive) setSelectedCourse(course); }} style={{ cursor: isReorderActive ? 'default' : 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{course.title}</span>
+                      </div>
+                    </Reorder.Item>
+                  );
+                })}
+              </Reorder.Group>
+            ) : (
+              courses.map((course, idx) => {
+                const hasAccess = allowedCourses.includes(course.id);
+                const imgUrl = decorImages[idx % decorImages.length];
+                return (
+                  <div key={course.id} className={hasAccess ? "hover-card" : ""} style={{ position: 'relative', overflow: 'hidden', zIndex: 1, background: hasAccess ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)') : (isDarkMode ? '#2d3748' : '#e2e8f0'), color: hasAccess ? '#ffffff' : theme.textSecondary, padding: '25px', borderRadius: '24px', boxShadow: hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '180px', opacity: hasAccess ? 1 : 0.75, border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box', cursor: hasAccess ? 'pointer' : 'not-allowed' }} onClick={() => { if (hasAccess) setSelectedCourse(course); else alert(t('lockedAlert')); }}>
+                    {hasAccess && <img src={imgUrl} alt="3d decor" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '140px', height: '140px', objectFit: 'cover', borderRadius: '50%', opacity: isDarkMode ? 0.3 : 0.4, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />}
+                    <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: hasAccess ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: hasAccess ? '#fff' : theme.textSecondary }}>
+                        {hasAccess ? <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg> : <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>}
+                      </div>
+                    </div>
+                    <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
+                      <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: hasAccess ? '#F6AD55' : theme.textSecondary, fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
+                      <span style={{ fontWeight: '900', fontSize: '20px', color: hasAccess ? '#ffffff' : theme.text, lineHeight: '1.2', display: 'block' }}>{course.title}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        <div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
+            <div onClick={startSpacedRepetition} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>🔄</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Розумні картки</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('repeatToday')}</span></div>
+            </div>
+            <div onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #805AD5 0%, #9F7AEA 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(128,90,213,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>🎯</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Міні-гра на час</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('sniperGame')}</span></div>
+            </div>
+            <div onClick={startFalseFriends} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #D69E2E 0%, #ECC94B 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(214,158,46,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.2)', boxSizing: 'border-box' }}>
+              <img src="https://images.unsplash.com/photo-1634017839464-5c339ebe3cb4?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.15, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
+              <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>🎭</div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#FFF5F5', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Тест на уважність</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('falseFriends')}</span></div>
+            </div>
+          </div>
+        </div>
+
+        {!window.Telegram?.WebApp?.initDataUnsafe?.user && !userName && (
+          <div style={{ marginBottom: '35px', maxWidth: '350px' }}>
+            <p style={{ color: theme.textSecondary, fontSize: '13px', marginBottom: '8px' }}>Як до вас звертатися?</p>
+            <input type="text" placeholder="Твоє ім'я..." defaultValue={localStorage.getItem('hack_browser_user') || ''} onBlur={e => { localStorage.setItem('hack_browser_user', e.target.value); window.location.reload(); }} style={{ padding: '12px 16px', width: '100%', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, fontSize: '15px', background: theme.cardBg, color: theme.text, boxSizing: 'border-box' }} />
+          </div>
+        )}
+
+        {isAdmin && (
+          <div style={{ marginTop: '30px', opacity: 0.85, fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '20px' }}>
+            {effectiveIsAdmin && (
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', color: theme.textSecondary }}>
+                <span>Додати адміна:</span>
+                <input type="number" placeholder="Telegram ID" value={newAdminTelegramId} onChange={e => setNewAdminTelegramId(e.target.value)} style={{ padding: '8px 12px', borderRadius: '8px', fontSize: '14px', width: '140px' }} />
+                <button onClick={handleMakeAdmin} style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '8px 14px', cursor: 'pointer', fontWeight: 'bold' }}>OK</button>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+              <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>☁️ Зробити бекап у хмару</button>
+              <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>❓ Довідка</button>
+              <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🔄 Відновити останній бекап</button>
+              <label style={{ background: 'transparent', border: '1px solid #38A169', color: '#38A169', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                📂 Завантажити JSON бекап
+                <input type="file" accept=".json" onChange={handleLocalJsonRestore} style={{ display: 'none' }} />
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
+
       {mergePrompt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: theme.bg, padding: '30px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 20px 50px rgba(224,163,69,0.2)' }}>
