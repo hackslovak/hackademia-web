@@ -1092,7 +1092,15 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                     return (
                       <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                         <div style={{ maxWidth: '75%', padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5' }}>
-                          {msg.text}
+                          {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+  if (part.match(/(https?:\/\/[^\s]+)/g)) {
+    if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
+      return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
+    }
+    return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
+  }
+  return <span key={i}>{part}</span>;
+})}
                         </div>
                         <span style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '6px', margin: isMine ? '0 10px 0 0' : '0 0 0 10px' }}>
                           {formatTime(msg.created_at)}
@@ -1268,6 +1276,8 @@ function Platform() {
 
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState(null);
+  const [recordingTaskId, setRecordingTaskId] = useState(null);
+  const [studentRecorder, setStudentRecorder] = useState(null);
 
   const [editingTaskId, setEditingTaskId] = useState(null);
   const [editContent, setEditContent] = useState('');
@@ -2121,6 +2131,67 @@ useEffect(() => {
       alert("❌ Помилка збереження голосового запису: " + err.message);
     }
   }
+  
+  // --- ЗАПИС ТА ВІДПРАВКА АУДІО ВІД УЧНІВ ---
+  async function startStudentRecording(taskId) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      let chunks = [];
+
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/mp3' });
+        await uploadStudentAudio(blob, taskId);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setStudentRecorder(recorder);
+      setRecordingTaskId(taskId);
+    } catch (err) {
+      alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message);
+    }
+  }
+
+  function stopStudentRecording() {
+    if (studentRecorder) {
+      studentRecorder.stop();
+      setRecordingTaskId(null);
+      setStudentRecorder(null);
+      setToast("⏳ Відправляємо запис вчителю...");
+      setTimeout(() => setToast(null), 3500);
+    }
+  }
+
+  async function uploadStudentAudio(blob, taskId) {
+    try {
+      const fileName = `student_ans_${dbUserId}_${Date.now()}.mp3`;
+      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, blob, { contentType: 'audio/mp3' });
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
+      
+      // Відправляємо повідомлення в чат
+      const task = tasks.find(t => t.id === taskId);
+      const taskSnippet = task.content ? task.content.substring(0, 35).replace(/\n/g, ' ') + '...' : 'Завдання';
+      const msgText = `🎤 Аудіо-відповідь на "${taskSnippet}":\n${data.publicUrl}`;
+      
+      await supabase.from('messages').insert([{ user_id: dbUserId, sender_id: dbUserId, text: msgText }]);
+
+      // Зараховуємо завдання
+      const diff = difficultyConfig[task.difficulty || 'medium'];
+      await supabase.from('progress').upsert({ user_id: dbUserId, task_id: taskId, status: 'completed', points: diff.points }, { onConflict: 'user_id, task_id' });
+      setCompletedTasks(prev => [...new Set([...prev, taskId])]);
+      
+      playUiSound('ding', isSoundEnabled);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      alert("✅ Вашу вимову відправлено вчителю на перевірку!");
+    } catch (err) {
+      alert("❌ Помилка відправки: " + err.message);
+    }
+  }
 
   async function handleCloudBackup() {
     try {
@@ -2907,19 +2978,38 @@ useEffect(() => {
                            {renderContent(task.content)}
                          </div>
 
-                         {/* ПОЛЕ ВВОДУ ДЛЯ УЧНЯ */}
-                         {task.correct_answer && (
-                           <div style={{ display: 'flex', gap: '15px', marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', alignItems: 'center' }}>
-                             <input 
-                               type="text" 
-                               placeholder="Ваша відповідь..." 
-                               value={userAnswers[task.id] || ''} 
-                               onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} 
-                               style={{ flex: 1, padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }}
-                             />
-                             <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
-                               Перевірити
-                             </button>
+{/* ПАНЕЛЬ ДІЙ УЧНЯ */}
+                         {!effectiveIsAdmin && (
+                           <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px' }}>
+                             
+                             {/* Класичне поле, якщо є точна текстова відповідь (Квіз) */}
+                             {task.correct_answer && (
+                               <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center' }}>
+                                 <input 
+                                   type="text" 
+                                   placeholder="Ваша текстова відповідь..." 
+                                   value={userAnswers[task.id] || ''} 
+                                   onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} 
+                                   style={{ flex: 1, padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }}
+                                 />
+                                 <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
+                                   Перевірити
+                                 </button>
+                               </div>
+                             )}
+
+                             {/* Кнопка запису голосу (Доступна для всіх завдань, щоб тренувати вимову) */}
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                               <button 
+                                 onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}
+                                 className="hover-card"
+                                 style={{ background: recordingTaskId === task.id ? '#E53E3E' : theme.inputBg, color: recordingTaskId === task.id ? '#fff' : theme.text, padding: '14px 24px', borderRadius: '14px', border: `1px solid ${recordingTaskId === task.id ? '#E53E3E' : theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: '0.2s', animation: recordingTaskId === task.id ? 'ffPulse 1.5s infinite' : 'none' }}
+                               >
+                                 {recordingTaskId === task.id ? '⏹ Відправити аудіо' : '🎤 Записати вимову'}
+                               </button>
+                               {recordingTaskId === task.id && <span style={{ color: '#E53E3E', fontWeight: 'bold', fontSize: '14px' }}>🔴 Запис іде...</span>}
+                             </div>
+
                            </div>
                          )}
 
