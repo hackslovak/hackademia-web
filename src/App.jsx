@@ -1895,10 +1895,13 @@ useEffect(() => {
   async function handleAddCourse() {
     const title = prompt("Введи назву нового курсу:");
     if (!title) return;
+    const courseLang = prompt("Введи код мови аудиторії (uk, sk, en, ru) або all (щоб бачили всі):", "uk");
+    if (!courseLang) return;
+    
     const newId = title.toLowerCase().replace(/\s+/g, '-');
     const newOrderIndex = courses.length; 
     
-    const { data, error } = await supabase.from('courses').insert({ id: newId, title, order_index: newOrderIndex }).select();
+    const { data, error } = await supabase.from('courses').insert({ id: newId, title, order_index: newOrderIndex, lang: courseLang.toLowerCase() }).select();
     if (error) { alert("Помилка створення: " + error.message); return; }
     if (data) setCourses([...courses, data[0]]);
   }
@@ -3540,7 +3543,9 @@ useEffect(() => {
           )}
         </div>
 
-        <div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
+        const studentVisibleCourses = courses.filter(c => !c.lang || c.lang === lang || c.lang === 'all');
+		
+		<div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
             {effectiveIsAdmin ? (
               <Reorder.Group axis="y" values={courses} onReorder={handleReorderCourses} style={{ display: 'contents', listStyle: 'none' }}>
@@ -3565,14 +3570,17 @@ useEffect(() => {
                       </div>
                       <div style={{ position: 'relative', zIndex: 2, textAlign: 'left', marginTop: '20px' }}>
                         <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#F6AD55', fontWeight: 'bold', display: 'block', marginBottom: '6px' }}>Hackademia</span>
-                        <span onClick={() => { if (!isReorderActive) setSelectedCourse(course); }} style={{ cursor: isReorderActive ? 'default' : 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{course.title}</span>
+                        <span onClick={() => { if (!isReorderActive) setSelectedCourse(course); }} style={{ cursor: isReorderActive ? 'default' : 'pointer', fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'flex', alignItems: 'center', gap: '10px' }}>
+  {course.title}
+  <span style={{ background: '#4A5568', color: '#fff', fontSize: '10px', padding: '3px 8px', borderRadius: '6px', fontWeight: 'bold', textTransform: 'uppercase' }}>{course.lang || 'UK'}</span>
+</span>
                       </div>
                     </Reorder.Item>
                   );
                 })}
               </Reorder.Group>
             ) : (
-              courses.map((course, idx) => {
+              studentVisibleCourses.map((course, idx) => {
                 const hasAccess = allowedCourses.includes(course.id);
                 const imgUrl = decorImages[idx % decorImages.length];
                 return (
