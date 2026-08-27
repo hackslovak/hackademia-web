@@ -3542,8 +3542,7 @@ useEffect(() => {
             </div>
           )}
         </div>
-
-        const studentVisibleCourses = courses.filter(c => !c.lang || c.lang === lang || c.lang === 'all');
+		
 		
 		<div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
@@ -3580,7 +3579,7 @@ useEffect(() => {
                 })}
               </Reorder.Group>
             ) : (
-              studentVisibleCourses.map((course, idx) => {
+              courses.filter(c => !c.lang || c.lang === lang || c.lang === 'all').map((course, idx) => {
                 const hasAccess = allowedCourses.includes(course.id);
                 const imgUrl = decorImages[idx % decorImages.length];
                 return (
