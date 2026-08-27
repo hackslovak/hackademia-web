@@ -3553,6 +3553,7 @@ useEffect(() => {
         )}
       </div>
 
+      {/* МОДАЛЬНЕ ВІКНО ОБ'ЄДНАННЯ АКАУНТІВ */}
       {mergePrompt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: theme.bg, padding: '30px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 20px 50px rgba(224,163,69,0.2)' }}>
@@ -3590,7 +3591,7 @@ useEffect(() => {
       )}
     </div>
   );
-  
+}
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
