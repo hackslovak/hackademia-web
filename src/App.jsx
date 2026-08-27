@@ -3452,16 +3452,12 @@ useEffect(() => {
                         <span style={{ opacity: 0.7 }}>⚙️</span> Технічна інформація
                       </h3>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        
                         <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '12px', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
                           <b style={{ color: isAdmin ? '#E0A345' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
                         </div>
-                        
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
-                          
-                          {/* Якщо юзер зайшов через Telegram — показуємо, що підключено. Якщо ні — красиву кнопку! */}
                           {window.Telegram?.WebApp?.initDataUnsafe?.user ? (
                             <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               ✅ Підключено
@@ -3481,10 +3477,14 @@ useEffect(() => {
                               </a>
                             </div>
                           )}
-
                         </div>
                       </div>
                   </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
 
