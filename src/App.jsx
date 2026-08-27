@@ -3709,24 +3709,12 @@ useEffect(() => {
   📂 Завантажити JSON бекап
   <input type="file" accept=".json" onChange={handleLocalJsonRestore} style={{ display: 'none' }} />
 </label>
-			</div>
+            </div>
           </div>
         )}
       </div>
 
-      {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
-        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, background: theme.cardBg, padding: '24px', borderRadius: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #2B6CB0`, maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite' }}>
-          <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px' }}>🚨 Увага!</h4>
-          <p style={{ margin: '0 0 18px 0', fontSize: '15px', color: theme.textSecondary, lineHeight: '1.4' }}>Нещодавно ви додали учня. Який курс та групу бажаєте йому призначити?</p>
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button onClick={() => setGlobalView('admin_panel')} style={{ flex: 1, background: '#2B6CB0', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>⚙️ Налаштувати</button>
-            <button onClick={dismissCourseAlert} style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Пізніше</button>
-          </div>
-        </div>
-      )}
-    {/* МОДАЛЬНЕ ВІКНО ОБ'ЄДНАННЯ АКАУНТІВ */}
+      {/* МОДАЛЬНЕ ВІКНО ОБ'ЄДНАННЯ АКАУНТІВ */}
       {mergePrompt && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.85)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
           <div style={{ background: theme.bg, padding: '30px', borderRadius: '24px', maxWidth: '400px', textAlign: 'center', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 20px 50px rgba(224,163,69,0.2)' }}>
@@ -3749,6 +3737,7 @@ useEffect(() => {
           </div>
         </div>
       )}
+	  
 
       {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
@@ -3763,9 +3752,6 @@ useEffect(() => {
         </div>
       )}
     </div>
-  );
-}
-	</div>
   );
 }
 
