@@ -3459,7 +3459,6 @@ useEffect(() => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
                           
-                          {/* Перевіряємо базу даних (userProfile.telegram_id), щоб статус зберігався завжди */}
                           {userProfile?.telegram_id ? (
                             <div style={{ textAlign: 'right' }}>
                               <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
