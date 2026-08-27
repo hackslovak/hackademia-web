@@ -3458,10 +3458,15 @@ useEffect(() => {
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
-                          {window.Telegram?.WebApp?.initDataUnsafe?.user ? (
-                            <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              ✅ Підключено
-                            </b>
+                          
+                          {/* ТЕПЕР МИ ПЕРЕВІРЯЄМО БАЗУ ДАНИХ (userProfile.telegram_id), А НЕ БРАУЗЕР */}
+                          {userProfile?.telegram_id ? (
+                            <div style={{ textAlign: 'right' }}>
+                              <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                                ✅ Підключено
+                              </b>
+                              <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {userProfile.telegram_id}</span>
+                            </div>
                           ) : (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                               <a 
@@ -3480,13 +3485,6 @@ useEffect(() => {
                         </div>
                       </div>
                   </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-    );
-  }
 
 // ЕКРАН 1: Головна сторінка вибору курсів
   return (
