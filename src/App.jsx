@@ -1540,15 +1540,21 @@ function Platform() {
             setIsAdmin(true);
             setAccessStatus('approved');
             localStorage.setItem('hack_is_admin', 'true');
+            localStorage.setItem('hack_auth_cache', 'approved'); // <-- ЗАПАМ'ЯТОВУЄМО ВХІД АДМІНА
           } else {
+            const savedAdmin = localStorage.getItem('hack_is_admin');
             if (savedAdmin === 'true') {
               localStorage.removeItem('hack_is_admin');
               setIsAdmin(false);
             }
             setAccessStatus(data.access_status || 'pending');
+            
+            // <-- ЗАПАМ'ЯТОВУЄМО ВХІД УЧНЯ, ЯКЩО ВІН СХВАЛЕНИЙ
+            if (data.access_status === 'approved') {
+               localStorage.setItem('hack_auth_cache', 'approved'); 
+            }
           }
         }
-      }
 
       const tg = window.Telegram?.WebApp;
       if (tg) { 
