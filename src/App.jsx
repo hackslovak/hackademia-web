@@ -1724,6 +1724,26 @@ function Platform() {
     });
   }
   
+  function moveCourse(courseId, direction) {
+    const index = courses.findIndex(c => c.id === courseId);
+    if (index === -1) return;
+    
+    const newIndex = direction === 'left' ? index - 1 : index + 1;
+    if (newIndex < 0 || newIndex >= courses.length) return; // За межі масиву не рухаємо
+    
+    const newCourses = [...courses];
+    const [movedItem] = newCourses.splice(index, 1);
+    newCourses.splice(newIndex, 0, movedItem);
+    
+    setCourses(newCourses);
+    
+    // Оновлюємо order_index та зберігаємо в базу Supabase
+    const updates = newCourses.map((c, i) => ({ id: c.id, title: c.title, order_index: i }));
+    supabase.from('courses').upsert(updates).then(({error}) => {
+      if (error) console.error("Помилка збереження порядку:", error);
+    });
+  }
+  
   async function handleAddModule() {
     if (!newModuleTitle.trim() || !selectedCourse) return;
     const { data, error } = await supabase.from('modules').insert({ 
