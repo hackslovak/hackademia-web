@@ -3300,8 +3300,8 @@ function Platform() {
           <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
           
           {/* НОВА КНОПКА ВИХОДУ */}
-          <button onClick={handleLogout} className="hover-card" title="Вийти з акаунта" style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
-            Вийти
+          <button onClick={handleLogout} className="hover-card" title={t('logout')} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
+            {t('logout')}
             <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
           </button>
         </div>

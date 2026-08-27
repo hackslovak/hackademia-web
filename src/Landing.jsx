@@ -1,41 +1,38 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from './supabase'; // ДОДАЛИ СЮДИ
-import { translations } from './i18n'; // ДОДАЛИ СЮДИ
-import './Landing.css';
+import { supabase } from './supabase';
+import { translations } from './i18n';
+import './Landing.css'; 
 
 export default function Landing() {
     const navigate = useNavigate();
     
-    // --- ЛОГІКА МОВИ (СПІЛЬНА З ПЛАТФОРМОЮ) ---
-    const [lang, setLang] = useState(() => {
-        return localStorage.getItem('hack_lang') || 'uk';
-    });
+    // --- ЛОГІКА МОВИ ---
+    const [lang, setLang] = useState(() => localStorage.getItem('hack_lang') || 'uk');
     const changeLang = (newLang) => {
         setLang(newLang);
         localStorage.setItem('hack_lang', newLang);
     };
     const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
-    // --- ЛОГІКА АВТОРИЗАЦІЇ ТА ВИХОДУ ---
+    // --- ЛОГІКА АВТОРИЗАЦІЇ ---
     const isAuth = localStorage.getItem('hack_auth_cache') === 'approved';
     
     const handleLogout = async () => {
         if (window.confirm(t('logout') + "?")) {
             await supabase.auth.signOut();
             localStorage.removeItem('hack_auth_cache');
-            window.location.reload(); // Перезавантажуємо сторінку
+            window.location.reload(); 
         }
     };
-    
+
     const [isChatOpen, setIsChatOpen] = useState(false);
     const [chatInput, setChatInput] = useState('');
-
     const toggleChat = () => setIsChatOpen(!isChatOpen);
 
     const sendLead = () => {
         if (!chatInput.trim()) {
-            alert('Введіть текст повідомлення!');
+            alert(t('chatAlert'));
             return;
         }
         const encodedText = encodeURIComponent("Лід з сайту: " + chatInput.trim());
@@ -46,48 +43,19 @@ export default function Landing() {
 
     return (
         <div className="landing-body">
-            {/* Додаткові стилі адаптивності для мобільних екранів */}
             <style>{`
-                .landing-body {
-                    overflow-x: hidden;
-                }
-                .hero h1 {
-                    font-size: clamp(32px, 8vw, 64px) !important;
-                    line-height: 1.15 !important;
-                }
-                .section-title {
-                    font-size: clamp(22px, 5vw, 36px) !important;
-                    word-break: break-word;
-                }
+                .landing-body { overflow-x: hidden; }
+                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; }
+                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; }
                 @media (max-width: 768px) {
-                    .landing-body {
-                        padding: 0 10px;
-                    }
-                    header {
-                        padding: 15px 20px !important;
-                    }
-                    .hero {
-                        padding: 40px 15px !important;
-                    }
-                    .container {
-                        padding: 30px 15px !important;
-                    }
-                    .about-grid, .pricing-grid {
-                        grid-template-columns: 1fr !important;
-                    }
-                    .extra-box {
-                        grid-template-columns: 1fr !important;
-                        padding: 20px !important;
-                    }
-                    .chat-modal {
-                        width: calc(100% - 30px) !important;
-                        right: 15px !important;
-                        bottom: 80px !important;
-                    }
-                    .floating-buttons {
-                        bottom: 15px !important;
-                        right: 15px !important;
-                    }
+                    .landing-body { padding: 0 10px; }
+                    header { padding: 15px 20px !important; flex-wrap: wrap; gap: 15px;}
+                    .hero { padding: 40px 15px !important; }
+                    .container { padding: 30px 15px !important; }
+                    .about-grid, .pricing-grid { grid-template-columns: 1fr !important; }
+                    .extra-box { grid-template-columns: 1fr !important; padding: 20px !important; }
+                    .chat-modal { width: calc(100% - 30px) !important; right: 15px !important; bottom: 80px !important; }
+                    .floating-buttons { bottom: 15px !important; right: 15px !important; }
                 }
             `}</style>
 
@@ -136,134 +104,131 @@ export default function Landing() {
             </header>
 
             <section className="hero">
-                <div className="hero__label">( Школа онлайн )</div>
-                <h1>ВИВЧАЙ СЛОВАЦЬКУ<br /><span>З HACKADEMIA</span></h1>
-                <p>Новий, крутий формат навчання у нашій школі. Старт нових груп вже незабаром!</p>
-                
-                {/* РОЗУМНА КНОПКА (ПЕРЕВІРЯЄ ЧИ МИ ВЖЕ УВІЙШЛИ) */}
+                <div className="hero__label">{t('heroLabel')}</div>
+                <h1>{t('heroTitle1')}<br /><span>{t('heroTitle2')}</span></h1>
+                <p>{t('heroSub')}</p>
                 <button className="btn" onClick={() => navigate(isAuth ? '/app' : '/login')}>
-                  {isAuth ? 'Повернутися до навчання 🚀' : 'Увійти до платформи'}
+                  {isAuth ? t('heroBtnAuth') : t('heroBtnNoAuth')}
                 </button>
             </section>
 
             <div className="container">
-                <h2 className="section-title"><span>( 01 - Про нас )</span>Сучасна онлайн-школа словацької мови</h2>
+                <h2 className="section-title"><span>{t('aboutLabel')}</span>{t('aboutTitle')}</h2>
                 <div className="about-grid">
                     <div className="about-card">
-                        <h3>🎓 Вступ до ВНЗ Словаччини</h3>
-                        <p>Готуємо до вступу та допомагаємо з повною адаптацією на новому місці.</p>
+                        <h3>{t('about1Title')}</h3>
+                        <p>{t('about1Text')}</p>
                     </div>
                     <div className="about-card">
-                        <h3>💡 Інноваційний підхід</h3>
-                        <p>Інтерактивні матеріали, гейміфікація та максимальна кількість розмовної практики.</p>
+                        <h3>{t('about2Title')}</h3>
+                        <p>{t('about2Text')}</p>
                     </div>
                     <div className="about-card">
-                        <h3>🤝 Спільнота однодумців</h3>
-                        <p>Жодної нудної субординації — лише дружня атмосфера, гумор і постійна підтримка ментора.</p>
+                        <h3>{t('about3Title')}</h3>
+                        <p>{t('about3Text')}</p>
                     </div>
                 </div>
             </div>
 
             <div className="container" style={{ paddingTop: 0 }}>
-                <h2 className="section-title"><span>( 02 - Формати та ціни )</span>Оберіть зручний формат навчання</h2>
+                <h2 className="section-title"><span>{t('priceLabel')}</span>{t('priceTitle')}</h2>
                 <div className="pricing-grid">
-                    {/* 1. Закритий доступ */}
+                    {/* 1 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge" style={{ background: '#EBF3FF', color: '#062440' }}>Самостійно</span>
-                            <h3>Закритий доступ</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Навчання за матеріалами платформи у власному темпі без викладача.</p>
+                            <span className="badge" style={{ background: '#EBF3FF', color: '#062440' }}>{t('price1Badge')}</span>
+                            <h3>{t('price1Title')}</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price1Sub')}</p>
                             <ul>
-                                <li>✔ <b>Повний доступ</b> до всіх курсів і модулів</li>
-                                <li>✔ Інтерактивні завдання та тести</li>
-                                <li>✔ Навчання у власному темпі</li>
+                                <li>✔ <b>{t('price1Li1')}</b> {t('price1Li1_2')}</li>
+                                <li>✔ {t('price1Li2')}</li>
+                                <li>✔ {t('price1Li3')}</li>
                             </ul>
                         </div>
                         <div>
-                            <div className="price">35€ <span>/ місяць</span></div>
+                            <div className="price">35€ <span>{t('priceMonth')}</span></div>
                             <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate(isAuth ? '/app' : '/login')}>
-                                {isAuth ? 'Перейти в кабінет' : 'Отримати доступ'}
+                                {isAuth ? t('priceBtn1Auth') : t('priceBtn1NoAuth')}
                             </button>
                         </div>
                     </div>
 
-                    {/* 2. Рівні А1 / А2 */}
+                    {/* 2 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge">Група (до 6 осіб)</span>
-                            <h3>Рівні А1 / А2</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Максимум живої комунікації та гумору у дружній атмосфері.</p>
+                            <span className="badge">{t('price2Badge')}</span>
+                            <h3>{t('price2Title')}</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price2Sub')}</p>
                             <ul>
-                                <li>✔ <b>16 занять</b> (2 місяці)</li>
-                                <li>✔ 2 рази на тиждень по 1.5 год</li>
-                                <li>✔ Помісячна оплата</li>
+                                <li>✔ <b>{t('price2Li1')}</b> {t('price2Li1_2')}</li>
+                                <li>✔ {t('price2Li2')}</li>
+                                <li>✔ {t('price2Li3')}</li>
                             </ul>
                         </div>
                         <div>
-                            <div className="price">85€ <span>/ місяць</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                            <div className="price">85€ <span>{t('priceMonth')}</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
 
-                    {/* 3. Рівень В1 */}
+                    {/* 3 */}
                     <div className="price-card highlight">
                         <div>
-                            <span className="badge" style={{ background: '#062440', color: '#fff' }}>Популярний</span>
-                            <h3>Рівень В1</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Поглиблене вивчення для тих, хто вже має базові знання.</p>
+                            <span className="badge" style={{ background: '#062440', color: '#fff' }}>{t('price3Badge')}</span>
+                            <h3>{t('price3Title')}</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price3Sub')}</p>
                             <ul>
-                                <li>✔ <b>24 заняття</b> (~2.5 місяці)</li>
-                                <li>✔ 2 рази на тиждень по 1.5 год</li>
-                                <li>✔ Чат із вашим ментором</li>
+                                <li>✔ <b>{t('price3Li1')}</b> {t('price3Li1_2')}</li>
+                                <li>✔ {t('price3Li2')}</li>
+                                <li>✔ {t('price3Li3')}</li>
                             </ul>
                         </div>
                         <div>
-                            <div className="price">85€ <span>/ місяць</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                            <div className="price">85€ <span>{t('priceMonth')}</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
 
-                    {/* 4. Індивідуально */}
+                    {/* 4 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge">1 особа або пара</span>
-                            <h3>Індивідуально</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>Повна персональна адаптація під ваші особисті цілі та графік.</p>
+                            <span className="badge">{t('price4Badge')}</span>
+                            <h3>{t('price4Title')}</h3>
+                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price4Sub')}</p>
                             <ul>
-                                <li>✔ <b>Власний гнучкий графік</b></li>
-                                <li>✔ 100% уваги викладача</li>
-                                <li>✔ Записи занять за бажанням</li>
+                                <li>✔ <b>{t('price4Li1')}</b></li>
+                                <li>✔ {t('price4Li2')}</li>
+                                <li>✔ {t('price4Li3')}</li>
                             </ul>
                         </div>
                         <div>
-                            <div className="price">175€ <span>/ місяць</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>Спробувати безкоштовно</button>
+                            <div className="price">175€ <span>{t('priceMonth')}</span></div>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
                 </div>
 
-                {/* Додаткові переваги */}
                 <div className="extra-box">
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>✨ Всі формати включають:</h4>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>{t('extraTitle1')}</h4>
                         <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
-                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>💬 <b>Постійний чат</b> з особистим ментором</li>
-                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>🎥 <b>Відеозаписи всіх занять</b></li>
-                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>📚 <b>Авторські капсули</b> та ілюстровані воркбуки</li>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi1')}</li>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi2')}</li>
+                            <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi3')}</li>
                         </ul>
                     </div>
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>🕊️ Як почати навчання?</h4>
-                        <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>Ви можете записатися на <b>безкоштовне пробне заняття</b> або отримати доступ до платформи матеріалів. Оплату здійснюєте лише тоді, коли переконаєтеся, що вам усе подобається!</p>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>{t('extraTitle2')}</h4>
+                        <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>{t('extraText')}</p>
                     </div>
                 </div>
             </div>
 
             <div className="floating-buttons">
-                <a href="https://t.me/xackademia" target="_blank" rel="noreferrer" className="float-btn" title="Зв'язатися в Telegram">
+                <a href="https://t.me/xackademia" target="_blank" rel="noreferrer" className="float-btn" title="Telegram">
                     <svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z" /></svg>
                 </a>
-                <button className="float-btn" onClick={toggleChat} title="Написати асистенту">
+                <button className="float-btn" onClick={toggleChat}>
                     <svg viewBox="0 0 24 24"><path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z" /></svg>
                 </button>
             </div>
@@ -273,27 +238,25 @@ export default function Landing() {
                     <div className="chat-header-info">
                         <div className="chat-avatar">H</div>
                         <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>Асистент Hackademia</div>
-                            <div style={{ fontSize: '0.75rem', color: '#FF4B2B' }}>Онлайн</div>
+                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t('chatAssistant')}</div>
+                            <div style={{ fontSize: '0.75rem', color: '#FF4B2B' }}>{t('chatOnline')}</div>
                         </div>
                     </div>
                     <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
                 </div>
                 <div className="chat-body">
-                    <div className="chat-message">
-                        Вітаю! 👋 Я ваш віртуальний асистент Hackademia. Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера в Telegram!
-                    </div>
+                    <div className="chat-message">{t('chatGreeting')}</div>
                 </div>
                 <div className="chat-footer">
-                    <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder="Ваше повідомлення..." onKeyDown={e => e.key === 'Enter' && sendLead()} />
+                    <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder={t('chatPlaceholder')} onKeyDown={e => e.key === 'Enter' && sendLead()} />
                     <button onClick={sendLead}>➤</button>
                 </div>
             </div>
 
             <footer>
                 <h3>HACKADEMIA</h3>
-                <p>Сучасна онлайн-школа словацької мови</p>
-                <p style={{ marginTop: '40px', fontSize: '0.85rem', color: '#789' }}>© 2026 Hackademia. Всі права захищено.</p>
+                <p>{t('footerDesc')}</p>
+                <p style={{ marginTop: '40px', fontSize: '0.85rem', color: '#789' }}>{t('footerRights')}</p>
             </footer>
         </div>
     );
