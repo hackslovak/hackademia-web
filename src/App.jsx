@@ -2644,53 +2644,55 @@ useEffect(() => {
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         {renderGlobalStyles()}
         {renderSidebar()}
-        <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
-          <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+        <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
+          
+          <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)', alignSelf: 'flex-start' }}>
             <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
             Назад на головну
           </button>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
-            <div>
-              <h2 style={{ color: theme.text, fontSize: '38px', margin: '0 0 10px 0', fontWeight: '900', letterSpacing: '-0.5px' }}>📖 Мій словник</h2>
-              <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>Ваші власні слова та інтервальне тренування</p>
-            </div>
-            <button onClick={startSpacedRepetition} className="hover-card" style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#fff', padding: '16px 32px', borderRadius: '16px', border: 'none', fontWeight: '900', fontSize: '18px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(43,108,176,0.3)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <span style={{ fontSize: '24px' }}>🔄</span> Почати тренування
+          {/* ЗАГОЛОВОК І ГОЛОВНА КНОПКА ПО ЦЕНТРУ */}
+          <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+            <h2 style={{ color: theme.text, fontSize: '42px', margin: '0 0 10px 0', fontWeight: '900', letterSpacing: '-0.5px' }}>📖 Мій словник</h2>
+            <p style={{ color: theme.textSecondary, fontSize: '18px', margin: '0 0 30px 0' }}>Ваші власні слова та інтервальне тренування</p>
+            
+            <button onClick={startSpacedRepetition} className="hover-card" style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#fff', padding: '20px 50px', borderRadius: '24px', border: 'none', fontWeight: '900', fontSize: '22px', cursor: 'pointer', boxShadow: '0 15px 35px rgba(255,123,84,0.3)', display: 'inline-flex', alignItems: 'center', gap: '15px' }}>
+              <span style={{ fontSize: '28px' }}>🔄</span> Почати тренування
             </button>
-          </div>
-
-          {/* ФОРМА ДОДАВАННЯ СЛОВА */}
-          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, marginBottom: '40px' }}>
-            <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', color: theme.text, fontWeight: '800' }}>➕ Додати нове слово</h3>
-            <form onSubmit={handleAddCustomCard} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
-              <input type="text" placeholder="Слово (наприклад: jablko)" value={newDictWord} onChange={e => setNewDictWord(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }} />
-              <input type="text" placeholder="Переклад (наприклад: яблуко)" value={newDictTranslation} onChange={e => setNewDictTranslation(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }} />
-              <button type="submit" disabled={!newDictWord.trim() || !newDictTranslation.trim()} className="hover-card" style={{ background: '#00C853', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', opacity: (!newDictWord.trim() || !newDictTranslation.trim()) ? 0.5 : 1 }}>
-                Додати
-              </button>
-            </form>
           </div>
 
           {/* СПИСОК ВЛАСНИХ СЛІВ */}
           <h3 style={{ margin: '0 0 20px 0', fontSize: '24px', color: theme.text, fontWeight: '800' }}>Ваші картки ({myCards.length})</h3>
           {myCards.length === 0 ? (
-            <div style={{ padding: '40px', textAlign: 'center', background: theme.inputBg, borderRadius: '24px', color: theme.textSecondary, fontSize: '16px' }}>
-              Ви ще не додали жодного слова. Зробіть це у формі вище! ☝️
+            <div style={{ padding: '40px', textAlign: 'center', background: theme.inputBg, borderRadius: '24px', color: theme.textSecondary, fontSize: '16px', marginBottom: '40px' }}>
+              Ви ще не додали жодного слова. Зробіть це у формі нижче! 👇
             </div>
           ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '20px', marginBottom: '40px' }}>
               {myCards.map(card => (
-                <div key={card.id} className="hover-card" style={{ background: theme.cardBg, padding: '25px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}`, position: 'relative' }}>
-                  <button onClick={() => handleDeleteMyCard(card.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Видалити</button>
-                  <div style={{ fontSize: '12px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>Словацька</div>
-                  <div style={{ fontSize: '22px', fontWeight: '900', color: theme.text, marginBottom: '15px' }}>{card.content}</div>
-                  <div style={{ fontSize: '12px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>Переклад</div>
-                  <div style={{ fontSize: '18px', fontWeight: '600', color: theme.primary }}>{card.correct_answer}</div>
+                <div key={card.id} className="hover-card" style={{ background: theme.cardBg, padding: '20px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}`, position: 'relative' }}>
+                  <button onClick={() => handleDeleteMyCard(card.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '4px 8px', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}>Видалити</button>
+                  <div style={{ fontSize: '11px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px', fontWeight: 'bold' }}>Словацька</div>
+                  <div style={{ fontSize: '20px', fontWeight: '900', color: theme.text, marginBottom: '12px' }}>{card.content}</div>
+                  <div style={{ fontSize: '11px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '6px', fontWeight: 'bold' }}>Переклад</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: theme.primary }}>{card.correct_answer}</div>
                 </div>
               ))}
             </div>
           )}
+
+          {/* ФОРМА ДОДАВАННЯ СЛОВА (Компактна, внизу) */}
+          <div style={{ background: theme.cardBg, padding: '25px', borderRadius: '20px', boxShadow: '0 4px 20px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, marginTop: 'auto' }}>
+            <h3 style={{ margin: '0 0 15px 0', fontSize: '18px', color: theme.text, fontWeight: '800' }}>➕ Додати власне слово</h3>
+            <form onSubmit={handleAddCustomCard} style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
+              <input type="text" placeholder="Слово (наприклад: jablko)" value={newDictWord} onChange={e => setNewDictWord(e.target.value)} style={{ flex: 1, minWidth: '150px', padding: '12px 16px', borderRadius: '12px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '14px' }} />
+              <input type="text" placeholder="Переклад (наприклад: яблуко)" value={newDictTranslation} onChange={e => setNewDictTranslation(e.target.value)} style={{ flex: 1, minWidth: '150px', padding: '12px 16px', borderRadius: '12px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '14px' }} />
+              <button type="submit" disabled={!newDictWord.trim() || !newDictTranslation.trim()} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '12px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', opacity: (!newDictWord.trim() || !newDictTranslation.trim()) ? 0.5 : 1 }}>
+                Зберегти
+              </button>
+            </form>
+          </div>
+
         </div>
       </div>
     );
@@ -3274,19 +3276,12 @@ useEffect(() => {
 
   // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ТА МАСИВ КАРТИНОК ---
   if (accessStatus === 'loading') {
-    return <div style={{ textAlign: 'center', padding: '50px', color: theme.text, background: theme.bg, minHeight: '100vh' }}>Завантаження...</div>;
-  }
-
-  if (accessStatus === 'no_auth') {
     return (
-      <div style={{ textAlign: 'center', padding: '50px', background: theme.bg, color: theme.text, minHeight: '100vh' }}>
-        <h2 style={{ fontSize: '30px', marginBottom: '20px' }}>🛑 Доступ закрито</h2>
-        <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
-          Hackademia — це закрита платформа. Увійти можна виключно через нашого офіційного Telegram-бота.
-        </p>
-        <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" style={{ display: 'inline-block', background: '#3182ce', color: 'white', padding: '15px 30px', borderRadius: '12px', textDecoration: 'none', fontWeight: 'bold', boxShadow: '0 4px 10px rgba(49,130,206,0.3)' }}>
-          Перейти в Telegram-бота 🚀
-        </a>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: theme.bg }}>
+        <img src="/logo.svg" alt="Loading" style={{ width: '90px', height: '90px', animation: 'ffPulse 1.5s infinite', filter: 'drop-shadow(0 10px 20px rgba(224,163,69,0.3))' }} />
+        <div style={{ marginTop: '25px', color: theme.textSecondary, fontWeight: '900', letterSpacing: '2px', fontSize: '14px', textTransform: 'uppercase' }}>
+          Завантаження...
+        </div>
       </div>
     );
   }
@@ -3298,7 +3293,7 @@ useEffect(() => {
         <p style={{ fontSize: '16px', color: theme.textSecondary, marginBottom: '30px' }}>
           Ваш запит на доступ надіслано головному адміністратору.
           <br /><br />
-          Чтойно адміністратор підтвердить вашу заявку, оновіть цю сторінку!
+          Щойно адміністратор підтвердить вашу заявку, оновіть цю сторінку!
         </p>
         <button onClick={() => window.location.reload()} style={{ background: '#00C853', color: 'white', padding: '15px 30px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
           🔄 Оновити сторінку
