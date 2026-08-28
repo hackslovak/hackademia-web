@@ -1284,6 +1284,7 @@ function Platform() {
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [isPasswordFormVisible, setIsPasswordFormVisible] = useState(false); // ДОДАЙ ЦЕЙ РЯДОК
 
     // Завантажуємо повні дані користувача при відкритті профілю
     useEffect(() => {
@@ -3599,39 +3600,46 @@ useEffect(() => {
                   </div>
 
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
-                      <h3 style={{ margin: '0 0 25px 0', fontSize: '18px', color: theme.textSecondary, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ opacity: 0.7 }}>⚙️</span> Технічна інформація
+                      <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
                       </h3>
+                      <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>
+                        Тут ви можете побачити свій email для входу або <b>змінити пароль</b>.
+                      </p>
+                      
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '12px', alignItems: 'center' }}>
-                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
-                          <b style={{ color: isAdmin ? '#E0A345' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
-                        </div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
-                          {userProfile?.telegram_id ? (
-                            <div style={{ textAlign: 'right' }}>
-                              <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
-                                ✅ Підключено
-                              </b>
-                              <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {userProfile.telegram_id}</span>
+                        <input type="email" value={userProfile.email || ''} disabled style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }} />
+                        
+                        {!isPasswordFormVisible ? (
+                          <button onClick={() => setIsPasswordFormVisible(true)} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s', marginTop: '5px' }}>
+                            Змінити пароль
+                          </button>
+                        ) : (
+                          <div style={{ background: isDarkMode ? '#1a202c' : '#F4F7F6', padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, marginTop: '5px', animation: 'fadeIn 0.3s ease' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                              <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '700' }}>Новий пароль</h4>
+                              <button onClick={() => { setIsPasswordFormVisible(false); setOldPassword(''); setNewPassword(''); setConfirmPassword(''); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>✕ Скасувати</button>
                             </div>
-                          ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                              <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" className="hover-card" title="Підключіть Telegram для входу в 1 клік без пароля!" style={{ background: '#3182ce', color: '#fff', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(49,130,206,0.2)' }}>
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
-                                Підключити бот
-                              </a>
-                            </div>
-                          )}
-                        </div>
+                            
+                            <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                              <input type={showPassword ? "text" : "password"} placeholder="Старий пароль" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', fontSize: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text }} />
+                              <input type={showPassword ? "text" : "password"} placeholder="Новий пароль" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', fontSize: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text }} />
+                              <input type={showPassword ? "text" : "password"} placeholder="Повторіть новий пароль" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '14px', borderRadius: '12px', fontSize: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text }} />
+                              
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                                <label style={{ fontSize: '13px', color: theme.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', userSelect: 'none' }}>
+                                   <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} style={{ cursor: 'pointer' }} />
+                                   Показати
+                                </label>
+                                <button type="submit" disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword} className="hover-card" style={{ background: '#E0A345', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 0.6 : 1 }}>
+                                  {isChangingPassword ? 'Збереження...' : 'Зберегти'}
+                                </button>
+                              </div>
+                            </form>
+                          </div>
+                        )}
                       </div>
                   </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
     );
   }
   
