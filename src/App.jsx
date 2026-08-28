@@ -3305,12 +3305,23 @@ useEffect(() => {
     );
   }
 
-  // --- ЕКРАНИ ФЕЙСКОНТРОЛЮ ТА МАСИВ КАРТИНОК ---
+  // --- ЕКРАН ЗАВАНТАЖЕННЯ ---
   if (accessStatus === 'loading') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', minHeight: '100vh', background: theme.bg }}>
-        <img src="/logo.svg" alt="Loading" style={{ width: '90px', height: '90px', animation: 'ffPulse 1.5s infinite', filter: 'drop-shadow(0 10px 20px rgba(224,163,69,0.3))' }} />
-        <div style={{ marginTop: '25px', color: theme.textSecondary, fontWeight: '900', letterSpacing: '2px', fontSize: '14px', textTransform: 'uppercase' }}>
+        {/* Гігантський SVG логотип з пульсацією */}
+        <img 
+          src="/logo.svg" 
+          alt="Hackademia" 
+          style={{ 
+            width: '280px', 
+            height: '280px', 
+            objectFit: 'contain',
+            animation: 'ffPulse 1.5s infinite', 
+            filter: 'drop-shadow(0 20px 40px rgba(224,163,69,0.3))' 
+          }} 
+        />
+        <div style={{ marginTop: '40px', color: theme.textSecondary, fontWeight: '900', letterSpacing: '4px', fontSize: '18px', textTransform: 'uppercase', animation: 'ffPulse 1.5s infinite' }}>
           Завантаження...
         </div>
       </div>

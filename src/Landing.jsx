@@ -108,7 +108,25 @@ export default function Landing() {
                 <div className="hero__label">{t('heroLabel')}</div>
                 <h1>{t('heroTitle1')}<br /><span>{t('heroTitle2')}</span></h1>
                 <p>{t('heroSub')}</p>
-                <button className="btn" onClick={() => navigate(isAuth ? '/app' : '/login')}>
+                
+                {/* ОНОВЛЕНА ПУЛЬСУЮЧА КНОПКА */}
+                <button 
+                  className="hover-card" 
+                  onClick={() => navigate(isAuth ? '/app' : '/login')}
+                  style={{ 
+                    background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', 
+                    color: '#fff', 
+                    padding: '18px 45px', 
+                    borderRadius: '30px', 
+                    border: 'none', 
+                    fontWeight: '900', 
+                    fontSize: '22px', 
+                    cursor: 'pointer', 
+                    boxShadow: '0 15px 35px rgba(255,123,84,0.4)',
+                    animation: 'ffPulse 2s infinite', 
+                    transition: '0.3s ease'
+                  }}
+                >
                   {isAuth ? t('heroBtnAuth') : t('heroBtnNoAuth')}
                 </button>
             </section>
