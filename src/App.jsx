@@ -961,6 +961,13 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
       .eq('user_id', activeChatUserId)
       .order('created_at', { ascending: true });
     if (data) setMessages(data);
+    
+    // Позначаємо повідомлення як прочитані
+    await supabase.from('messages')
+      .update({ is_read: true })
+      .eq('user_id', activeChatUserId)
+      .neq('sender_id', dbUserId)
+      .eq('is_read', false);
   };
 
   React.useEffect(() => {
@@ -974,7 +981,8 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     e.preventDefault();
     if (!chatText.trim() || !activeChatUserId) return;
     
-    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim() };
+    // Всі нові повідомлення створюються з is_read: false
+    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim(), is_read: false };
     setChatText(''); 
     
     await supabase.from('messages').insert([newMsg]);
@@ -1072,14 +1080,14 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                       <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                         <div style={{ maxWidth: '75%', padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5' }}>
                           {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
-  if (part.match(/(https?:\/\/[^\s]+)/g)) {
-    if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
-      return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
-    }
-    return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
-  }
-  return <span key={i}>{part}</span>;
-})}
+                            if (part.match(/(https?:\/\/[^\s]+)/g)) {
+                              if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
+                                return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
+                              }
+                              return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
+                            }
+                            return <span key={i}>{part}</span>;
+                          })}
                         </div>
                         <span style={{ fontSize: '11px', color: theme.textSecondary, marginTop: '6px', margin: isMine ? '0 10px 0 0' : '0 0 0 10px' }}>
                           {formatTime(msg.created_at)}
@@ -1298,14 +1306,30 @@ function Platform() {
     if (pressTimer.current) clearTimeout(pressTimer.current);
   };
   
-  // --- ЄДИНИЙ САЙДБАР ---
+  // --- ЄДИНИЙ САЙДБАР ТА ЛІЧИЛЬНИК ЧАТУ ---
+  const [unreadChatCount, setUnreadChatCount] = useState(0);
+
+  useEffect(() => {
+    if (!dbUserId) return;
+    const fetchUnread = async () => {
+      let query = supabase.from('messages').select('*', { count: 'exact', head: true }).eq('is_read', false).neq('sender_id', dbUserId);
+      if (!effectiveIsAdmin) query = query.eq('user_id', dbUserId);
+      
+      const { count } = await query;
+      setUnreadChatCount(count || 0);
+    };
+    
+    fetchUnread();
+    const interval = setInterval(fetchUnread, 5000); // Оновлюємо кожні 5 секунд
+    return () => clearInterval(interval);
+  }, [dbUserId, effectiveIsAdmin]);
+
   const renderSidebar = () => (
     <div style={{ 
       width: '85px', background: isDarkMode ? '#1a202c' : '#1A3636', color: '#ffffff', 
       display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '20px 12px',
       boxShadow: '4px 0 20px rgba(0,0,0,0.08)', position: 'sticky', top: 0, height: '100vh', boxSizing: 'border-box'
     }}>
-      {/* ЛОГОТИП-СОВА SVG (Тепер клікабельний і з анімацією) */}
       <div 
         title="На головну сторінку" 
         onClick={() => navigate('/')} 
@@ -1322,8 +1346,15 @@ function Platform() {
         <button title={t('myProfile')} onClick={() => { setGlobalView('profile'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'profile' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </button>
-        <button title={t('chatBtn')} onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        
+        {/* КНОПКА ЧАТУ ЗІ ЗНАЧКОМ */}
+        <button title={t('chatBtn')} onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ position: 'relative', width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          {unreadChatCount > 0 && (
+            <span style={{ position: 'absolute', top: '2px', right: '14px', background: '#FF007F', color: 'white', fontSize: '11px', fontWeight: 'bold', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+              {unreadChatCount}
+            </span>
+          )}
         </button>
       </div>
 

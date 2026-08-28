@@ -6,34 +6,33 @@ export default function SupportChat() {
   const [step, setStep] = useState(1); 
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
-  const [messenger, setMessenger] = useState('Telegram'); // Стан для вибору месенджера
+  const [messenger, setMessenger] = useState('Telegram');
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
-  // Перевіряємо, чи юзер авторизований
   useEffect(() => {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        const { data } = await supabase
-          .from('users')
-          .select('id, first_name')
-          .eq('email', session.user.email)
-          .maybeSingle();
+        // Шукаємо юзера по email, а якщо немає - по id
+        let { data } = await supabase.from('users').select('id, first_name').eq('email', session.user.email).maybeSingle();
+        if (!data) {
+          const res = await supabase.from('users').select('id, first_name').eq('id', session.user.id).maybeSingle();
+          data = res.data;
+        }
         if (data) setAuthUser(data);
       }
     }
     checkAuth();
   }, []);
 
-  // Відправка готового тексту в Telegram
   const sendToTelegram = async (text) => {
     setIsSending(true);
     const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
     const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
 
     if (!BOT_TOKEN || !CHAT_ID) {
-      alert("Помилка конфігурації.");
+      alert("Помилка конфігурації Telegram.");
       setIsSending(false);
       return false;
     }
@@ -53,9 +52,8 @@ export default function SupportChat() {
     }
   };
 
-  // Авторизація ліда через бота
   const handleTelegramAuth = async () => {
-    const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення від бота поруч у цьому чаті)`;
+    const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення поруч у цьому чаті)`;
     const success = await sendToTelegram(text);
     if (success) {
       window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
@@ -63,7 +61,6 @@ export default function SupportChat() {
     }
   };
 
-  // Ручне введення контактів із вибраним месенджером
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!contact.trim()) return;
@@ -77,31 +74,35 @@ export default function SupportChat() {
     if (!message.trim()) return;
 
     if (authUser) {
-      // ЛОГІКА ДЛЯ ЗАРЕЄСТРОВАНИХ УЧНІВ (Відразу зберігаємо і сповіщаємо адміна)
       setIsSending(true);
-      try {
-        await supabase.from('messages').insert([
-          { user_id: authUser.id, sender_id: authUser.id, text: message.trim() }
-        ]);
-        
-        const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
-        const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
-        if (BOT_TOKEN && CHAT_ID) {
-          const text = `🟢 <b>ПОВІДОМЛЕННЯ ВІД СТУДЕНТА</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n💬 Текст: <i>${message.trim()}</i>\n\n⚠️ <i>Відповідайте йому безпосередньо на платформі в розділі 'Чат'!</i>`;
-          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
-          });
-        }
+      
+      // ВСТАВЛЯЄМО ПОВІДОМЛЕННЯ ТА ПЕРЕВІРЯЄМО НА ПОМИЛКУ
+      const { error } = await supabase.from('messages').insert([
+        { user_id: authUser.id, sender_id: authUser.id, text: message.trim(), is_read: false }
+      ]);
+      
+      if (error) {
+        console.error("Помилка БД:", error);
+        alert("Не вдалося зберегти на платформі. Відправляємо через Telegram...");
+        await sendToTelegram(`⚠️ <b>Аварійна відправка (студент ${authUser.first_name})</b>\n\n💬 ${message.trim()}`);
         setStep(3);
-      } catch (err) {
-        alert("Помилка бази даних.");
-      } finally {
         setIsSending(false);
+        return;
       }
+      
+      const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
+      const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
+      if (BOT_TOKEN && CHAT_ID) {
+        const text = `🟢 <b>ПОВІДОМЛЕННЯ ВІД СТУДЕНТА</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n💬 Текст: <i>${message.trim()}</i>\n\n⚠️ <i>Зайдіть на платформу в розділ 'Чат', щоб відповісти!</i>`;
+        await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
+        });
+      }
+      setStep(3);
+      setIsSending(false);
     } else {
-      // Якщо це ГІСТЬ - показуємо вибір месенджерів (Крок 2)
       setStep(2); 
     }
   };
@@ -115,7 +116,6 @@ export default function SupportChat() {
   return (
     <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, fontFamily: 'sans-serif' }}>
       
-      {/* ПОВЕРНУТО ФІРМОВИЙ КОЛІР, ХОВЕР ТА АНІМАЦІЮ ПУЛЬСАЦІЇ */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
@@ -187,7 +187,6 @@ export default function SupportChat() {
                   <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }}></div>
                 </div>
 
-                {/* НОВИЙ БЛОК: ВИБІР МЕСЕНДЖЕРА */}
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontSize: '11px', color: '#718096', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Де вам зручніше отримати відповідь?</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
