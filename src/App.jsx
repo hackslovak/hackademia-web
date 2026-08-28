@@ -1274,10 +1274,16 @@ function Platform() {
   const [editDifficulty, setEditDifficulty] = useState('medium');
   
   // Локальні стани для екрану профілю
-    const [showPassword, setShowPassword] = useState(false);
-    const [isSaving, setIsSaving] = useState(false);
-    const [isUploading, setIsUploading] = useState(false);
-    const [userProfile, setUserProfile] = useState({});
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [userProfile, setUserProfile] = useState({});
+  
+  // НОВІ СТАНИ ДЛЯ ЗМІНИ ПАРОЛЯ:
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
 
     // Завантажуємо повні дані користувача при відкритті профілю
     useEffect(() => {
@@ -3433,18 +3439,48 @@ useEffect(() => {
       }
     };
 
-    const handleLinkEmail = async (e) => {
+    const handleChangePassword = async (e) => {
       e.preventDefault();
-      const email = e.target.email.value.trim();
-      const password = e.target.password.value;
-      const { error } = await supabase.auth.updateUser({ email, password });
-      if (error) {
-        alert("❌ Помилка: " + error.message);
+      
+      if (newPassword !== confirmPassword) {
+        alert("❌ Новий пароль та його підтвердження не збігаються!");
         return;
       }
-      await supabase.from('users').update({ email: email }).eq('id', dbUserId);
-      alert("✅ Дані доступу (пошта та пароль) успішно оновлено!"); 
-      window.location.reload();
+      
+      if (!window.confirm("❓ Ви впевнені, що хочете зберегти цей новий пароль?")) {
+        return;
+      }
+
+      setIsChangingPassword(true);
+
+      // Крок 1: Перевірка старого пароля (ре-авторизація в Supabase)
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: userProfile.email,
+        password: oldPassword,
+      });
+
+      if (signInError) {
+        alert("❌ Старий пароль введено неправильно!");
+        setIsChangingPassword(false);
+        return;
+      }
+
+      // Крок 2: Встановлення нового пароля
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: newPassword
+      });
+
+      setIsChangingPassword(false);
+
+      if (updateError) {
+        alert("❌ Помилка оновлення пароля: " + updateError.message);
+      } else {
+        alert("✅ Пароль успішно змінено!");
+        setOldPassword('');
+        setNewPassword('');
+        setConfirmPassword('');
+        setShowPassword(false);
+      }
     };
 
     return (
@@ -3536,21 +3572,29 @@ useEffect(() => {
                       <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
                       </h3>
-                      <p style={{ color: theme.textSecondary, fontSize: '14px', marginBottom: '25px', lineHeight: '1.6' }}>
-                        Тут ви можете прив'язати email або <b>змінити свій пароль</b> для входу на платформу.
-                      </p>
                       
-                      <form onSubmit={handleLinkEmail} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                      <div style={{ marginBottom: '25px' }}>
+                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ваш Email для входу</label>
                         <input type="email" value={userProfile.email || ''} disabled style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }} />
-                        <div style={{ position: 'relative' }}>
-                          <input type={showPassword ? "text" : "password"} name="password" placeholder="Введіть новий пароль" required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', paddingRight: '50px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                          <button type="button" onClick={() => setShowPassword(!showPassword)} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', opacity: 0.6 }}>
-                            {showPassword ? '🙈' : '👁'}
+                      </div>
+
+                      <h4 style={{ margin: '0 0 15px 0', fontSize: '16px', color: theme.text, fontWeight: '700' }}>Зміна пароля</h4>
+                      <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <input type={showPassword ? "text" : "password"} placeholder="Введіть старий пароль" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                        
+                        <input type={showPassword ? "text" : "password"} placeholder="Введіть новий пароль" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                        
+                        <input type={showPassword ? "text" : "password"} placeholder="Повторіть новий пароль" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
+                        
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                          <label style={{ fontSize: '13px', color: theme.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', userSelect: 'none' }}>
+                             <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
+                             Показати паролі
+                          </label>
+                          <button type="submit" disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 0.6 : 1 }}>
+                            {isChangingPassword ? 'Збереження...' : 'Зберегти новий пароль'}
                           </button>
                         </div>
-                        <button type="submit" className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '16px', borderRadius: '14px', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', transition: '0.2s', marginTop: '5px' }}>
-                          Оновити дані доступу
-                        </button>
                       </form>
                   </div>
 
