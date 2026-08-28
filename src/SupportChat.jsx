@@ -2,28 +2,26 @@ import React, { useState } from 'react';
 
 export default function FloatingChat() {
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState(1); // 1: повідомлення, 2: контакти, 3: успіх
+  const [step, setStep] = useState(1); 
   
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
   const [isSending, setIsSending] = useState(false);
 
-  // Функція відправки в Telegram
-  const sendToTelegram = async () => {
-    if (!contact.trim()) return;
+  // Універсальна функція відправки
+  const sendToTelegram = async (contactInfo) => {
     setIsSending(true);
-
-    // Тягнемо ключі з безпечного середовища Vite
     const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
     const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
 
     if (!BOT_TOKEN || !CHAT_ID) {
       alert("Помилка конфігурації: не знайдено токен або ID чату.");
       setIsSending(false);
-      return;
+      return false;
     }
 
-    const text = `🚨 <b>Новий запит з сайту Hackademia!</b>\n\n💬 <b>Повідомлення:</b>\n${message}\n\n📞 <b>Контакт:</b>\n${contact}`;
+    // МАКСИМАЛЬНО МІНІМАЛІСТИЧНИЙ ФОРМАТ (без зайвих слів)
+    const text = `💬 ${message}\n\n📞 ${contactInfo}`;
 
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -35,22 +33,38 @@ export default function FloatingChat() {
           parse_mode: 'HTML'
         })
       });
-      setStep(3); // Переходимо на екран "Успіх"
+      return true;
     } catch (error) {
       alert("Помилка відправки. Спробуйте пізніше.");
+      return false;
     } finally {
       setIsSending(false);
     }
   };
 
-  const handleNext = (e) => {
-    e.preventDefault();
-    if (message.trim()) setStep(2); // Переходимо до запиту контактів
+  // 🚀 Головний флоу: Авторизація через Telegram
+  const handleTelegramAuth = async () => {
+    // Відправляємо питання адміну і позначаємо, що юзер пішов у бота
+    const success = await sendToTelegram("Перейшов у Telegram-бот 🚀");
+    
+    if (success) {
+      // Відкриваємо твого основного бота (це і реєстрація, і канал зв'язку)
+      window.open('https://t.me/hackademiapp_bot', '_blank');
+      setStep(3);
+    }
   };
 
-  const handleSubmit = (e) => {
+  // 📝 Резервний флоу: Ручний ввід контактів
+  const handleManualSubmit = async (e) => {
     e.preventDefault();
-    sendToTelegram();
+    if (!contact.trim()) return;
+    const success = await sendToTelegram(contact.trim());
+    if (success) setStep(3);
+  };
+
+  const handleNext = (e) => {
+    e.preventDefault();
+    if (message.trim()) setStep(2); 
   };
 
   const resetChat = () => {
@@ -82,8 +96,9 @@ export default function FloatingChat() {
               <div style={{ width: '35px', height: '35px', background: '#FF7B54', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 'bold' }}>H</div>
               <div>
                 <div style={{ color: '#fff', fontWeight: 'bold', fontSize: '15px' }}>Асистент Hackademia</div>
-                <div style={{ color: '#FF7B54', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '6px', height: '6px', background: '#FF7B54', borderRadius: '50%', display: 'inline-block' }}></span>
+                {/* 🟢 Змінено колір на зелений + світіння */}
+                <div style={{ color: '#00C853', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px', marginTop: '2px' }}>
+                  <span style={{ width: '6px', height: '6px', background: '#00C853', borderRadius: '50%', display: 'inline-block', boxShadow: '0 0 4px rgba(0,200,83,0.6)' }}></span>
                   Онлайн
                 </div>
               </div>
@@ -98,7 +113,7 @@ export default function FloatingChat() {
             {step === 1 && (
               <>
                 <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '20px' }}>
-                  Вітаю! 👋 Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера!
+                  Вітаю! 👋 Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера.
                 </div>
                 <form onSubmit={handleNext} style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
                   <input 
@@ -115,27 +130,46 @@ export default function FloatingChat() {
               </>
             )}
 
-            {/* КРОК 2: ВВІД КОНТАКТІВ */}
+            {/* КРОК 2: АВТОРИЗАЦІЯ АБО РЕЗЕРВНИЙ КОНТАКТ */}
             {step === 2 && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '20px' }}>
-                  Клас! Щоб ми могли вам відповісти, залиште свій номер телефону або email 👇
+                <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '15px' }}>
+                  Клас! Щоб отримати відповідь миттєво, авторизуйтесь через наш Telegram-бот 👇
                 </div>
-                <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                
+                {/* 🚀 Головна яскрава кнопка Telegram */}
+                <button 
+                  type="button"
+                  onClick={handleTelegramAuth}
+                  disabled={isSending}
+                  style={{ width: '100%', background: '#2AABEE', color: '#fff', border: 'none', borderRadius: '12px', padding: '14px', cursor: isSending ? 'wait' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px', boxShadow: '0 4px 15px rgba(42,171,238,0.3)', transition: '0.2s' }}
+                >
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                  {isSending ? 'Відправка...' : 'Перейти в Telegram'}
+                </button>
+
+                {/* Розділювач */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                  <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }}></div>
+                  <span style={{ fontSize: '11px', color: '#A0AEC0', fontWeight: 'bold' }}>АБО ІНШИМ СПОСОБОМ</span>
+                  <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }}></div>
+                </div>
+
+                {/* 📝 Ручний ввід (резерв) */}
+                <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <input 
                     type="text" 
-                    placeholder="+380... або email" 
+                    placeholder="Viber, номер або email..." 
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
-                    style={{ width: '100%', padding: '14px 15px', borderRadius: '12px', border: '2px solid #FF7B54', outline: 'none', boxSizing: 'border-box' }}
-                    autoFocus
+                    style={{ width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', boxSizing: 'border-box', fontSize: '14px' }}
                   />
                   <div style={{ display: 'flex', gap: '10px' }}>
-                    <button type="button" onClick={() => setStep(1)} style={{ background: '#EDF2F7', color: '#718096', border: 'none', borderRadius: '12px', padding: '12px', flex: 1, cursor: 'pointer', fontWeight: 'bold' }}>
+                    <button type="button" onClick={() => setStep(1)} style={{ background: '#EDF2F7', color: '#718096', border: 'none', borderRadius: '12px', padding: '10px', flex: 1, cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
                       Назад
                     </button>
-                    <button type="submit" disabled={!contact.trim() || isSending} style={{ background: '#FF7B54', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px', flex: 2, cursor: contact.trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold' }}>
-                      {isSending ? 'Відправка...' : 'Відправити'}
+                    <button type="submit" disabled={!contact.trim() || isSending} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px', flex: 2, cursor: contact.trim() ? 'pointer' : 'not-allowed', fontWeight: 'bold', fontSize: '14px', opacity: contact.trim() ? 1 : 0.5 }}>
+                      Відправити
                     </button>
                   </div>
                 </form>
@@ -147,7 +181,7 @@ export default function FloatingChat() {
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '20px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
                 <h3 style={{ color: '#2D3748', margin: '0 0 10px 0' }}>Відправлено!</h3>
-                <p style={{ color: '#718096', fontSize: '14px', lineHeight: '1.5' }}>Дякуємо! Ми вже отримали ваш запит і скоро зв'яжемося.</p>
+                <p style={{ color: '#718096', fontSize: '14px', lineHeight: '1.5' }}>Дякуємо! Ми вже отримали ваш запит.</p>
                 <button onClick={() => { setIsOpen(false); setTimeout(resetChat, 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold' }}>
                   Закрити
                 </button>
