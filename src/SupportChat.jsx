@@ -116,16 +116,40 @@ export default function SupportChat() {
   return (
     <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, fontFamily: 'sans-serif' }}>
       
+      {/* НОВІ СТИЛІ: Спокійна кнопка, яка реагує тільки на наведення */}
+      <style>{`
+        .support-trigger-btn {
+          width: 60px;
+          height: 60px;
+          border-radius: 50%;
+          background-color: #062440; /* Спокійний темно-синій колір */
+          color: #ffffff;
+          border: none;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+          transition: all 0.3s ease;
+        }
+        .support-trigger-btn:hover {
+          background-color: #FF7B54; /* Жовто-гарячий колір ТІЛЬКИ при наведенні */
+          transform: translateY(-4px) scale(1.05);
+          box-shadow: 0 10px 25px rgba(255,123,84,0.4);
+        }
+      `}</style>
+
+      {/* КНОПКА ВІДКРИТТЯ ЧАТУ */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          className="hover-card"
-          style={{ width: '65px', height: '65px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#fff', border: 'none', boxShadow: '0 10px 25px rgba(255,123,84,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'ffPulse 2s infinite' }}
+          className="support-trigger-btn"
         >
-          <svg width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       )}
 
+      {/* Вікно чату */}
       {isOpen && (
         <div style={{ width: '340px', background: '#fff', borderRadius: '20px', boxShadow: '0 15px 40px rgba(0,0,0,0.15)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           
