@@ -1147,6 +1147,8 @@ function Platform() {
 
   const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
   
+  const [newDictWord, setNewDictWord] = useState('');
+  const [newDictTranslation, setNewDictTranslation] = useState('');
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
   const [isAdmin, setIsAdmin] = useState(true);
@@ -2386,17 +2388,15 @@ useEffect(() => {
   const allTasksToRender = [...tasks, ...myCards];
   const flashcards = allTasksToRender.filter(t => t.type === 'flashcard');
 
-  function handleAddMyCard() {
-    const word = prompt("Введи слово (лицьова сторона):");
-    if (!word) return;
-    const translation = prompt("Введи переклад (зворотна сторона):");
-    if (!translation) return;
+  function handleAddCustomCard(e) {
+    e.preventDefault();
+    if (!newDictWord.trim() || !newDictTranslation.trim()) return;
 
     const newCard = {
       id: 'custom_' + Date.now(),
       type: 'flashcard',
-      content: word.trim(),
-      correct_answer: translation.trim(),
+      content: newDictWord.trim(),
+      correct_answer: newDictTranslation.trim(),
       difficulty: 'medium',
       isCustom: true
     };
@@ -2404,6 +2404,12 @@ useEffect(() => {
     const updated = [...myCards, newCard];
     setMyCards(updated);
     localStorage.setItem('hack_my_cards', JSON.stringify(updated));
+    
+    // Очищаємо форму після додавання
+    setNewDictWord('');
+    setNewDictTranslation('');
+    
+    playUiSound('ding', isSoundEnabled);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
 
@@ -2632,47 +2638,115 @@ useEffect(() => {
     );
   }
   
-  // --- ЕКРАН ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ ---
+// --- ЕКРАН "МІЙ СЛОВНИК" (ХАБ ФЛЕШКАРТОК) ---
+  if (globalView === 'dictionary') {
+    return (
+      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
+        {renderGlobalStyles()}
+        {renderSidebar()}
+        <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
+          <button onClick={() => setGlobalView(null)} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '25px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+            Назад на головну
+          </button>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
+            <div>
+              <h2 style={{ color: theme.text, fontSize: '38px', margin: '0 0 10px 0', fontWeight: '900', letterSpacing: '-0.5px' }}>📖 Мій словник</h2>
+              <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>Ваші власні слова та інтервальне тренування</p>
+            </div>
+            <button onClick={startSpacedRepetition} className="hover-card" style={{ background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#fff', padding: '16px 32px', borderRadius: '16px', border: 'none', fontWeight: '900', fontSize: '18px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(43,108,176,0.3)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <span style={{ fontSize: '24px' }}>🔄</span> Почати тренування
+            </button>
+          </div>
+
+          {/* ФОРМА ДОДАВАННЯ СЛОВА */}
+          <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, marginBottom: '40px' }}>
+            <h3 style={{ margin: '0 0 20px 0', fontSize: '20px', color: theme.text, fontWeight: '800' }}>➕ Додати нове слово</h3>
+            <form onSubmit={handleAddCustomCard} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+              <input type="text" placeholder="Слово (наприклад: jablko)" value={newDictWord} onChange={e => setNewDictWord(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }} />
+              <input type="text" placeholder="Переклад (наприклад: яблуко)" value={newDictTranslation} onChange={e => setNewDictTranslation(e.target.value)} style={{ flex: 1, minWidth: '200px', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }} />
+              <button type="submit" disabled={!newDictWord.trim() || !newDictTranslation.trim()} className="hover-card" style={{ background: '#00C853', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px', opacity: (!newDictWord.trim() || !newDictTranslation.trim()) ? 0.5 : 1 }}>
+                Додати
+              </button>
+            </form>
+          </div>
+
+          {/* СПИСОК ВЛАСНИХ СЛІВ */}
+          <h3 style={{ margin: '0 0 20px 0', fontSize: '24px', color: theme.text, fontWeight: '800' }}>Ваші картки ({myCards.length})</h3>
+          {myCards.length === 0 ? (
+            <div style={{ padding: '40px', textAlign: 'center', background: theme.inputBg, borderRadius: '24px', color: theme.textSecondary, fontSize: '16px' }}>
+              Ви ще не додали жодного слова. Зробіть це у формі вище! ☝️
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
+              {myCards.map(card => (
+                <div key={card.id} className="hover-card" style={{ background: theme.cardBg, padding: '25px', borderRadius: '20px', boxShadow: '0 4px 15px rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}`, position: 'relative' }}>
+                  <button onClick={() => handleDeleteMyCard(card.id)} style={{ position: 'absolute', top: '15px', right: '15px', background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Видалити</button>
+                  <div style={{ fontSize: '12px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>Словацька</div>
+                  <div style={{ fontSize: '22px', fontWeight: '900', color: theme.text, marginBottom: '15px' }}>{card.content}</div>
+                  <div style={{ fontSize: '12px', color: theme.textSecondary, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px', fontWeight: 'bold' }}>Переклад</div>
+                  <div style={{ fontSize: '18px', fontWeight: '600', color: theme.primary }}>{card.correct_answer}</div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // --- ЕКРАН ІНТЕРВАЛЬНОГО ПОВТОРЕННЯ (Оновлений для ПК) ---
   if (globalView === 'spaced') {
     const currentCard = spacedCards[spacedIndex];
     return (
-      <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
+      <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         {renderGlobalStyles()}
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
-            ← Назад на головну
-          </button>
-        </div>
-        <h2 style={{ color: theme.text }}>🔄 Інтервальне повторення</h2>
-        <p style={{ color: theme.textSecondary, fontSize: '13px', marginBottom: '20px' }}>Картка {spacedIndex + 1} із {spacedCards.length}</p>
+        {renderSidebar()}
+        <div style={{ flex: 1, padding: '50px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+          <div style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            <button onClick={() => setGlobalView('dictionary')} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
+              <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+              До словника
+            </button>
+            <div style={{ color: theme.textSecondary, fontSize: '16px', fontWeight: 'bold', background: theme.inputBg, padding: '8px 16px', borderRadius: '12px' }}>
+              Картка {spacedIndex + 1} із {spacedCards.length}
+            </div>
+          </div>
 
-        {spacedCards.length > 0 && currentCard ? (
-          <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-            <div className="card-3d-container" onClick={() => { playUiSound('whoosh', isSoundEnabled); setIsSpacedFlipped(!isSpacedFlipped); }}>
-              <div className={`card-3d-inner ${isSpacedFlipped ? 'flipped' : ''}`}>
-                <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}` }}>
-                  <span style={{ fontSize: '11px', opacity: 0.6, marginBottom: '8px' }}>Натисни для перевороту</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>{currentCard.content}</span>
-                  {/* КНОПКА ОЗВУЧКИ */}
-                  <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.content); }} style={{ background: 'transparent', border: 'none', fontSize: '32px', marginTop: '15px', cursor: 'pointer' }}>🔊</button>
-                </div>
-                <div className="card-face card-back" style={getCardStyle(spacedIndex, isDarkMode, true)}>
-                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '8px' }}>Переклад</span>
-                  <span style={{ fontSize: '24px', fontWeight: 'bold' }}>{currentCard.correct_answer}</span>
+          {spacedCards.length > 0 && currentCard ? (
+            <div style={{ width: '100%', maxWidth: '700px', marginTop: '20px' }}>
+              <div className="card-3d-container" onClick={() => { playUiSound('whoosh', isSoundEnabled); setIsSpacedFlipped(!isSpacedFlipped); }}>
+                <div className={`card-3d-inner ${isSpacedFlipped ? 'flipped' : ''}`} style={{ minHeight: '350px' }}>
+                  <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}`, boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }}>
+                    <span style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Натисніть для перевороту</span>
+                    <span style={{ fontSize: '48px', fontWeight: '900', margin: '20px 0' }}>{currentCard.content}</span>
+                    {/* КНОПКА ОЗВУЧКИ */}
+                    <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.content); }} className="hover-card" style={{ background: theme.inputBg, border: 'none', fontSize: '24px', width: '60px', height: '60px', borderRadius: '50%', marginTop: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔊</button>
+                  </div>
+                  <div className="card-face card-back" style={{ ...getCardStyle(spacedIndex, isDarkMode, true), boxShadow: '0 15px 40px rgba(0,0,0,0.15)' }}>
+                    <span style={{ fontSize: '14px', opacity: 0.8, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
+                    <span style={{ fontSize: '42px', fontWeight: '900' }}>{currentCard.correct_answer}</span>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <button 
-              onClick={() => handleSpacedNext(currentCard)} 
-              style={{ width: '100%', marginTop: '20px', background: '#00C853', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}
-            >
-              Далі →
-            </button>
-          </div>
-        ) : (
-          <p style={{ color: theme.text }}>Немає карток для повторення.</p>
-        )}
+              <button 
+                onClick={() => handleSpacedNext(currentCard)} 
+                className="hover-card"
+                style={{ width: '100%', marginTop: '40px', background: '#00C853', color: 'white', padding: '20px', borderRadius: '16px', border: 'none', fontWeight: '900', fontSize: '20px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(0,200,83,0.3)' }}
+              >
+                Запам'ятав! Далі →
+              </button>
+            </div>
+          ) : (
+            <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', border: `1px solid ${theme.inputBorder}`, color: theme.text, textAlign: 'center', width: '100%', maxWidth: '600px', marginTop: '40px' }}>
+              <div style={{ fontSize: '50px', marginBottom: '20px' }}>🎉</div>
+              <h3 style={{ fontSize: '28px', margin: '0 0 10px 0', fontWeight: '900' }}>Чудова робота!</h3>
+              <p style={{ fontSize: '16px', color: theme.textSecondary }}>На сьогодні немає слів для повторення.</p>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -3590,7 +3664,7 @@ useEffect(() => {
 
         <div style={{ maxWidth: '1150px', marginBottom: '40px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(230px, 1fr))', gap: '20px' }}>
-            <div onClick={startSpacedRepetition} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+            <div onClick={() => setGlobalView('dictionary')} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
               <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
               <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>🔄</div>
               <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Розумні картки</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('repeatToday')}</span></div>
