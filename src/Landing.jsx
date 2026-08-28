@@ -261,10 +261,6 @@ export default function Landing() {
             </footer>
         {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
       <SupportChat />
-      
-    </div> // Це твій головний закриваючий <div> лендінгу
+    </div>
   );
-}
-		</div>
-    );
 }
