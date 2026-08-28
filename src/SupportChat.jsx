@@ -6,9 +6,11 @@ export default function SupportChat() {
   const [step, setStep] = useState(1); 
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
+  const [messenger, setMessenger] = useState('Telegram'); // Стан для вибору месенджера
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
+  // Перевіряємо, чи юзер авторизований
   useEffect(() => {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -24,7 +26,8 @@ export default function SupportChat() {
     checkAuth();
   }, []);
 
-  const sendToTelegram = async (contactInfo) => {
+  // Відправка готового тексту в Telegram
+  const sendToTelegram = async (text) => {
     setIsSending(true);
     const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
     const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
@@ -34,8 +37,6 @@ export default function SupportChat() {
       setIsSending(false);
       return false;
     }
-
-    const text = `💬 ${message}\n\n📞 ${contactInfo}`;
 
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
@@ -52,18 +53,22 @@ export default function SupportChat() {
     }
   };
 
+  // Авторизація ліда через бота
   const handleTelegramAuth = async () => {
-    const success = await sendToTelegram("Перейшов у Telegram-бот 🚀");
+    const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення від бота поруч у цьому чаті)`;
+    const success = await sendToTelegram(text);
     if (success) {
       window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
       setStep(3);
     }
   };
 
+  // Ручне введення контактів із вибраним месенджером
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!contact.trim()) return;
-    const success = await sendToTelegram(contact.trim());
+    const text = `🔥 <b>НОВИЙ ЛІД З САЙТУ</b>\n\n💬 Питання: <i>${message}</i>\n\n📞 Контакт [<b>${messenger}</b>]: ${contact.trim()}`;
+    const success = await sendToTelegram(text);
     if (success) setStep(3);
   };
 
@@ -72,6 +77,7 @@ export default function SupportChat() {
     if (!message.trim()) return;
 
     if (authUser) {
+      // ЛОГІКА ДЛЯ ЗАРЕЄСТРОВАНИХ УЧНІВ (Відразу зберігаємо і сповіщаємо адміна)
       setIsSending(true);
       try {
         await supabase.from('messages').insert([
@@ -81,7 +87,7 @@ export default function SupportChat() {
         const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
         const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
         if (BOT_TOKEN && CHAT_ID) {
-          const text = `🟢 <b>Внутрішній чат (${authUser.first_name}):</b>\n\n💬 ${message.trim()}\n\n<i>(Відповідайте на платформі)</i>`;
+          const text = `🟢 <b>ПОВІДОМЛЕННЯ ВІД СТУДЕНТА</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n💬 Текст: <i>${message.trim()}</i>\n\n⚠️ <i>Відповідайте йому безпосередньо на платформі в розділі 'Чат'!</i>`;
           await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -95,6 +101,7 @@ export default function SupportChat() {
         setIsSending(false);
       }
     } else {
+      // Якщо це ГІСТЬ - показуємо вибір месенджерів (Крок 2)
       setStep(2); 
     }
   };
@@ -108,12 +115,14 @@ export default function SupportChat() {
   return (
     <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, fontFamily: 'sans-serif' }}>
       
+      {/* ПОВЕРНУТО ФІРМОВИЙ КОЛІР, ХОВЕР ТА АНІМАЦІЮ ПУЛЬСАЦІЇ */}
       {!isOpen && (
         <button 
           onClick={() => setIsOpen(true)}
-          style={{ width: '60px', height: '60px', borderRadius: '50%', background: '#1A3636', color: '#fff', border: 'none', boxShadow: '0 10px 25px rgba(0,0,0,0.2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          className="hover-card"
+          style={{ width: '65px', height: '65px', borderRadius: '50%', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#fff', border: 'none', boxShadow: '0 10px 25px rgba(255,123,84,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'ffPulse 2s infinite' }}
         >
-          <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <svg width="30" height="30" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       )}
 
@@ -158,30 +167,52 @@ export default function SupportChat() {
 
             {step === 2 && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '15px' }}>
-                  Клас! Щоб отримати відповідь миттєво, авторизуйтесь через наш Telegram-бот 👇
+                <div style={{ background: '#F4F7F6', padding: '12px', borderRadius: '15px 15px 15px 4px', fontSize: '13px', color: '#2D3748', lineHeight: '1.4', marginBottom: '15px' }}>
+                  Щоб отримати відповідь миттєво, авторизуйтесь через наш Telegram-бот 👇
                 </div>
                 
                 <button 
                   type="button"
                   onClick={handleTelegramAuth}
                   disabled={isSending}
-                  style={{ width: '100%', background: '#2AABEE', color: '#fff', border: 'none', borderRadius: '12px', padding: '14px', cursor: isSending ? 'wait' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px', boxShadow: '0 4px 15px rgba(42,171,238,0.3)', transition: '0.2s' }}
+                  style={{ width: '100%', background: '#2AABEE', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px', cursor: isSending ? 'wait' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px', boxShadow: '0 4px 15px rgba(42,171,238,0.3)', transition: '0.2s' }}
                 >
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                   {isSending ? 'Відправка...' : 'Перейти в Telegram'}
                 </button>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                   <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }}></div>
-                  <span style={{ fontSize: '11px', color: '#A0AEC0', fontWeight: 'bold' }}>АБО ІНШИМ СПОСОБОМ</span>
+                  <span style={{ fontSize: '11px', color: '#A0AEC0', fontWeight: 'bold' }}>АБО</span>
                   <div style={{ flex: 1, height: '1px', background: '#E2E8F0' }}></div>
+                </div>
+
+                {/* НОВИЙ БЛОК: ВИБІР МЕСЕНДЖЕРА */}
+                <div style={{ marginBottom: '12px' }}>
+                  <label style={{ fontSize: '11px', color: '#718096', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>Де вам зручніше отримати відповідь?</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
+                    {[
+                      { id: 'Telegram', icon: '✈️' },
+                      { id: 'Viber', icon: '💜' },
+                      { id: 'WhatsApp', icon: '🟩' },
+                      { id: 'Телефон/Пошта', icon: '📞' }
+                    ].map(m => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => setMessenger(m.id)}
+                        style={{ padding: '8px', borderRadius: '10px', border: messenger === m.id ? '2px solid #FF7B54' : '1px solid #E2E8F0', background: messenger === m.id ? '#FFF5F5' : '#fff', color: messenger === m.id ? '#FF7B54' : '#4A5568', fontWeight: 'bold', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s' }}
+                      >
+                        <span style={{ fontSize: '14px' }}>{m.icon}</span> {m.id}
+                      </button>
+                    ))}
+                  </div>
                 </div>
 
                 <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <input 
                     type="text" 
-                    placeholder="Viber, номер або email..." 
+                    placeholder={`Ваш ${messenger}...`}
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     style={{ width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', boxSizing: 'border-box', fontSize: '14px' }}
@@ -201,9 +232,13 @@ export default function SupportChat() {
             {step === 3 && (
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
-                <h3 style={{ color: '#2D3748', margin: '0 0 10px 0', fontSize: '18px' }}>Перехід у Telegram...</h3>
+                <h3 style={{ color: '#2D3748', margin: '0 0 10px 0', fontSize: '18px' }}>
+                  {authUser ? "Відправлено!" : "Перехід у Telegram..."}
+                </h3>
                 <p style={{ color: '#718096', fontSize: '13px', lineHeight: '1.5', background: '#F4F7F6', padding: '10px', borderRadius: '10px' }}>
-                  Якщо бот не привітався автоматично, просто надішліть йому команду <b>/support</b> або напишіть своє питання.
+                  {authUser 
+                    ? "Ми отримали ваше повідомлення. Викладач відповість вам у чаті платформи!"
+                    : "Якщо бот не привітався автоматично, надішліть йому команду /support або напишіть своє питання."}
                 </p>
                 <button onClick={() => { setIsOpen(false); setTimeout(resetChat, 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
                   Зрозуміло, закрити
