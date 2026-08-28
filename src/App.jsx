@@ -1868,8 +1868,16 @@ useEffect(() => {
     const newSound = !isSoundEnabled;
     setIsSoundEnabled(newSound);
     localStorage.setItem('hack_sound', newSound ? 'true' : 'false');
-    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    if (newSound) playUiSound('ding', true); // Підтвердження увімкнення звуку
+    
+    if (window.Telegram?.WebApp) {
+      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+    }
+    
+    if (newSound) {
+      // Відтворюємо твій кастомний mp3-файл із папки public
+      const audio = new Audio('/sound-on.mp3');
+      audio.play().catch(err => console.log("Помилка відтворення:", err));
+    }
   };
 
   async function fetchCourses() {
