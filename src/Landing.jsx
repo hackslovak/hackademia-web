@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from './supabase';
 import { translations } from './i18n';
-import './Landing.css'; 
+import './Landing.css';
+import SupportChat from './SupportChat'; 
 
 export default function Landing() {
     const navigate = useNavigate();
@@ -258,6 +259,12 @@ export default function Landing() {
                 <p>{t('footerDesc')}</p>
                 <p style={{ marginTop: '40px', fontSize: '0.85rem', color: '#789' }}>{t('footerRights')}</p>
             </footer>
-        </div>
+        {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
+      <SupportChat />
+      
+    </div> // Це твій головний закриваючий <div> лендінгу
+  );
+}
+		</div>
     );
 }

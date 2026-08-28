@@ -13,11 +13,17 @@ export default function FloatingChat() {
     if (!contact.trim()) return;
     setIsSending(true);
 
-    // Заміни на свої дані (краще сховати у .env файл як VITE_TG_BOT_TOKEN)
-    const BOT_TOKEN = 'ТВІЙ_ТОКЕН_БОТА'; 
-    const CHAT_ID = 'ТВІЙ_АБО_ГРУПОВИЙ_CHAT_ID'; 
+    // Тягнемо ключі з безпечного середовища Vite
+    const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
+    const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
 
-    const text = `🚨 <b>Новий запит з сайту Hackademia!</b>\n\n💬 <b>Повідомлення:</b>\n${message}\n\n📞 <b>Контакт для зв'язку:</b>\n${contact}`;
+    if (!BOT_TOKEN || !CHAT_ID) {
+      alert("Помилка конфігурації: не знайдено токен або ID чату.");
+      setIsSending(false);
+      return;
+    }
+
+    const text = `🚨 <b>Новий запит з сайту Hackademia!</b>\n\n💬 <b>Повідомлення:</b>\n${message}\n\n📞 <b>Контакт:</b>\n${contact}`;
 
     try {
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
