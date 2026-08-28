@@ -10,48 +10,25 @@ import Login from './Login';
 
 // --- ЗВУКОВИЙ ДВИЖОК ---
 let audioCtx = null;
+
 function playUiSound(type, isEnabled) {
   if (!isEnabled) return;
   try {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const now = audioCtx.currentTime;
-    
     if (type === 'ding') {
-      // Райські дзвіночки (Арфа)
-      const notes = [523.25, 659.25, 783.99, 1046.50]; // C5, E5, G5, C6
-      notes.forEach((freq, i) => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        const delay = i * 0.06;
-        osc.frequency.setValueAtTime(freq, now + delay);
-        gain.gain.setValueAtTime(0, now + delay);
-        gain.gain.linearRampToValueAtTime(0.12, now + delay + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + delay + 1.2);
-        osc.start(now + delay);
-        osc.stop(now + delay + 1.2);
-      });
+      // Звук успіху / збереження
+      const audio = new Audio('/success.mp3');
+      audio.play().catch(e => console.log("Помилка аудіо:", e));
+      
     } else if (type === 'buzz') {
-      // М'який глухий "буп" для помилки
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'sine';
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.setValueAtTime(150, now);
-      osc.frequency.exponentialRampToValueAtTime(40, now + 0.15);
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.15, now + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-      osc.start(now);
-      osc.stop(now + 0.15);
+      // Звук помилки
+      const audio = new Audio('/error.mp3');
+      audio.play().catch(e => console.log("Помилка аудіо:", e));
+      
     } else if (type === 'whoosh') {
-      // Легкий вітерець для перегортання
+      // Залишаємо легкий синтезований звук для перегортання карток (щоб не шукати для нього mp3)
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const now = audioCtx.currentTime;
       const osc = audioCtx.createOscillator();
       const gain = audioCtx.createGain();
       osc.type = 'triangle'; 
@@ -65,7 +42,9 @@ function playUiSound(type, isEnabled) {
       osc.start(now);
       osc.stop(now + 0.15);
     }
-  } catch (e) { console.error(e); }
+  } catch (e) { 
+    console.error(e); 
+  }
 }
 
 // --- ПАЛІТРА ДЛЯ КАРТОК (Генератор унікальних кольорів) ---
