@@ -9,7 +9,6 @@ export default function SupportChat() {
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
-  // Перевіряємо, чи юзер авторизований на платформі
   useEffect(() => {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
@@ -56,7 +55,6 @@ export default function SupportChat() {
   const handleTelegramAuth = async () => {
     const success = await sendToTelegram("Перейшов у Telegram-бот 🚀");
     if (success) {
-      // ПЕРЕДАЄМО ПАРАМЕТР support 
       window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
       setStep(3);
     }
@@ -74,14 +72,12 @@ export default function SupportChat() {
     if (!message.trim()) return;
 
     if (authUser) {
-      // Юзер авторизований: зберігаємо у внутрішній чат
       setIsSending(true);
       try {
         await supabase.from('messages').insert([
           { user_id: authUser.id, sender_id: authUser.id, text: message.trim() }
         ]);
         
-        // Сповіщення адміну про внутрішнє повідомлення
         const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
         const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
         if (BOT_TOKEN && CHAT_ID) {
@@ -202,7 +198,6 @@ export default function SupportChat() {
               </div>
             )}
 
-            {/* КРОК 3: УСПІХ */}
             {step === 3 && (
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
@@ -215,3 +210,10 @@ export default function SupportChat() {
                 </button>
               </div>
             )}
+
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
