@@ -48,6 +48,14 @@ export default function Landing() {
                 .landing-body { overflow-x: hidden; }
                 .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; }
                 .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; }
+                
+                /* НОВА АНІМАЦІЯ ДЛЯ КНОПКИ */
+                @keyframes pulseCTA {
+                    0% { transform: scale(1); box-shadow: 0 15px 35px rgba(255,123,84,0.4); }
+                    50% { transform: scale(1.03); box-shadow: 0 20px 45px rgba(255,123,84,0.7); }
+                    100% { transform: scale(1); box-shadow: 0 15px 35px rgba(255,123,84,0.4); }
+                }
+
                 @media (max-width: 768px) {
                     .landing-body { padding: 0 10px; }
                     header { padding: 15px 20px !important; flex-wrap: wrap; gap: 15px;}
@@ -123,7 +131,7 @@ export default function Landing() {
                     fontSize: '22px', 
                     cursor: 'pointer', 
                     boxShadow: '0 15px 35px rgba(255,123,84,0.4)',
-                    animation: 'ffPulse 2s infinite', 
+                    animation: 'pulseCTA 2s infinite', /* ТУТ ЗМІНЕНО НАЗВУ АНІМАЦІЇ */
                     transition: '0.3s ease'
                   }}
                 >
