@@ -3440,6 +3440,7 @@ useEffect(() => {
       }
     };
 
+    // ОНОВЛЕНА ФУНКЦІЯ ЗМІНИ ПАРОЛЯ З ПЕРЕВІРКОЮ
     const handleChangePassword = async (e) => {
       e.preventDefault();
       
@@ -3454,7 +3455,6 @@ useEffect(() => {
 
       setIsChangingPassword(true);
 
-      // Крок 1: Перевірка старого пароля (ре-авторизація в Supabase)
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email: userProfile.email,
         password: oldPassword,
@@ -3466,7 +3466,6 @@ useEffect(() => {
         return;
       }
 
-      // Крок 2: Встановлення нового пароля
       const { error: updateError } = await supabase.auth.updateUser({
         password: newPassword
       });
@@ -3481,6 +3480,7 @@ useEffect(() => {
         setNewPassword('');
         setConfirmPassword('');
         setShowPassword(false);
+        setIsPasswordFormVisible(false); // Ховаємо форму після успіху
       }
     };
 
@@ -3569,36 +3569,8 @@ useEffect(() => {
 
               {/* ПРАВА КОЛОНКА */}
               <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                  <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
-                      <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
-                      </h3>
-                      
-                      <div style={{ marginBottom: '25px' }}>
-                        <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: '600' }}>Ваш Email для входу</label>
-                        <input type="email" value={userProfile.email || ''} disabled style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.textSecondary, boxSizing: 'border-box', fontSize: '15px', opacity: 0.6, cursor: 'not-allowed' }} />
-                      </div>
-
-                      <h4 style={{ margin: '0 0 15px 0', fontSize: '16px', color: theme.text, fontWeight: '700' }}>Зміна пароля</h4>
-                      <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                        <input type={showPassword ? "text" : "password"} placeholder="Введіть старий пароль" value={oldPassword} onChange={e => setOldPassword(e.target.value)} required style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                        
-                        <input type={showPassword ? "text" : "password"} placeholder="Введіть новий пароль" value={newPassword} onChange={e => setNewPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                        
-                        <input type={showPassword ? "text" : "password"} placeholder="Повторіть новий пароль" value={confirmPassword} onChange={e => setConfirmPassword(e.target.value)} required minLength="6" style={{ width: '100%', boxSizing: 'border-box', padding: '16px', borderRadius: '14px', fontSize: '15px', border: 'none', background: theme.inputBg, color: theme.text }} />
-                        
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                          <label style={{ fontSize: '13px', color: theme.textSecondary, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', userSelect: 'none' }}>
-                             <input type="checkbox" checked={showPassword} onChange={() => setShowPassword(!showPassword)} style={{ width: '16px', height: '16px', cursor: 'pointer' }} />
-                             Показати паролі
-                          </label>
-                          <button type="submit" disabled={isChangingPassword || !oldPassword || !newPassword || !confirmPassword} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 'not-allowed' : 'pointer', fontSize: '14px', opacity: (isChangingPassword || !oldPassword || !newPassword || !confirmPassword) ? 0.6 : 1 }}>
-                            {isChangingPassword ? 'Збереження...' : 'Зберегти новий пароль'}
-                          </button>
-                        </div>
-                      </form>
-                  </div>
-
+                  
+                  {/* БЛОК ПАРОЛЯ З ПРИХОВАНОЮ ФОРМОЮ */}
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                       <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
@@ -3640,6 +3612,42 @@ useEffect(() => {
                         )}
                       </div>
                   </div>
+
+                  {/* ТЕХНІЧНА ІНФОРМАЦІЯ */}
+                  <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+                      <h3 style={{ margin: '0 0 25px 0', fontSize: '18px', color: theme.textSecondary, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <span style={{ opacity: 0.7 }}>⚙️</span> Технічна інформація
+                      </h3>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: `1px solid ${theme.inputBg}`, paddingBottom: '12px', alignItems: 'center' }}>
+                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Роль</span>
+                          <b style={{ color: isAdmin ? '#E0A345' : theme.text, fontSize: '14px' }}>{isAdmin ? 'Адміністратор' : 'Учень'}</b>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span style={{ color: theme.textSecondary, fontSize: '14px' }}>Telegram</span>
+                          {userProfile?.telegram_id ? (
+                            <div style={{ textAlign: 'right' }}>
+                              <b style={{ color: '#38A169', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'flex-end' }}>
+                                ✅ Підключено
+                              </b>
+                              <span style={{ fontSize: '11px', color: theme.textSecondary }}>ID: {userProfile.telegram_id}</span>
+                            </div>
+                          ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                              <a href="https://t.me/hackademiapp_bot" target="_blank" rel="noreferrer" className="hover-card" title="Підключіть Telegram для входу в 1 клік без пароля!" style={{ background: '#3182ce', color: '#fff', padding: '8px 14px', borderRadius: '10px', fontSize: '12px', fontWeight: 'bold', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', boxShadow: '0 4px 10px rgba(49,130,206,0.2)' }}>
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
+                                Підключити бот
+                              </a>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                  </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     );
   }
   
