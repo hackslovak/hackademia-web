@@ -3641,16 +3641,13 @@ useEffect(() => {
                             </div>
                           )}
                         </div>
-                      </div>
-                  </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
     );
   }
-  
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
