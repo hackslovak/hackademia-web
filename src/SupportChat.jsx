@@ -87,15 +87,15 @@ export default function SupportChat() {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        let { data } = await supabase.from('users').select('id, first_name, email').eq('email', session.user.email).maybeSingle();
+        // ДОДАЛИ ВИБІРКУ telegram_id
+        let { data } = await supabase.from('users').select('id, first_name, email, telegram_id').eq('email', session.user.email).maybeSingle();
         if (!data) {
-            const res = await supabase.from('users').select('id, first_name, email').eq('id', session.user.id).maybeSingle();
+            const res = await supabase.from('users').select('id, first_name, email, telegram_id').eq('id', session.user.id).maybeSingle();
             data = res.data;
         }
         if (data) {
             setAuthUser(data);
         } else {
-            // Фолбек, якщо запису ще немає в таблиці users, але сесія Google вже є
             setAuthUser({ id: session.user.id, first_name: session.user.user_metadata?.full_name || 'Студент', email: session.user.email });
         }
       }
@@ -103,37 +103,25 @@ export default function SupportChat() {
     checkAuth();
   }, []);
 
-  const handleGoogleLogin = async () => {
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: window.location.origin }
-    });
-  };
-
-  const handleTelegramLogin = () => {
-    window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
-    setView('telegram');
-  };
-
   const handleSendMessage = async (e) => {
     e.preventDefault();
     if (!message.trim() || !authUser) return;
     
     setIsSending(true);
     
-    // 1. Зберігаємо повідомлення в БД платформи
     const { error } = await supabase.from('messages').insert([
       { user_id: authUser.id, sender_id: authUser.id, text: message.trim(), is_read: false }
     ]);
     
     if (error) console.error("Помилка збереження повідомлення:", error);
     
-    // 2. Відправляємо сповіщення адміну в Telegram
     const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
     const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
     
     if (BOT_TOKEN && CHAT_ID) {
-      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ (АВТОРИЗОВАНИЙ УЧЕНЬ)</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n⚠️ <i>Зайдіть на платформу в розділ 'Чат', щоб відповісти!</i>`;
+      // ВИЗНАЧАЄМО ЯКИЙ ID ВІДПРАВИТИ І ПОВЕРТАЄМО ФОРМАТ ПОВІДОМЛЕННЯ
+      const targetId = authUser.telegram_id || authUser.id;
+      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: ${targetId}\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
       
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
