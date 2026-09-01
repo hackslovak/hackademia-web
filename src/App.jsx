@@ -942,8 +942,8 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   React.useEffect(() => {
     if (isAdmin) {
+      // ПРИБРАНО ФІЛЬТР, ЩОБ АДМІН БАЧИВ СВІЙ ТЕСТОВИЙ АКАУНТ У СПИСКУ
       supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id')
-        .neq('role', 'admin')
         .then(({data}) => {
          if (data) {
            const validUsers = data.filter(u => u.first_name || u.email);
@@ -962,7 +962,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
       .order('created_at', { ascending: true });
     if (data) setMessages(data);
     
-    // Позначаємо повідомлення як прочитані
     await supabase.from('messages')
       .update({ is_read: true })
       .eq('user_id', activeChatUserId)
@@ -981,7 +980,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     e.preventDefault();
     if (!chatText.trim() || !activeChatUserId) return;
     
-    // Всі нові повідомлення створюються з is_read: false
     const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim(), is_read: false };
     setChatText(''); 
     
