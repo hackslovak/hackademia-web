@@ -1570,7 +1570,8 @@ useEffect(() => {
             .from('users')
             .insert({
               email: emailUser.email,
-              first_name: emailUser.email.split('@')[0],
+              first_name: emailUser.user_metadata?.full_name || emailUser.email.split('@')[0],
+              avatar_url: emailUser.user_metadata?.avatar_url || null,
               access_status: 'approved',
               telegram_id: fakeTelegramId
             })
