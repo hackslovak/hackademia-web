@@ -77,7 +77,6 @@ const chatTranslations = {
   }
 };
 
-// --- ВЕКТОРНІ ІКОНКИ МЕСЕНДЖЕРІВ ---
 const messengers = [
   { id: 'Telegram', icon: <svg viewBox="0 0 24 24" fill="#0088cc" width="18" height="18"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69a.2.2 0 00-.05-.18c-.06-.05-.14-.03-.21-.02-.09.02-1.42.94-4.02 2.69-.38.27-.72.4-.1.03-.31-.04-.89-.23-1.33-.37-.54-.18-.96-.28-.92-.59.02-.16.23-.32.65-.49 2.54-1.11 4.24-1.81 5.09-2.17 2.42-1.03 2.92-1.2 3.25-1.2.07 0 .23.02.32.08s.16.14.18.23c.02.09.02.2.01.3z"/></svg> },
   { id: 'Viber', icon: <svg viewBox="0 0 24 24" fill="#7360f2" width="18" height="18"><path d="M18.89 14.12c-.28-.31-.69-.53-1.12-.53-.44 0-.85.22-1.12.53l-1.3 1.45c-2.3-1.1-4.04-2.84-5.14-5.14l1.45-1.3c.31-.28.53-.69.53-1.12 0-.44-.22-.85-.53-1.12L9.2 4.45C8.92 4.14 8.51 3.92 8.08 3.92c-.44 0-.85.22-1.12.53L4.9 6.5C4.24 7.16 4 8.1 4 9.1c0 6.64 5.36 12 12 12 1 0 1.94-.24 2.6-.9l2.05-2.05c.31-.28.53-.69.53-1.12 0-.44-.22-.85-.53-1.12l-2.29-2.79z"/></svg> },
@@ -198,15 +197,13 @@ export default function SupportChat() {
   };
 
   return (
-    <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, fontFamily: 'sans-serif' }}>
+    <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'flex-end', fontFamily: 'sans-serif' }}>
       
       <style>{`
         .support-trigger-btn {
-          width: 60px;
-          height: 60px;
+          width: 55px;
+          height: 55px;
           border-radius: 50%;
-          background-color: #062440; 
-          color: #ffffff;
           border: none;
           cursor: pointer;
           display: flex;
@@ -216,16 +213,29 @@ export default function SupportChat() {
           transition: all 0.3s ease;
         }
         .support-trigger-btn:hover {
-          background-color: #FF7B54; 
           transform: translateY(-4px) scale(1.05);
-          box-shadow: 0 10px 25px rgba(255,123,84,0.4);
+          box-shadow: 0 10px 25px rgba(0,0,0,0.25);
         }
       `}</style>
 
-      {/* КНОПКА ВИКЛИКУ З TELEGRAM-ІКОНКОЮ */}
+      {/* ВЕРХНЯ КНОПКА (ІКОНКА TELEGRAM З ПАПКИ PUBLIC) */}
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="support-trigger-btn">
-          <img src="/telegram-chat.svg" alt="Chat" style={{ width: '32px', height: '32px', objectFit: 'contain' }} />
+        <a 
+          href="https://t.me/hackademiapp_bot" 
+          target="_blank" 
+          rel="noreferrer"
+          className="support-trigger-btn"
+          style={{ backgroundColor: '#2AABEE', textDecoration: 'none' }}
+          title="Наш Telegram-бот"
+        >
+          <img src="/telegram.svg" alt="Telegram" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+        </a>
+      )}
+
+      {/* НИЖНЯ КНОПКА (ОРИГІНАЛЬНА КНОПКА ЧАТУ ЗІ СТАРОЮ ІКОНКОЮ) */}
+      {!isOpen && (
+        <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
+          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       )}
 
