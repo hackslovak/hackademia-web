@@ -156,12 +156,10 @@ export default function SupportChat() {
 
   const handleTelegramAuth = async () => {
     setSubmissionType('telegram');
-    const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення поруч у цьому чаті)`;
-    const success = await sendToTelegram(text);
-    if (success) {
-      window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
-      setStep(3);
-    }
+    // Ми повністю видалили відправку анонімного "ЛІД ПЕРЕЙШОВ У БОТ"
+    // Тепер користувач просто переходить у бот, де його зустріне повноцінне меню
+    window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+    setStep(3);
   };
 
   const handleManualSubmit = async (e) => {
