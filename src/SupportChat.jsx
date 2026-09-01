@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from './supabase'; 
 
 const chatTranslations = {
@@ -12,7 +12,14 @@ const chatTranslations = {
     prompt: "Напишіть своє питання нижче:",
     placeholder: "Ваше повідомлення...",
     transition: "Перехід у Telegram...",
-    guestReply: "Якщо бот не відкрився автоматично, перейдіть за посиланням."
+    guestReply: "Якщо бот не відкрився автоматично, перейдіть за посиланням.",
+    send: "Відправити",
+    sent: "✅ Дякуємо! Відправлено.",
+    studentReply: "Ми успішно отримали ваше повідомлення! Наш менеджер незабаром зв'яжеться з вами.",
+    close: "Закрити",
+    sending: "Відправка...",
+    systemWait: "Наразі ваше повідомлення надійшло. Очікується вільний менеджер, будь ласка, зачекайте...",
+    typing: "Асистент друкує... ✍️"
   },
   sk: {
     assistant: "Asistent Hackademia",
@@ -29,7 +36,9 @@ const chatTranslations = {
     transition: "Prechod do Telegramu...",
     guestReply: "Ak sa bot neotvoril automaticky, prejdite na odkaz.",
     close: "Zavrieť",
-    sending: "Odosielanie..."
+    sending: "Odosielanie...",
+    systemWait: "Vaša správa bola prijatá. Očakáva sa voľný manažér, počkajte prosím...",
+    typing: "Asistent píše... ✍️"
   },
   en: {
     assistant: "Hackademia Support",
@@ -46,7 +55,9 @@ const chatTranslations = {
     transition: "Going to Telegram...",
     guestReply: "If the bot didn't open automatically, follow the link.",
     close: "Close",
-    sending: "Sending..."
+    sending: "Sending...",
+    systemWait: "Your message has been received. Waiting for an available manager, please wait...",
+    typing: "Assistant is typing... ✍️"
   },
   ru: {
     assistant: "Ассистент Hackademia",
@@ -63,7 +74,9 @@ const chatTranslations = {
     transition: "Переход в Telegram...",
     guestReply: "Если бот не открылся автоматически, перейдите по ссылке.",
     close: "Закрыть",
-    sending: "Отправка..."
+    sending: "Отправка...",
+    systemWait: "Ваше сообщение получено. Ожидается свободный менеджер, пожалуйста, подождите...",
+    typing: "Ассистент печатает... ✍️"
   }
 };
 
@@ -79,8 +92,18 @@ export default function SupportChat() {
   
   const [view, setView] = useState('main'); 
   const [message, setMessage] = useState('');
-  const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
+
+  // Нові стани для живого чату
+  const [chatHistory, setChatHistory] = useState([]);
+  const [isTyping, setIsTyping] = useState(false);
+  const [systemMsg, setSystemMsg] = useState('');
+  const chatEndRef = useRef(null);
+
+  // Автопрокрутка до останнього повідомлення
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatHistory, isTyping, systemMsg]);
 
   useEffect(() => {
     if (sessionStorage.getItem('keepSupportChatOpen')) {
@@ -142,10 +165,16 @@ export default function SupportChat() {
     e.preventDefault();
     if (!message.trim() || !authUser) return;
     
-    setIsSending(true);
+    const textToSend = message.trim();
+    setMessage(''); // Миттєво очищаємо поле вводу
+    
+    // Додаємо бульбашку користувача та показуємо імітацію набору тексту
+    setChatHistory(prev => [...prev, { text: textToSend, sender: 'user' }]);
+    setSystemMsg('');
+    setIsTyping(true);
     
     const { error } = await supabase.from('messages').insert([
-      { user_id: authUser.id, sender_id: authUser.id, text: message.trim(), is_read: false }
+      { user_id: authUser.id, sender_id: authUser.id, text: textToSend, is_read: false }
     ]);
     
     if (error) console.error("Помилка збереження повідомлення:", error);
@@ -154,7 +183,7 @@ export default function SupportChat() {
     
     if (BOT_TOKEN) {
       const targetId = authUser.telegram_id || authUser.id;
-      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: <code>${targetId}</code>\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
+      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${textToSend}</i>\n\n🆔 ID: <code>${targetId}</code>\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
       
       for (const adminId of ADMIN_IDS) {
         try {
@@ -167,8 +196,11 @@ export default function SupportChat() {
       }
     }
     
-    setIsSending(false);
-    setView('sent');
+    // Через 2.5 секунди прибираємо "Асистент друкує..." і показуємо жовте повідомлення
+    setTimeout(() => {
+      setIsTyping(false);
+      setSystemMsg(t('systemWait'));
+    }, 2500);
   };
 
   return (
@@ -202,7 +234,6 @@ export default function SupportChat() {
         .auth-btn.google:hover { background: #F8FAFC; }
       `}</style>
 
-      {/* КНОПКА ВІДКРИТТЯ ВІДЖЕТА ЧАТУ ПІДТРИМКИ (Тільки вона) */}
       {!isOpen && (
         <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -210,7 +241,7 @@ export default function SupportChat() {
       )}
 
       {isOpen && (
-        <div style={{ width: '340px', background: '#fff', borderRadius: '20px', boxShadow: '0 15px 40px rgba(0,0,0,0.15)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ width: '340px', background: '#fff', borderRadius: '20px', boxShadow: '0 15px 40px rgba(0,0,0,0.15)', overflow: 'hidden', display: 'flex', flexDirection: 'column', maxHeight: '500px' }}>
           
           <div style={{ background: '#1A3636', padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -226,7 +257,7 @@ export default function SupportChat() {
             <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '20px', opacity: 0.7 }}>×</button>
           </div>
 
-          <div style={{ padding: '20px', flex: 1, minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+          <div style={{ padding: '20px', flex: 1, minHeight: '300px', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
             
             {!authUser && view === 'main' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -247,11 +278,37 @@ export default function SupportChat() {
             )}
 
             {authUser && view === 'main' && (
-              <div style={{ animation: 'fadeIn 0.3s ease', display: 'flex', flexDirection: 'column', height: '100%' }}>
-                <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '20px' }}>
-                  <b>{t('greeting')}, {authUser.first_name || 'Студент'}!</b><br/>
-                  {t('prompt')}
+              <div style={{ animation: 'fadeIn 0.3s ease', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
+                
+                {/* ОБЛАСТЬ ЖИВОГО ЧАТУ */}
+                <div style={{ flex: 1, overflowY: 'auto', marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '5px' }}>
+                  <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '10px' }}>
+                    <b>{t('greeting')}, {authUser.first_name || 'Студент'}!</b><br/>{t('prompt')}
+                  </div>
+                  
+                  {/* Бульбашки повідомлень */}
+                  {chatHistory.map((msg, i) => (
+                    <div key={i} style={{ alignSelf: 'flex-end', background: '#FF7B54', color: '#fff', padding: '10px 14px', borderRadius: '15px 15px 4px 15px', maxWidth: '85%', fontSize: '13px' }}>
+                      {msg.text}
+                    </div>
+                  ))}
+                  
+                  {/* Імітація набору тексту менеджером */}
+                  {isTyping && (
+                    <div style={{ alignSelf: 'flex-start', background: '#F4F7F6', padding: '10px 14px', borderRadius: '15px 15px 15px 4px', fontSize: '12px', color: '#718096', fontStyle: 'italic', animation: 'fadeIn 0.3s ease' }}>
+                      {t('typing')}
+                    </div>
+                  )}
+
+                  {/* Повідомлення "Очікується менеджер" */}
+                  {systemMsg && (
+                    <div style={{ alignSelf: 'center', background: '#FFFBEB', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', color: '#92400E', textAlign: 'center', marginTop: '10px', animation: 'fadeIn 0.5s ease' }}>
+                      {systemMsg}
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
                 </div>
+
                 <form onSubmit={handleSendMessage} style={{ display: 'flex', gap: '10px', marginTop: 'auto' }}>
                   <input 
                     type="text" 
@@ -260,23 +317,10 @@ export default function SupportChat() {
                     onChange={(e) => setMessage(e.target.value)}
                     style={{ flex: 1, padding: '12px 15px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none' }}
                   />
-                  <button type="submit" disabled={!message.trim() || isSending} style={{ background: '#FF7B54', color: '#fff', border: 'none', borderRadius: '12px', width: '45px', cursor: message.trim() ? 'pointer' : 'not-allowed', opacity: message.trim() ? 1 : 0.5 }}>
+                  <button type="submit" disabled={!message.trim()} style={{ background: '#FF7B54', color: '#fff', border: 'none', borderRadius: '12px', width: '45px', cursor: message.trim() ? 'pointer' : 'not-allowed', opacity: message.trim() ? 1 : 0.5 }}>
                     ➤
                   </button>
                 </form>
-              </div>
-            )}
-
-            {view === 'sent' && (
-              <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
-                <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
-                <h3 style={{ color: '#2D3748', margin: '0 0 10px 0', fontSize: '18px' }}>{t('sent')}</h3>
-                <p style={{ color: '#718096', fontSize: '13px', lineHeight: '1.5', background: '#F4F7F6', padding: '12px', borderRadius: '10px' }}>
-                  {t('studentReply')}
-                </p>
-                <button onClick={() => { setIsOpen(false); setTimeout(() => { setView('main'); setMessage(''); }, 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
-                  {t('close')}
-                </button>
               </div>
             )}
 
