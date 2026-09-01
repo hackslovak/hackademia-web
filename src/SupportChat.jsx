@@ -241,15 +241,24 @@ export default function SupportChat() {
         }
       `}</style>
 
-      {/* ЄДИНА КНОПКА ВИКЛИКУ ЧАТУ З ІКОНКОЮ TELEGRAM У ТЕПЛОМУ ФІРМОВОМУ СТИЛІ */}
+      {/* ВЕРХНЯ КНОПКА (ПЕРЕХІД НА TELEGRAM-БОТ) */}
       {!isOpen && (
-        <button 
-          onClick={() => setIsOpen(true)} 
+        <a 
+          href="https://t.me/hackademiapp_bot" 
+          target="_blank" 
+          rel="noreferrer"
           className="support-trigger-btn"
-          style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', boxShadow: '0 6px 20px rgba(255,123,84,0.35)' }}
-          title="Чат підтримки"
+          style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', textDecoration: 'none', boxShadow: '0 6px 20px rgba(255,123,84,0.35)' }}
+          title="Наш Telegram-бот"
         >
           <img src="/telegram.svg" alt="Telegram" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
+        </a>
+      )}
+
+      {/* НИЖНЯ КНОПКА (ВІДКРИТТЯ ВІДЖЕТА ЧАТУ ПІДТРИМКИ) */}
+      {!isOpen && (
+        <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
+          <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       )}
 
