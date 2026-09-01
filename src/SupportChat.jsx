@@ -156,9 +156,19 @@ export default function SupportChat() {
 
   const handleTelegramAuth = async () => {
     setSubmissionType('telegram');
-    // Ми повністю видалили відправку анонімного "ЛІД ПЕРЕЙШОВ У БОТ"
-    // Тепер користувач просто переходить у бот, де його зустріне повноцінне меню
-    window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+    
+    if (message.trim()) {
+      // Якщо людина ввела текст, генеруємо PIN і передаємо його в Telegram
+      const pin = Math.floor(1000 + Math.random() * 9000);
+      const text = `⏳ <b>ОЧІКУВАННЯ АВТОРИЗАЦІЇ...</b>\n\n💬 Питання з сайту: <i>${message.trim()}</i>\n🔑 PIN: <b>${pin}</b>\n\n(Щойно клієнт відкриє бота, ви отримаєте його профіль з цим PIN!)`;
+      
+      await sendToTelegram(text);
+      window.open(`https://t.me/hackademiapp_bot?start=pin_${pin}`, '_blank');
+    } else {
+      // Якщо тексту немає, просто відкриваємо бота
+      window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+    }
+    
     setStep(3);
   };
 
