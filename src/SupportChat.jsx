@@ -14,7 +14,7 @@ const chatTranslations = {
     placeholder: "Ваше повідомлення...",
     send: "Відправити",
     sent: "✅ Дякуємо! Відправлено.",
-    studentReply: "Ми отримали ваше повідомлення. Викладач відповість вам у чаті платформи!",
+    studentReply: "Ми успішно отримали ваше повідомлення! Наш менеджер незабаром зв'яжеться з вами.",
     transition: "Перехід у Telegram...",
     guestReply: "Якщо бот не відкрився автоматично, перейдіть за посиланням.",
     close: "Закрити",
@@ -31,7 +31,7 @@ const chatTranslations = {
     placeholder: "Vaša správa...",
     send: "Odoslať",
     sent: "✅ Ďakujeme! Odoslané.",
-    studentReply: "Dostali sme vašu správu. Lektor vám odpovie v chate platformy!",
+    studentReply: "Úspešne sme prijali vašu správu! Náš manažér vás bude čoskoro kontaktovať.",
     transition: "Prechod do Telegramu...",
     guestReply: "Ak sa bot neotvoril automaticky, prejdite na odkaz.",
     close: "Zavrieť",
@@ -48,7 +48,7 @@ const chatTranslations = {
     placeholder: "Your message...",
     send: "Send",
     sent: "✅ Thank you! Sent.",
-    studentReply: "We received your message. The teacher will reply to you in the platform chat!",
+    studentReply: "We have successfully received your message! Our manager will contact you shortly.",
     transition: "Going to Telegram...",
     guestReply: "If the bot didn't open automatically, follow the link.",
     close: "Close",
@@ -65,7 +65,7 @@ const chatTranslations = {
     placeholder: "Ваше сообщение...",
     send: "Отправить",
     sent: "✅ Спасибо! Отправлено.",
-    studentReply: "Мы получили ваше сообщение. Преподаватель ответит вам в чате платформы!",
+    studentReply: "Мы успешно получили ваше сообщение! Наш менеджер вскоре свяжется с вами.",
     transition: "Переход в Telegram...",
     guestReply: "Если бот не открылся автоматически, перейдите по ссылке.",
     close: "Закрыть",
@@ -73,11 +73,12 @@ const chatTranslations = {
   }
 };
 
+const ADMIN_IDS = [597686904, 5604755902];
+
 export default function SupportChat() {
   const lang = localStorage.getItem('hack_lang') || 'uk';
   const t = (key) => chatTranslations[lang]?.[key] || chatTranslations['uk'][key] || key;
 
-  // "Пам'ять" браузера: якщо ми перенаправлялися з Google, відкриваємо чат автоматично
   const [isOpen, setIsOpen] = useState(() => {
     return sessionStorage.getItem('keepSupportChatOpen') === 'true';
   });
@@ -88,7 +89,6 @@ export default function SupportChat() {
   const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
-    // Очищаємо пам'ять після успішного відкриття, щоб не зависало назавжди
     if (sessionStorage.getItem('keepSupportChatOpen')) {
       sessionStorage.removeItem('keepSupportChatOpen');
     }
@@ -112,7 +112,6 @@ export default function SupportChat() {
   }, []);
 
   const handleGoogleLogin = async () => {
-    // Кажемо браузеру: "Запам'ятай, що після перезавантаження треба відкрити цей чат"
     sessionStorage.setItem('keepSupportChatOpen', 'true');
     await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -120,9 +119,29 @@ export default function SupportChat() {
     });
   };
 
-  const handleTelegramLogin = () => {
-    window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+  const handleTelegramLogin = async () => {
+    sessionStorage.setItem('keepSupportChatOpen', 'true');
     setView('telegram');
+    
+    const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
+    
+    if (message.trim() && BOT_TOKEN) {
+      const pin = Math.floor(1000 + Math.random() * 9000);
+      const text = `🚨 <b>НОВЕ ПИТАННЯ З САЙТУ</b>\n\n💬 Текст: <i>${message.trim()}</i>\n\n🔑 <b>PIN-КОД: ${pin}</b>\n\n<i>(Очікуємо авторизації. Як тільки клієнт натисне Start у боті, ви отримаєте сповіщення з цим же PIN-кодом).</i>`;
+      
+      for (const adminId of ADMIN_IDS) {
+        try {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: adminId, text: text, parse_mode: 'HTML' })
+          });
+        } catch (e) {}
+      }
+      window.open(`https://t.me/hackademiapp_bot?start=pin_${pin}`, '_blank');
+    } else {
+      window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+    }
   };
 
   const handleSendMessage = async (e) => {
@@ -138,17 +157,20 @@ export default function SupportChat() {
     if (error) console.error("Помилка збереження повідомлення:", error);
     
     const BOT_TOKEN = import.meta.env.VITE_TG_BOT_TOKEN; 
-    const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
     
-    if (BOT_TOKEN && CHAT_ID) {
+    if (BOT_TOKEN) {
       const targetId = authUser.telegram_id || authUser.id;
       const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: <code>${targetId}</code>\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
       
-      await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ chat_id: CHAT_ID, text: text, parse_mode: 'HTML' })
-      });
+      for (const adminId of ADMIN_IDS) {
+        try {
+          await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ chat_id: adminId, text: text, parse_mode: 'HTML' })
+          });
+        } catch (e) {}
+      }
     }
     
     setIsSending(false);
