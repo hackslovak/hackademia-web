@@ -27,20 +27,8 @@ export default function Landing() {
         }
     };
 
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [chatInput, setChatInput] = useState('');
-    const toggleChat = () => setIsChatOpen(!isChatOpen);
-
-    const sendLead = () => {
-        if (!chatInput.trim()) {
-            alert(t('chatAlert'));
-            return;
-        }
-        const encodedText = encodeURIComponent("Лід з сайту: " + chatInput.trim());
-        window.open(`https://t.me/xackademia?text=${encodedText}`, '_blank');
-        setChatInput('');
-        toggleChat();
-    };
+    // Виклик глобальної події для відкриття нового чату підтримки
+    const openSupportWidget = () => window.dispatchEvent(new CustomEvent('openSupportChat'));
 
     return (
         <div className="landing-body">
@@ -63,8 +51,6 @@ export default function Landing() {
                     .container { padding: 30px 15px !important; }
                     .about-grid, .pricing-grid { grid-template-columns: 1fr !important; }
                     .extra-box { grid-template-columns: 1fr !important; padding: 20px !important; }
-                    .chat-modal { width: calc(100% - 30px) !important; right: 15px !important; bottom: 80px !important; }
-                    .floating-buttons { bottom: 15px !important; right: 15px !important; }
                 }
             `}</style>
 
@@ -108,7 +94,7 @@ export default function Landing() {
                         </div>
                     )}
 
-                    <button className="header-btn" onClick={toggleChat}>{t('contactBtn')}</button>
+                    <button className="header-btn" onClick={openSupportWidget}>{t('contactBtn')}</button>
                 </div>
             </header>
 
@@ -117,7 +103,6 @@ export default function Landing() {
                 <h1>{t('heroTitle1')}<br /><span>{t('heroTitle2')}</span></h1>
                 <p>{t('heroSub')}</p>
                 
-                {/* ОНОВЛЕНА ПУЛЬСУЮЧА КНОПКА */}
                 <button 
                   className="hover-card" 
                   onClick={() => navigate(isAuth ? '/app' : '/login')}
@@ -131,7 +116,7 @@ export default function Landing() {
                     fontSize: '22px', 
                     cursor: 'pointer', 
                     boxShadow: '0 15px 35px rgba(255,123,84,0.4)',
-                    animation: 'pulseCTA 2s infinite', /* ТУТ ЗМІНЕНО НАЗВУ АНІМАЦІЇ */
+                    animation: 'pulseCTA 2s infinite',
                     transition: '0.3s ease'
                   }}
                 >
@@ -194,7 +179,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">85€ <span>{t('priceMonth')}</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={openSupportWidget}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
 
@@ -212,7 +197,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">85€ <span>{t('priceMonth')}</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={openSupportWidget}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
 
@@ -230,7 +215,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">175€ <span>{t('priceMonth')}</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={toggleChat}>{t('priceTryBtn')}</button>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center' }} onClick={openSupportWidget}>{t('priceTryBtn')}</button>
                         </div>
                     </div>
                 </div>
@@ -251,32 +236,12 @@ export default function Landing() {
                 </div>
             </div>
 
-
-            <div className={`chat-modal ${isChatOpen ? 'active' : ''}`}>
-                <div className="chat-header">
-                    <div className="chat-header-info">
-                        <div className="chat-avatar">H</div>
-                        <div>
-                            <div style={{ fontWeight: 700, fontSize: '0.95rem' }}>{t('chatAssistant')}</div>
-                            <div style={{ fontSize: '0.75rem', color: '#FF4B2B' }}>{t('chatOnline')}</div>
-                        </div>
-                    </div>
-                    <button onClick={toggleChat} style={{ background: 'none', border: 'none', color: '#fff', fontSize: '1.2rem', cursor: 'pointer' }}>&times;</button>
-                </div>
-                <div className="chat-body">
-                    <div className="chat-message">{t('chatGreeting')}</div>
-                </div>
-                <div className="chat-footer">
-                    <input type="text" value={chatInput} onChange={e => setChatInput(e.target.value)} placeholder={t('chatPlaceholder')} onKeyDown={e => e.key === 'Enter' && sendLead()} />
-                    <button onClick={sendLead}>➤</button>
-                </div>
-            </div>
-
             <footer>
                 <h3>HACKADEMIA</h3>
                 <p>{t('footerDesc')}</p>
                 <p style={{ marginTop: '40px', fontSize: '0.85rem', color: '#789' }}>{t('footerRights')}</p>
             </footer>
+            
         {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
       <SupportChat />
     </div>

@@ -86,21 +86,42 @@ export default function SupportChat() {
   const lang = localStorage.getItem('hack_lang') || 'uk';
   const t = (key) => chatTranslations[lang]?.[key] || chatTranslations['uk'][key] || key;
 
+  // Надійне збереження відкритого стану після редіректу Google OAuth
   const [isOpen, setIsOpen] = useState(() => {
-    return sessionStorage.getItem('keepSupportChatOpen') === 'true';
+    const isAuthRedirect = window.location.hash.includes('access_token');
+    return sessionStorage.getItem('keepSupportChatOpen') === 'true' || isAuthRedirect;
   });
   
   const [view, setView] = useState('main'); 
   const [message, setMessage] = useState('');
   const [authUser, setAuthUser] = useState(null);
 
-  // Нові стани для живого чату
   const [chatHistory, setChatHistory] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [systemMsg, setSystemMsg] = useState('');
   const chatEndRef = useRef(null);
 
-  // Автопрокрутка до останнього повідомлення
+  // Слухач для кнопок на головній сторінці та авто-відкриття
+  useEffect(() => {
+    const handleOpenChat = () => {
+      setIsOpen(true);
+      sessionStorage.setItem('chatInteracted', 'true');
+    };
+    window.addEventListener('openSupportChat', handleOpenChat);
+
+    const autoOpenTimer = setTimeout(() => {
+      if (!sessionStorage.getItem('chatInteracted') && !window.location.hash.includes('access_token')) {
+        setIsOpen(true);
+        sessionStorage.setItem('chatInteracted', 'true');
+      }
+    }, 3000); // 3 секунди до відкриття
+
+    return () => {
+      window.removeEventListener('openSupportChat', handleOpenChat);
+      clearTimeout(autoOpenTimer);
+    };
+  }, []);
+
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [chatHistory, isTyping, systemMsg]);
@@ -127,6 +148,11 @@ export default function SupportChat() {
     }
     checkAuth();
   }, []);
+
+  const closeChat = () => {
+    setIsOpen(false);
+    sessionStorage.setItem('chatInteracted', 'true');
+  };
 
   const handleGoogleLogin = async () => {
     sessionStorage.setItem('keepSupportChatOpen', 'true');
@@ -166,9 +192,8 @@ export default function SupportChat() {
     if (!message.trim() || !authUser) return;
     
     const textToSend = message.trim();
-    setMessage(''); // Миттєво очищаємо поле вводу
+    setMessage(''); 
     
-    // Додаємо бульбашку користувача та показуємо імітацію набору тексту
     setChatHistory(prev => [...prev, { text: textToSend, sender: 'user' }]);
     setSystemMsg('');
     setIsTyping(true);
@@ -196,7 +221,6 @@ export default function SupportChat() {
       }
     }
     
-    // Через 2.5 секунди прибираємо "Асистент друкує..." і показуємо жовте повідомлення
     setTimeout(() => {
       setIsTyping(false);
       setSystemMsg(t('systemWait'));
@@ -218,10 +242,13 @@ export default function SupportChat() {
           justify-content: center;
           box-shadow: 0 4px 15px rgba(0,0,0,0.15);
           transition: all 0.3s ease;
+          background-color: #062440;
+          color: #ffffff;
         }
         .support-trigger-btn:hover {
           transform: translateY(-4px) scale(1.05);
           box-shadow: 0 10px 25px rgba(255,123,84,0.35);
+          background-color: #FF7B54;
         }
         .auth-btn {
           width: 100%; display: flex; align-items: center; justify-content: center; gap: 10px;
@@ -235,7 +262,7 @@ export default function SupportChat() {
       `}</style>
 
       {!isOpen && (
-        <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
+        <button onClick={() => { setIsOpen(true); sessionStorage.setItem('chatInteracted', 'true'); }} className="support-trigger-btn" title="Чат підтримки">
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
       )}
@@ -254,7 +281,7 @@ export default function SupportChat() {
                 </div>
               </div>
             </div>
-            <button onClick={() => setIsOpen(false)} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '20px', opacity: 0.7 }}>×</button>
+            <button onClick={closeChat} style={{ background: 'transparent', border: 'none', color: '#fff', cursor: 'pointer', fontSize: '20px', opacity: 0.7 }}>×</button>
           </div>
 
           <div style={{ padding: '20px', flex: 1, minHeight: '300px', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
@@ -280,27 +307,23 @@ export default function SupportChat() {
             {authUser && view === 'main' && (
               <div style={{ animation: 'fadeIn 0.3s ease', display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
                 
-                {/* ОБЛАСТЬ ЖИВОГО ЧАТУ */}
                 <div style={{ flex: 1, overflowY: 'auto', marginBottom: '15px', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '5px' }}>
                   <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '10px' }}>
                     <b>{t('greeting')}, {authUser.first_name || 'Студент'}!</b><br/>{t('prompt')}
                   </div>
                   
-                  {/* Бульбашки повідомлень */}
                   {chatHistory.map((msg, i) => (
                     <div key={i} style={{ alignSelf: 'flex-end', background: '#FF7B54', color: '#fff', padding: '10px 14px', borderRadius: '15px 15px 4px 15px', maxWidth: '85%', fontSize: '13px' }}>
                       {msg.text}
                     </div>
                   ))}
                   
-                  {/* Імітація набору тексту менеджером */}
                   {isTyping && (
                     <div style={{ alignSelf: 'flex-start', background: '#F4F7F6', padding: '10px 14px', borderRadius: '15px 15px 15px 4px', fontSize: '12px', color: '#718096', fontStyle: 'italic', animation: 'fadeIn 0.3s ease' }}>
                       {t('typing')}
                     </div>
                   )}
 
-                  {/* Повідомлення "Очікується менеджер" */}
                   {systemMsg && (
                     <div style={{ alignSelf: 'center', background: '#FFFBEB', border: '1px solid #FDE68A', padding: '8px 12px', borderRadius: '8px', fontSize: '11px', color: '#92400E', textAlign: 'center', marginTop: '10px', animation: 'fadeIn 0.5s ease' }}>
                       {systemMsg}
@@ -331,7 +354,7 @@ export default function SupportChat() {
                 <p style={{ color: '#718096', fontSize: '13px', lineHeight: '1.5', background: '#F4F7F6', padding: '12px', borderRadius: '10px' }}>
                   {t('guestReply')}
                 </p>
-                <button onClick={() => { setIsOpen(false); setTimeout(() => setView('main'), 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
+                <button onClick={() => { closeChat(); setTimeout(() => setView('main'), 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
                   {t('close')}
                 </button>
               </div>
