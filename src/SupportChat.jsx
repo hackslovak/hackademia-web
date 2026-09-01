@@ -18,6 +18,8 @@ const chatTranslations = {
     transition: "Перехід у Telegram...",
     studentReply: "Ми отримали ваше повідомлення. Викладач відповість вам у чаті платформи!",
     guestReply: "Якщо бот не привітався автоматично, надішліть йому команду /support або напишіть своє питання.",
+    contactSuccess: "Дякуємо!",
+    contactReply: "Ми успішно отримали ваші контакти й незабаром зв'яжемося з вами у вибраному месенджері.",
     close: "Зрозуміло, закрити",
     sending: "Відправка..."
   },
@@ -36,6 +38,8 @@ const chatTranslations = {
     transition: "Prechod do Telegramu...",
     studentReply: "Dostali sme vašu správu. Lektor vám odpovie v chate platformy!",
     guestReply: "Ak bot nepozdraví automaticky, pošlite nam príkaz /support alebo napíšte svoju otázku.",
+    contactSuccess: "Ďakujeme!",
+    contactReply: "Úspešne sme prijali vaše kontakty a čoskoro vás budeme kontaktovať.",
     close: "Rozumiem, zavrieť",
     sending: "Odosielanie..."
   },
@@ -54,6 +58,8 @@ const chatTranslations = {
     transition: "Going to Telegram...",
     studentReply: "We received your message. The teacher will reply to you in the platform chat!",
     guestReply: "If the bot didn't greet you automatically, send it the /support command or write your question.",
+    contactSuccess: "Thank you!",
+    contactReply: "We have successfully received your contacts and will contact you shortly.",
     close: "Got it, close",
     sending: "Sending..."
   },
@@ -72,6 +78,8 @@ const chatTranslations = {
     transition: "Переход в Telegram...",
     studentReply: "Мы получили ваше сообщение. Преподаватель ответит вам в чате платформы!",
     guestReply: "Если бот не поздоровался автоматически, отправьте ему команду /support или напишите свой вопрос.",
+    contactSuccess: "Спасибо!",
+    contactReply: "Мы успешно получили ваши контакты и вскоре свяжемся с вами.",
     close: "Понятно, закрыть",
     sending: "Отправка..."
   }
@@ -90,9 +98,10 @@ export default function SupportChat() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [step, setStep] = useState(1); 
+  const [submissionType, setSubmissionType] = useState(null); // 'telegram' або 'manual'
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
-  const [selectedMessengers, setSelectedMessengers] = useState([]); // Множинний вибір
+  const [selectedMessengers, setSelectedMessengers] = useState([]);
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
@@ -146,6 +155,7 @@ export default function SupportChat() {
   };
 
   const handleTelegramAuth = async () => {
+    setSubmissionType('telegram');
     const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення поруч у цьому чаті)`;
     const success = await sendToTelegram(text);
     if (success) {
@@ -157,6 +167,7 @@ export default function SupportChat() {
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!contact.trim()) return;
+    setSubmissionType('manual');
     const messengersList = selectedMessengers.length > 0 ? selectedMessengers.join(', ') : 'Не вказано';
     const text = `🔥 <b>НОВИЙ ЛІД З САЙТУ</b>\n\n💬 Питання: <i>${message}</i>\n\n📞 Контакти [<b>${messengersList}</b>]: ${contact.trim()}`;
     const success = await sendToTelegram(text);
@@ -168,6 +179,7 @@ export default function SupportChat() {
     if (!message.trim()) return;
 
     if (authUser) {
+      setSubmissionType('manual');
       setIsSending(true);
       const { error } = await supabase.from('messages').insert([
         { user_id: authUser.id, sender_id: authUser.id, text: message.trim(), is_read: false }
@@ -204,6 +216,7 @@ export default function SupportChat() {
     setMessage('');
     setContact('');
     setSelectedMessengers([]);
+    setSubmissionType(null);
   };
 
   return (
@@ -228,7 +241,7 @@ export default function SupportChat() {
         }
       `}</style>
 
-      {/* ВЕРХНЯ КНОПКА (ТЕПЕР У ФІРМОВОМУ ТЕПЛОМУ СТИЛІ З ІКОНКОЮ TELEGRAM) */}
+      {/* ВЕРХНЯ КНОПКА (TELEGRAM) */}
       {!isOpen && (
         <a 
           href="https://t.me/hackademiapp_bot" 
@@ -242,7 +255,7 @@ export default function SupportChat() {
         </a>
       )}
 
-      {/* НИЖНЯ КНОПКА (ОРИГІНАЛЬНА КНОПКА ЧАТУ) */}
+      {/* НИЖНЯ КНОПКА (ЧАТ ПІДТРИМКИ) */}
       {!isOpen && (
         <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -353,10 +366,10 @@ export default function SupportChat() {
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
                 <h3 style={{ color: '#2D3748', margin: '0 0 10px 0', fontSize: '18px' }}>
-                  {authUser ? t('sent') : t('transition')}
+                  {submissionType === 'telegram' ? t('transition') : t('contactSuccess')}
                 </h3>
-                <p style={{ color: '#718096', fontSize: '13px', lineHeight: '1.5', background: '#F4F7F6', padding: '10px', borderRadius: '10px' }}>
-                  {authUser ? t('studentReply') : t('guestReply')}
+                <p style={{ color: '#718096', fontSize: '13px', lineHeight: '1.5', background: '#F4F7F6', padding: '12px', borderRadius: '10px' }}>
+                  {submissionType === 'telegram' ? t('guestReply') : t('contactReply')}
                 </p>
                 <button onClick={() => { setIsOpen(false); setTimeout(resetChat, 500); }} style={{ background: '#1A3636', color: '#fff', border: 'none', borderRadius: '12px', padding: '10px 20px', marginTop: '15px', cursor: 'pointer', fontWeight: 'bold', width: '100%' }}>
                   {t('close')}
