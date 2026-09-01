@@ -11,7 +11,7 @@ const chatTranslations = {
     authPrompt: "Щоб отримати відповідь миттєво, авторизуйтесь через наш Telegram-бот 👇",
     toTelegram: "Перейти в Telegram",
     or: "АБО",
-    whereConvenient: "Де вам зручніше отримати відповідь?",
+    whereConvenient: "Де вам зручніше отримати відповідь? (можна кілька)",
     send: "Відправити",
     back: "Назад",
     sent: "Відправлено!",
@@ -29,13 +29,13 @@ const chatTranslations = {
     authPrompt: "Pre okamžitú odpoveď sa prihláste cez náš Telegram bot 👇",
     toTelegram: "Prejsť do Telegramu",
     or: "ALEBO",
-    whereConvenient: "Kde vám najviac vyhovuje prijať odpoveď?",
+    whereConvenient: "Kde vám najviac vyhovuje prijať odpoveď? (môžete vybrať viaceré)",
     send: "Odoslať",
     back: "Späť",
     sent: "Odoslané!",
     transition: "Prechod do Telegramu...",
     studentReply: "Dostali sme vašu správu. Lektor vám odpovie v chate platformy!",
-    guestReply: "Ak bot nepozdraví automaticky, pošlite mu príkaz /support alebo napíšte svoju otázku.",
+    guestReply: "Ak bot nepozdraví automaticky, pošlite nam príkaz /support alebo napíšte svoju otázku.",
     close: "Rozumiem, zavrieť",
     sending: "Odosielanie..."
   },
@@ -47,7 +47,7 @@ const chatTranslations = {
     authPrompt: "To get an instant reply, log in via our Telegram bot 👇",
     toTelegram: "Go to Telegram",
     or: "OR",
-    whereConvenient: "Where is it more convenient for you to get a reply?",
+    whereConvenient: "Where is it more convenient to get a reply? (multiple choice)",
     send: "Send",
     back: "Back",
     sent: "Sent!",
@@ -65,7 +65,7 @@ const chatTranslations = {
     authPrompt: "Чтобы получить ответ мгновенно, авторизуйтесь через наш Telegram-бот 👇",
     toTelegram: "Перейти в Telegram",
     or: "ИЛИ",
-    whereConvenient: "Где вам удобнее получить ответ?",
+    whereConvenient: "Где вам удобнее получить ответ? (можно несколько)",
     send: "Отправить",
     back: "Назад",
     sent: "Отправлено!",
@@ -92,7 +92,7 @@ export default function SupportChat() {
   const [step, setStep] = useState(1); 
   const [message, setMessage] = useState('');
   const [contact, setContact] = useState('');
-  const [messenger, setMessenger] = useState('Telegram');
+  const [selectedMessengers, setSelectedMessengers] = useState([]); // Множинний вибір
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
@@ -137,6 +137,14 @@ export default function SupportChat() {
     }
   };
 
+  const toggleMessenger = (id) => {
+    if (selectedMessengers.includes(id)) {
+      setSelectedMessengers(selectedMessengers.filter(m => m !== id));
+    } else {
+      setSelectedMessengers([...selectedMessengers, id]);
+    }
+  };
+
   const handleTelegramAuth = async () => {
     const text = `🚀 <b>ЛІД ПЕРЕЙШОВ У БОТ</b>\n\n💬 Питання: <i>${message}</i>\n\n(Шукайте його повідомлення поруч у цьому чаті)`;
     const success = await sendToTelegram(text);
@@ -149,7 +157,8 @@ export default function SupportChat() {
   const handleManualSubmit = async (e) => {
     e.preventDefault();
     if (!contact.trim()) return;
-    const text = `🔥 <b>НОВИЙ ЛІД З САЙТУ</b>\n\n💬 Питання: <i>${message}</i>\n\n📞 Контакт [<b>${messenger}</b>]: ${contact.trim()}`;
+    const messengersList = selectedMessengers.length > 0 ? selectedMessengers.join(', ') : 'Не вказано';
+    const text = `🔥 <b>НОВИЙ ЛІД З САЙТУ</b>\n\n💬 Питання: <i>${message}</i>\n\n📞 Контакти [<b>${messengersList}</b>]: ${contact.trim()}`;
     const success = await sendToTelegram(text);
     if (success) setStep(3);
   };
@@ -194,6 +203,7 @@ export default function SupportChat() {
     setStep(1);
     setMessage('');
     setContact('');
+    setSelectedMessengers([]);
   };
 
   return (
@@ -218,21 +228,21 @@ export default function SupportChat() {
         }
       `}</style>
 
-      {/* ВЕРХНЯ КНОПКА (ІКОНКА TELEGRAM З ПАПКИ PUBLIC) */}
+      {/* ВЕРХНЯ КНОПКА (ТЕПЕР У ФІРМОВОМУ ТЕПЛОМУ СТИЛІ З ІКОНКОЮ TELEGRAM) */}
       {!isOpen && (
         <a 
           href="https://t.me/hackademiapp_bot" 
           target="_blank" 
           rel="noreferrer"
           className="support-trigger-btn"
-          style={{ backgroundColor: '#2AABEE', textDecoration: 'none' }}
+          style={{ background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', textDecoration: 'none', boxShadow: '0 6px 20px rgba(255,123,84,0.35)' }}
           title="Наш Telegram-бот"
         >
-          <img src="/telegram.svg" alt="Telegram" style={{ width: '28px', height: '28px', objectFit: 'contain' }} />
+          <img src="/telegram.svg" alt="Telegram" style={{ width: '26px', height: '26px', objectFit: 'contain' }} />
         </a>
       )}
 
-      {/* НИЖНЯ КНОПКА (ОРИГІНАЛЬНА КНОПКА ЧАТУ ЗІ СТАРОЮ ІКОНКОЮ) */}
+      {/* НИЖНЯ КНОПКА (ОРИГІНАЛЬНА КНОПКА ЧАТУ) */}
       {!isOpen && (
         <button onClick={() => setIsOpen(true)} className="support-trigger-btn" style={{ backgroundColor: '#062440', color: '#ffffff' }} title="Чат підтримки">
           <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
@@ -288,7 +298,7 @@ export default function SupportChat() {
                   type="button"
                   onClick={handleTelegramAuth}
                   disabled={isSending}
-                  style={{ width: '100%', background: '#2AABEE', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px', cursor: isSending ? 'wait' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px', boxShadow: '0 4px 15px rgba(42,171,238,0.3)', transition: '0.2s' }}
+                  style={{ width: '100%', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', color: '#fff', border: 'none', borderRadius: '12px', padding: '12px', cursor: isSending ? 'wait' : 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '15px', boxShadow: '0 4px 15px rgba(255,123,84,0.3)', transition: '0.2s' }}
                 >
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" /></svg>
                   {isSending ? t('sending') : t('toTelegram')}
@@ -303,23 +313,26 @@ export default function SupportChat() {
                 <div style={{ marginBottom: '12px' }}>
                   <label style={{ fontSize: '11px', color: '#718096', fontWeight: 'bold', display: 'block', marginBottom: '8px', textTransform: 'uppercase' }}>{t('whereConvenient')}</label>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px' }}>
-                    {messengers.map(m => (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => setMessenger(m.id)}
-                        style={{ padding: '8px', borderRadius: '10px', border: messenger === m.id ? '2px solid #FF7B54' : '1px solid #E2E8F0', background: messenger === m.id ? '#FFF5F5' : '#fff', color: messenger === m.id ? '#FF7B54' : '#4A5568', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s' }}
-                      >
-                        {m.icon} {m.id}
-                      </button>
-                    ))}
+                    {messengers.map(m => {
+                      const isSelected = selectedMessengers.includes(m.id);
+                      return (
+                        <button
+                          key={m.id}
+                          type="button"
+                          onClick={() => toggleMessenger(m.id)}
+                          style={{ padding: '8px', borderRadius: '10px', border: isSelected ? '2px solid #FF7B54' : '1px solid #E2E8F0', background: isSelected ? '#FFF5F5' : '#fff', color: isSelected ? '#FF7B54' : '#4A5568', fontWeight: 'bold', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s' }}
+                        >
+                          {m.icon} {m.id}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
                 <form onSubmit={handleManualSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <input 
                     type="text" 
-                    placeholder={`Ваш ${messenger}...`}
+                    placeholder="Ваші контакти..."
                     value={contact}
                     onChange={(e) => setContact(e.target.value)}
                     style={{ width: '100%', padding: '12px 15px', borderRadius: '12px', border: '1px solid #E2E8F0', outline: 'none', boxSizing: 'border-box', fontSize: '14px' }}
