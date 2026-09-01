@@ -78,7 +78,7 @@ export default function SupportChat() {
   const t = (key) => chatTranslations[lang]?.[key] || chatTranslations['uk'][key] || key;
 
   const [isOpen, setIsOpen] = useState(false);
-  const [view, setView] = useState('main'); // 'main', 'sent', 'telegram'
+  const [view, setView] = useState('main'); 
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
@@ -87,7 +87,6 @@ export default function SupportChat() {
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // ДОДАЛИ ВИБІРКУ telegram_id
         let { data } = await supabase.from('users').select('id, first_name, email, telegram_id').eq('email', session.user.email).maybeSingle();
         if (!data) {
             const res = await supabase.from('users').select('id, first_name, email, telegram_id').eq('id', session.user.id).maybeSingle();
@@ -102,6 +101,20 @@ export default function SupportChat() {
     }
     checkAuth();
   }, []);
+
+  // --- ВІДНОВЛЕНІ ФУНКЦІЇ АВТОРИЗАЦІЇ ---
+  const handleGoogleLogin = async () => {
+    await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin }
+    });
+  };
+
+  const handleTelegramLogin = () => {
+    window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
+    setView('telegram');
+  };
+  // ----------------------------------------
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -119,7 +132,6 @@ export default function SupportChat() {
     const CHAT_ID = import.meta.env.VITE_TG_CHAT_ID; 
     
     if (BOT_TOKEN && CHAT_ID) {
-      // ВИЗНАЧАЄМО ЯКИЙ ID ВІДПРАВИТИ І ПОВЕРТАЄМО ФОРМАТ ПОВІДОМЛЕННЯ
       const targetId = authUser.telegram_id || authUser.id;
       const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: ${targetId}\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
       
