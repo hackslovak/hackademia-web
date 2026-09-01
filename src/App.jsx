@@ -1159,7 +1159,7 @@ function Platform() {
   const [newDictTranslation, setNewDictTranslation] = useState('');
   const [userName, setUserName] = useState(null);
   const [dbUserId, setDbUserId] = useState(null);
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false); // Тепер за замовчуванням юзер - не адмін
   const [accessStatus, setAccessStatus] = useState('loading'); 
   const [telegramId, setTelegramId] = useState(null);
   const [allowedCourses, setAllowedCourses] = useState([]);
@@ -1212,7 +1212,8 @@ function Platform() {
     if (window.confirm("Ви точно хочете вийти з акаунта?")) {
       await supabase.auth.signOut();
       localStorage.removeItem('hack_auth_cache');
-      window.location.href = '/'; // Перекидаємо на лендінг
+      localStorage.removeItem('hack_is_admin'); // Додали очищення статусу адміна
+      window.location.href = '/'; 
     }
   };
   
@@ -1586,10 +1587,17 @@ useEffect(() => {
           if (userData.role === 'admin' || emailUser.email === 'hackslovak@gmail.com') {
             setIsAdmin(true);
             localStorage.setItem('hack_is_admin', 'true');
+          } else {
+            // Жорстко забираємо права, якщо це звичайний юзер
+            setIsAdmin(false);
+            localStorage.removeItem('hack_is_admin');
           }
         } else {
           setAccessStatus('approved');
+          setIsAdmin(false);
         }
+        
+        // --- ЦЕЙ ШМАТОК БУВ ВИПАДКОВО ВИДАЛЕНИЙ ---
         fetchCourses();
       } else if (tgUser) {
         setUserName(tgUser.first_name);

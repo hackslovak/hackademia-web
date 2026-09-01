@@ -27,7 +27,7 @@ export const translations = {
     price3Li1: "24 заняття", price3Li1_2: "(~2.5 місяці)", price3Li2: "2 рази на тиждень по 1.5 год", price3Li3: "Чат із вашим ментором",
     price4Badge: "1 особа або пара", price4Title: "Індивідуально", price4Sub: "Повна персональна адаптація під ваші особисті цілі та графік.",
     price4Li1: "Власний гнучкий графік", price4Li2: "100% уваги викладача", price4Li3: "Записи занять за бажанням",
-    extraTitle1: "✨ Всі формати включають:", extraLi1: "💬 Постійний чат з особистим ментором", extraLi2: "🎥 Відеозаписи всіх занять", extraLi3: "📚 Авторські капсули та ілюстровані воркбуки",
+    extraTitle1: "✨ Всі формати включають:", extraLi1: "💬 Постоянний чат з особистим ментором", extraLi2: "🎥 Відеозаписи всіх занять", extraLi3: "📚 Авторські капсули та ілюстровані воркбуки",
     extraTitle2: "🕊️ Як почати навчання?", extraText: "Ви можете записатися на безкоштовне пробне заняття або отримати доступ до платформи матеріалів. Оплату здійснюєте лише тоді, коли переконаєтеся, що вам усе подобається!",
     footerDesc: "Сучасна онлайн-школа словацької мови", footerRights: "© 2026 Hackademia. Всі права захищено.",
     chatAssistant: "Асистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше повідомлення...", chatAlert: "Введіть текст повідомлення!",
@@ -40,7 +40,8 @@ export const translations = {
     hasAccount: "Вже є акаунт?", loginLink: "Увійти",
     orTelegram: "Або увійдіть через Telegram (Mini App)",
     openBotBtn: "Відкрити бота 🚀", backToHome: "Повернутися на головну",
-    regTitle: "Реєстрація", regSub: "Створіть акаунт, щоб почати навчання 🚀", regBtn: "Зареєструватися"
+    regTitle: "Реєстрація", regSub: "Створіть акаунт, щоб почати навчання 🚀", regBtn: "Зареєструватися",
+    quickLogin: "Швидкий вхід", continueWithGoogle: "Продовжити з Google"
   },
   sk: {
     greeting: "Ahoj", selectCourse: "Kurzy", lockedAlert: "Tento kurz je momentálne nedostupný.",
@@ -79,7 +80,8 @@ export const translations = {
     hasAccount: "Už máte účet?", loginLink: "Prihlásiť sa",
     orTelegram: "Alebo sa prihláste cez Telegram (Mini App)",
     openBotBtn: "Otvoriť bota 🚀", backToHome: "Späť na hlavnú stránku",
-    regTitle: "Registrácia", regSub: "Vytvorte si účet a začnite sa učiť 🚀", regBtn: "Zaregistrovať sa"
+    regTitle: "Registrácia", regSub: "Vytvorte si účet a začnite sa učiť 🚀", regBtn: "Zaregistrovať sa",
+    quickLogin: "Rýchle prihlásenie", continueWithGoogle: "Pokračovať s Google"
   },
   en: {
     greeting: "Hello", selectCourse: "Courses", lockedAlert: "This course is currently locked.",
@@ -118,7 +120,8 @@ export const translations = {
     hasAccount: "Already have an account?", loginLink: "Log in",
     orTelegram: "Or log in via Telegram (Mini App)",
     openBotBtn: "Open bot 🚀", backToHome: "Back to home",
-    regTitle: "Registration", regSub: "Create an account to start learning 🚀", regBtn: "Sign up"
+    regTitle: "Registration", regSub: "Create an account to start learning 🚀", regBtn: "Sign up",
+    quickLogin: "Quick login", continueWithGoogle: "Continue with Google"
   },
   ru: {
     greeting: "Привет", selectCourse: "Курсы", lockedAlert: "Этот курс сейчас недоступен.",
@@ -157,6 +160,7 @@ export const translations = {
     hasAccount: "Уже есть аккаунт?", loginLink: "Войти",
     orTelegram: "Или войдите через Telegram (Mini App)",
     openBotBtn: "Открыть бота 🚀", backToHome: "Вернуться на главную",
-    regTitle: "Регистрация", regSub: "Создайте аккаунт, чтобы начать обучение 🚀", regBtn: "Зарегистрироваться"
+    regTitle: "Регистрация", regSub: "Создайте аккаунт, чтобы начать обучение 🚀", regBtn: "Зарегистрироваться",
+    quickLogin: "Быстрый вход", continueWithGoogle: "Продолжить с Google"
   }
 };
