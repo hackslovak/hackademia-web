@@ -77,13 +77,22 @@ export default function SupportChat() {
   const lang = localStorage.getItem('hack_lang') || 'uk';
   const t = (key) => chatTranslations[lang]?.[key] || chatTranslations['uk'][key] || key;
 
-  const [isOpen, setIsOpen] = useState(false);
+  // "Пам'ять" браузера: якщо ми перенаправлялися з Google, відкриваємо чат автоматично
+  const [isOpen, setIsOpen] = useState(() => {
+    return sessionStorage.getItem('keepSupportChatOpen') === 'true';
+  });
+  
   const [view, setView] = useState('main'); 
   const [message, setMessage] = useState('');
   const [isSending, setIsSending] = useState(false);
   const [authUser, setAuthUser] = useState(null);
 
   useEffect(() => {
+    // Очищаємо пам'ять після успішного відкриття, щоб не зависало назавжди
+    if (sessionStorage.getItem('keepSupportChatOpen')) {
+      sessionStorage.removeItem('keepSupportChatOpen');
+    }
+
     async function checkAuth() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
@@ -102,8 +111,9 @@ export default function SupportChat() {
     checkAuth();
   }, []);
 
-  // --- ВІДНОВЛЕНІ ФУНКЦІЇ АВТОРИЗАЦІЇ ---
   const handleGoogleLogin = async () => {
+    // Кажемо браузеру: "Запам'ятай, що після перезавантаження треба відкрити цей чат"
+    sessionStorage.setItem('keepSupportChatOpen', 'true');
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin }
@@ -114,7 +124,6 @@ export default function SupportChat() {
     window.open('https://t.me/hackademiapp_bot?start=support', '_blank');
     setView('telegram');
   };
-  // ----------------------------------------
 
   const handleSendMessage = async (e) => {
     e.preventDefault();
@@ -133,7 +142,7 @@ export default function SupportChat() {
     
     if (BOT_TOKEN && CHAT_ID) {
       const targetId = authUser.telegram_id || authUser.id;
-      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: ${targetId}\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
+      const text = `🟢 <b>ПОВІДОМЛЕННЯ З САЙТУ</b>\n\n👤 Учень: <b>${authUser.first_name}</b>\n📧 Email: ${authUser.email || 'Немає'}\n\n💬 Текст: <i>${message.trim()}</i>\n\n🆔 ID: <code>${targetId}</code>\n\n💬 <i>Щоб відповісти клієнту прямо тут, зробіть Reply (Відповісти) на це повідомлення.</i>`;
       
       await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
         method: 'POST',
@@ -217,7 +226,6 @@ export default function SupportChat() {
 
           <div style={{ padding: '20px', flex: 1, minHeight: '200px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
             
-            {/* ЯКЩО НЕ АВТОРИЗОВАНИЙ -> ПОКАЗУЄМО КНОПКИ ВХОДУ */}
             {!authUser && view === 'main' && (
               <div style={{ animation: 'fadeIn 0.3s ease' }}>
                 <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '20px' }}>
@@ -236,7 +244,6 @@ export default function SupportChat() {
               </div>
             )}
 
-            {/* ЯКЩО АВТОРИЗОВАНИЙ -> ВІДРАЗУ ПОКАЗУЄМО ПОЛЕ ВВОДУ */}
             {authUser && view === 'main' && (
               <div style={{ animation: 'fadeIn 0.3s ease', display: 'flex', flexDirection: 'column', height: '100%' }}>
                 <div style={{ background: '#F4F7F6', padding: '15px', borderRadius: '15px 15px 15px 4px', fontSize: '14px', color: '#2D3748', lineHeight: '1.5', marginBottom: '20px' }}>
@@ -258,7 +265,6 @@ export default function SupportChat() {
               </div>
             )}
 
-            {/* ЕКРАН ПІСЛЯ ВІДПРАВКИ ПОВІДОМЛЕННЯ НА САЙТІ */}
             {view === 'sent' && (
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>✅</div>
@@ -272,7 +278,6 @@ export default function SupportChat() {
               </div>
             )}
 
-            {/* ЕКРАН ПІСЛЯ НАТИСКАННЯ НА TELEGRAM */}
             {view === 'telegram' && (
               <div style={{ textAlign: 'center', animation: 'fadeIn 0.5s ease', padding: '15px 0' }}>
                 <div style={{ fontSize: '40px', marginBottom: '10px' }}>🚀</div>
