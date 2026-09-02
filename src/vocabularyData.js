@@ -1673,28 +1673,6 @@ export const vocabularyData = [
           { emoji: '🛑', ua: 'зупинятися', sk: 'zastaviť', en: 'to stop', ru: 'останавливаться' }
         ]
       },
-      {
-    id: 'transport',
-    title: { uk: 'Пересування', sk: 'Doprava', en: 'Transport', ru: 'Передвижение' },
-    icon: '🚗',
-    level: 'A2',
-    totalWords: 98,
-    subcategories: [
-      { 
-        title: { uk: 'Дороги', sk: 'Cesty', en: 'Roads', ru: 'Дороги' }, 
-        icon: '🛣️', 
-        level: 'B1', 
-        wordList: [
-          { emoji: '🛣️', ua: 'дорожній рух', sk: 'doprava', en: 'traffic', ru: 'дорожное движение' },
-          { emoji: '🛣️', ua: 'шосе автомагістраль траса', sk: 'diaľnica', en: 'highway', ru: 'шоссе автомагистраль' },
-          { emoji: '🔄', ua: 'кільцева розв\'язка', sk: 'kruhový objazd', en: 'roundabout', ru: 'кольцевая развязка' },
-          { emoji: '🚇', ua: 'підземний перехід', sk: 'podchod', en: 'underpass', ru: 'подземный переход' },
-          { emoji: '🚗', ua: 'затор корок', sk: 'dopravná zápcha', en: 'traffic jam', ru: 'пробка' },
-          { emoji: '🚶', ua: 'пішохідний перехід зебра', sk: 'priechod pre chodcov', en: 'crosswalk', ru: 'пешеходный переход' },
-          { emoji: '🚘', ua: 'водити керувати', sk: 'riadiť', en: 'to drive', ru: 'водить' },
-          { emoji: '🛑', ua: 'зупинятися', sk: 'zastaviť', en: 'to stop', ru: 'останавливаться' }
-        ]
-      },
       { 
         title: { uk: 'Автомобілі', sk: 'Autá', en: 'Cars', ru: 'Автомобили' }, 
         icon: '🚙', 
@@ -2084,7 +2062,7 @@ export const vocabularyData = [
       }
     ]
   },
-{
+  {
     id: 'leisure',
     title: { uk: 'Дозвілля', sk: 'Voľný čas', en: 'Leisure', ru: 'Досуг' },
     icon: '🎭',
@@ -2834,4 +2812,4 @@ export const vocabularyData = [
       }
     ]
   }
-]; 
+];
