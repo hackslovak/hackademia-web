@@ -2834,4 +2834,4 @@ export const vocabularyData = [
       }
     ]
   }
-];
+]; 
