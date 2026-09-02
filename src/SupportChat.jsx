@@ -138,7 +138,7 @@ export default function SupportChat() {
     initializeUser();
   }, []);
 
-  // НАДІЙНИЙ РАДАР (Smart Polling): перевіряє нові повідомлення кожні 3 секунди, якщо чат відкритий
+// НАДІЙНИЙ РАДАР (Smart Polling): перевіряє нові повідомлення кожні 3 секунди, якщо чат відкритий
   useEffect(() => {
     let interval;
     if (isOpen && authUser) {
@@ -147,7 +147,7 @@ export default function SupportChat() {
           .from('messages')
           .select('*')
           .eq('user_id', authUser.id)
-          .order('id', { ascending: true });
+          .order('created_at', { ascending: true }); // ЗМІНЕНО: тепер сортуємо суворо за часом!
         
         if (data) {
           setChatHistory(data.map(m => ({
