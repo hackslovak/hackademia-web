@@ -1,24 +1,5 @@
 export const vocabularyData = [
   {
-    id: 'people',
-    title: 'Люди',
-    icon: '👨‍👩‍👧',
-    level: 'A1',
-    totalWords: 198,
-    subcategories: [
-      { title: 'Тіло', icon: '🦵', level: 'A1', words: 21 },
-      { title: 'Обличчя', icon: '👁️', level: 'A2', words: 31 },
-      { title: 'Кисті та стопи', icon: '🦶', level: 'B1', words: 10 },
-      { title: 'М\'язи та скелет', icon: '💀', level: 'B2', words: 12 },
-      { title: 'Органи', icon: '🫀', level: 'B2', words: 11 },
-      { title: 'Сім\'я', icon: '🏠', level: 'A1', words: 31 },
-      { title: 'Почуття', icon: '❤️', level: 'A1', words: 19 },
-      { title: 'Життєві події', icon: '💍', level: 'B1', words: 29 },
-      { title: 'Розпорядок дня', icon: '⏰', level: 'A2', words: 9 },
-      { title: 'Риси характеру', icon: '🎭', level: 'B1', words: 25 },
-    ]
-  },
-  {
     id: 'appearance',
     title: 'Зовнішність',
     icon: '👕',
