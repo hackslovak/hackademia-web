@@ -1650,8 +1650,7 @@ export const vocabularyData = [
         ]
       }
     ]
-  }
-  ,
+  },
   {
     id: 'transport',
     title: 'Пересування',
@@ -2082,7 +2081,7 @@ export const vocabularyData = [
         ]
       }
     ]
-  }
+  },
 {
     id: 'leisure',
     title: { uk: 'Дозвілля', sk: 'Voľný čas', en: 'Leisure', ru: 'Досуг' },
@@ -2483,7 +2482,7 @@ export const vocabularyData = [
         ]
       }
     ]
-  }
+  },
   {
     id: 'nature',
     title: { uk: 'Природа', sk: 'Príroda', en: 'Nature', ru: 'Природа' },
