@@ -60,6 +60,26 @@ export const vocabularyData = [
     ]
   },
   {
+    id: 'health',
+    title: { uk: 'Здоров\'я', sk: 'Zdravie', en: 'Health', ru: 'Здоровье' },
+    icon: '❤️',
+    level: 'A2',
+    totalWords: 68,
+    subcategories: [
+      { 
+        title: { uk: 'Самопочуття', sk: 'Pohoda', en: 'Well-being', ru: 'Самочувствие' }, 
+        icon: '🤒', 
+        level: 'A2', 
+        wordList: [
+          { emoji: '🤒', ua: 'хворий', sk: 'chorý', en: 'sick', ru: 'больной' },
+          { emoji: '🤧', ua: 'кашляти', sk: 'kašľať', en: 'to cough', ru: 'кашлять' },
+          { emoji: '🌡️', ua: 'температура', sk: 'teplota', en: 'temperature', ru: 'температура' },
+          { emoji: '💊', ua: 'ліки', sk: 'lieky', en: 'medicine', ru: 'лекарства' }
+        ]
+      }
+    ]
+  },
+  {
     id: 'people',
     title: { uk: 'Люди', sk: 'Ľudia', en: 'People', ru: 'Люди' },
     icon: '👨‍👩‍👧',
