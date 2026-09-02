@@ -330,7 +330,6 @@ export const vocabularyData = [
       }
     ]
   },
-]
   {
     id: 'home',
     title: 'Дім',
