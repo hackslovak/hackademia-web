@@ -885,47 +885,33 @@ const ffFlashcards = falseFriendsDatabase.map(ff => ({
   isFfConverted: true
 }));
 
-// --- ГОЛОСОВИЙ ДВИЖОК (Telegram-Safe Гібрид + Magic Link) ---
+// --- ГОЛОСОВИЙ ДВИЖОК (Google TTS) ---
 const globalAudioPlayer = new Audio();
 
 function speakSlovak(text) {
+  if (!text) return;
+
+  // Завжди використовуємо Google TTS для ідеальної словацької вимови
   const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=sk&q=${encodeURIComponent(text)}`;
   globalAudioPlayer.src = audioUrl;
   
   globalAudioPlayer.play().catch(err => {
-    console.warn("Мережеве аудіо не спрацювало:", err);
+    console.warn("Помилка Google TTS, пробуємо системний:", err);
+    // Якщо Google заблоковано, використовуємо системний як резерв
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'sk-SK';
-      utterance.rate = 0.85;
       window.speechSynthesis.speak(utterance);
-    } else {
-      // Викликаємо нативний Popup Телеграму з кнопкою "Відкрити в браузері"
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showPopup({
-          title: "Блокування звуку 🔇",
-          message: "Ваш пристрій жорстко блокує аудіо всередині Telegram.\n\nВідкрийте платформу у звичайному браузері (Chrome/Safari), щоб звук працював ідеально. Ваш прогрес буде автоматично збережено!",
-          buttons: [
-            { id: "open_web", type: "default", text: "🌐 Відкрити в браузері" },
-            { type: "cancel", text: "Закрити" }
-          ]
-        }, (btnId) => {
-          if (btnId === "open_web") {
-            const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
-            let url = "https://hackademia-web.vercel.app/";
-            if (tgUser) {
-              // Шифруємо дані юзера у Base64 для тимчасової передачі сесії (Magic Link)
-              const authData = JSON.stringify({ id: tgUser.id, first_name: tgUser.first_name });
-              const authStr = btoa(encodeURIComponent(authData));
-              url += "?auth=" + authStr;
-            }
-            window.Telegram.WebApp.openLink(url);
-          }
-        });
-      }
     }
   });
+}
+
+// Допоміжна функція для надійного аудіо
+function playGoogleTTS(text) {
+  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=sk&client=tw-ob&q=${encodeURIComponent(text)}`;
+  const audio = new Audio(audioUrl);
+  audio.play().catch(e => console.warn("Помилка TTS:", e));
 }
 
 // --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---
@@ -1826,7 +1812,7 @@ useEffect(() => {
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
     }
   }
-
+  
   function handleSniperNext(wasCorrect) {
     if (sniperIndex + 1 < sniperCards.length) {
       setSniperIndex(prev => prev + 1);
@@ -1836,6 +1822,16 @@ useEffect(() => {
       setIsSniperOver(true);
     }
   }
+
+  // ВСТАВЛЯЄМО ТУТ:
+  const exitSniper = () => {
+    setSniperStatus('menu');
+    setSniperTimeLeft(5);
+    setSniperHp(5);    // Скидаємо життя
+    setSniperIndex(0); // Скидаємо індекс слова
+    setSniperInput('');
+    setGlobalView(null);
+  };
   
   // --- ЛОГІКА МІНІ-ГРИ "ФАЛЬШИВІ ДРУЗІ" ---
   function startFalseFriends() {
@@ -2807,7 +2803,7 @@ useEffect(() => {
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
         {renderGlobalStyles()}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button onClick={exitSniper} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
           </button>
           {sniperStatus === 'playing' && (
@@ -2850,7 +2846,7 @@ useEffect(() => {
             <h3 style={{ fontSize: '24px', margin: '0 0 10px 0' }}>💀 Гра завершена!</h3>
             <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій рахунок: <b style={{ color: '#00C853', fontSize: '28px' }}>{sniperScore}</b></p>
             <button onClick={startDiacriticalSniperGame} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '14px', borderRadius: '10px', border: 'none', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer', marginBottom: '10px' }}>Спробувати ще раз 🔄</button>
-            <button onClick={() => setGlobalView(null)} style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>На головну</button>
+            <button onClick={exitSniper} style={{ width: '100%', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '10px', fontWeight: 'bold', fontSize: '16px', cursor: 'pointer' }}>На головну</button>
           </div>
         )}
 
@@ -3774,14 +3770,16 @@ useEffect(() => {
               <img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.15, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
               <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>📚</div>
               <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}>
-                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#FFF5F5', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>A1-B2 База слів</span>
-                <span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>Тематичний словник</span>
+                <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#FFF5F5', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>{t('vocabSub')}</span>
+                <span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('vocabTitle')}</span>
               </div>
             </div>
-			<div onClick={() => setGlobalView('dictionary')} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
+            
+            {/* КАРТКА: ІНТЕРВАЛЬНЕ ПОВТОРЕННЯ */}
+            <div onClick={() => setGlobalView('dictionary')} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #2B6CB0 0%, #4299E1 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(43,108,176,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
               <img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />
               <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', position: 'relative', zIndex: 1 }}>🔄</div>
-              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>Розумні картки</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('repeatToday')}</span></div>
+              <div style={{ position: 'relative', zIndex: 1, marginTop: '20px' }}><span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1px', color: '#E2E8F0', fontWeight: 'bold', display: 'block', marginBottom: '4px' }}>{t('flashcardsSub')}</span><span style={{ fontWeight: '900', fontSize: '20px', color: '#ffffff', lineHeight: '1.2', display: 'block' }}>{t('spacedRep')}</span></div>
             </div>
             <div onClick={() => { setGlobalView('sniper'); setSniperStatus('menu'); }} className="hover-card" style={{ position: 'relative', overflow: 'hidden', background: 'linear-gradient(135deg, #805AD5 0%, #9F7AEA 100%)', color: '#ffffff', padding: '25px', borderRadius: '24px', boxShadow: '0 10px 30px rgba(128,90,213,0.2)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '170px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box' }}>
               <img src="https://images.unsplash.com/photo-1604871000636-074fa5117945?q=80&w=400&auto=format&fit=crop" alt="3d" style={{ position: 'absolute', right: '-20px', bottom: '-20px', width: '130px', height: '130px', objectFit: 'cover', borderRadius: '50%', opacity: 0.2, mixBlendMode: 'screen', pointerEvents: 'none', zIndex: 0 }} />

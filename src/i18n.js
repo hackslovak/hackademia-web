@@ -8,6 +8,12 @@ export const translations = {
     chatBtn: "Чат зі школою", adminPanel: "Адмін-панель", toSchool: "На сайт школи",
     contactBtn: "Зв'язатися",
     
+    // Нові картки
+    flashcardsSub: "ФЛЕШ-КАРТКИ",
+    spacedRep: "Інтервальне повторення",
+    vocabSub: "A1-B2 БАЗА СЛІВ",
+    vocabTitle: "Тематичний словник",
+    
     // Landing
     heroLabel: "( Школа онлайн )", heroTitle1: "ВИВЧАЙ СЛОВАЦЬКУ", heroTitle2: "З HACKADEMIA",
     heroSub: "Новий, крутий формат навчання у нашій школі. Старт нових груп вже незабаром!",
@@ -49,6 +55,13 @@ export const translations = {
     falseFriends: "Falošní priatelia", loggedIn: "Prihlásený.", logout: "Odhlásiť sa",
     admin: "ADMINISTRÁTOR", studentPreview: "👤 Študent (Náhľad)", myProfile: "Môj profil",
     chatBtn: "Chat so školou", adminPanel: "Admin panel", toSchool: "Na stránku školy", contactBtn: "Kontaktovať",
+    
+    // Нові картки
+    flashcardsSub: "KARTIČKY",
+    spacedRep: "Intervalové opakovanie",
+    vocabSub: "A1-B2 ZÁSOBA SLOV",
+    vocabTitle: "Tematický slovník",
+    
     heroLabel: "( Online škola )", heroTitle1: "UČ SA SLOVENČINU", heroTitle2: "S HACKADEMIA",
     heroSub: "Nový, skvelý formát výučby v našej škole. Štart nových skupín už čoskoro!",
     heroBtnAuth: "Späť na štúdium 🚀", heroBtnNoAuth: "Vstúpiť do platformy",
@@ -89,6 +102,13 @@ export const translations = {
     falseFriends: "False Friends", loggedIn: "Logged in.", logout: "Log out",
     admin: "ADMINISTRATOR", studentPreview: "👤 Student (Preview)", myProfile: "My Profile",
     chatBtn: "School Chat", adminPanel: "Admin Panel", toSchool: "To School Site", contactBtn: "Contact",
+    
+    // Нові картки
+    flashcardsSub: "FLASHCARDS",
+    spacedRep: "Spaced Repetition",
+    vocabSub: "A1-B2 VOCABULARY",
+    vocabTitle: "Thematic Dictionary",
+    
     heroLabel: "( Online School )", heroTitle1: "LEARN SLOVAK", heroTitle2: "WITH HACKADEMIA",
     heroSub: "A new, cool format of studying at our school. New groups starting soon!",
     heroBtnAuth: "Back to Studies 🚀", heroBtnNoAuth: "Enter Platform",
@@ -129,6 +149,13 @@ export const translations = {
     falseFriends: "Ложные друзья", loggedIn: "Вход выполнен.", logout: "Выйти",
     admin: "АДМИНИСТРАТОР", studentPreview: "👤 Ученик (Превью)", myProfile: "Мой профиль",
     chatBtn: "Чат со школой", adminPanel: "Админ-панель", toSchool: "На сайт школы", contactBtn: "Связаться",
+    
+    // Нові картки
+    flashcardsSub: "ФЛЕШ-КАРТЫ",
+    spacedRep: "Интервальное повторение",
+    vocabSub: "A1-B2 БАЗА СЛОВ",
+    vocabTitle: "Тематический словарь",
+    
     heroLabel: "( Онлайн школа )", heroTitle1: "ИЗУЧАЙ СЛОВАЦКИЙ", heroTitle2: "С HACKADEMIA",
     heroSub: "Новый, крутой формат обучения в нашей школе. Старт новых групп уже скоро!",
     heroBtnAuth: "Вернуться к учебе 🚀", heroBtnNoAuth: "Войти на платформу",
@@ -152,7 +179,7 @@ export const translations = {
     footerDesc: "Современная онлайн-школа словацкого языка", footerRights: "© 2026 Hackademia. Все права защищены.",
     chatAssistant: "Ассистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше сообщение...", chatAlert: "Введите текст сообщения!",
     chatGreeting: "Привет! 👋 Я ваш виртуальный ассистент Hackademia. Напишите свой вопрос ниже, и он мгновенно полетит к нашему менеджеру в Telegram!",
-    
+
     // Login Page
     loginTitle: "Вход на платформу", loginSub: "С возвращением! Рады видеть тебя снова 💛",
     emailLabel: "Email", passwordLabel: "Пароль", loginBtn: "Войти",
