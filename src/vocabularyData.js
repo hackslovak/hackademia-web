@@ -18,7 +18,6 @@ export const vocabularyData = [
       { title: 'Риси характеру', icon: '🎭', level: 'B1', words: 25 },
     ]
   },
-  export const vocabularyData = [
   {
     id: 'appearance',
     title: 'Зовнішність',
