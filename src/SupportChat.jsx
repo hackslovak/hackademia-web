@@ -100,7 +100,6 @@ export default function SupportChat() {
   const [systemMsg, setSystemMsg] = useState('');
   const chatEndRef = useRef(null);
 
-  // Слухач для авто-відкриття чату
   useEffect(() => {
     const handleOpenChat = () => { setIsOpen(true); sessionStorage.setItem('chatInteracted', 'true'); };
     window.addEventListener('openSupportChat', handleOpenChat);
@@ -115,16 +114,15 @@ export default function SupportChat() {
     return () => { window.removeEventListener('openSupportChat', handleOpenChat); clearTimeout(autoOpenTimer); };
   }, []);
 
-  // Автопрокрутка
   useEffect(() => { chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [chatHistory, isTyping, systemMsg]);
 
-  // Авторизація та завантаження історії чату + Realtime
+  // Авторизація та первинне завантаження історії
   useEffect(() => {
     if (sessionStorage.getItem('keepSupportChatOpen')) {
       sessionStorage.removeItem('keepSupportChatOpen');
     }
 
-    async function initializeChat() {
+    async function initializeUser() {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         let { data } = await supabase.from('users').select('id, first_name, email, telegram_id').eq('email', session.user.email).maybeSingle();
@@ -135,43 +133,41 @@ export default function SupportChat() {
         
         const currentUser = data || { id: session.user.id, first_name: session.user.user_metadata?.full_name || 'Студент', email: session.user.email };
         setAuthUser(currentUser);
-
-        // 1. ЗАВАНТАЖЕННЯ ІСТОРІЇ
-        const { data: historyData } = await supabase
-          .from('messages')
-          .select('*')
-          .eq('user_id', currentUser.id)
-          .order('id', { ascending: true });
-        
-        if (historyData) {
-          setChatHistory(historyData.map(m => ({
-            text: m.text,
-            sender: m.sender_id === currentUser.id ? 'user' : 'admin'
-          })));
-        }
-
-        // 2. ПІДПИСКА НА НОВІ ВІДПОВІДІ (REALTIME)
-        const channel = supabase.channel('realtime_messages')
-          .on(
-            'postgres_changes',
-            { event: 'INSERT', schema: 'public', table: 'messages', filter: `user_id=eq.${currentUser.id}` },
-            (payload) => {
-              const newMsg = payload.new;
-              // Додаємо лише повідомлення від адміна (свої ми додаємо локально)
-              if (newMsg.sender_id !== currentUser.id) {
-                setChatHistory(prev => [...prev, { text: newMsg.text, sender: 'admin' }]);
-                setSystemMsg(''); // Прибираємо напис "Очікується менеджер"
-                setIsTyping(false);
-              }
-            }
-          )
-          .subscribe();
-
-        return () => { supabase.removeChannel(channel); };
       }
     }
-    initializeChat();
+    initializeUser();
   }, []);
+
+  // НАДІЙНИЙ РАДАР (Smart Polling): перевіряє нові повідомлення кожні 3 секунди, якщо чат відкритий
+  useEffect(() => {
+    let interval;
+    if (isOpen && authUser) {
+      const fetchMessages = async () => {
+        const { data } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('user_id', authUser.id)
+          .order('id', { ascending: true });
+        
+        if (data) {
+          setChatHistory(data.map(m => ({
+            text: m.text,
+            sender: m.sender_id === authUser.id ? 'user' : 'admin'
+          })));
+
+          // Якщо останнє повідомлення ВІД АДМІНА - прибираємо плашку "Очікується менеджер"
+          if (data.length > 0 && data[data.length - 1].sender_id !== authUser.id) {
+            setSystemMsg('');
+            setIsTyping(false);
+          }
+        }
+      };
+
+      fetchMessages(); // Викликаємо одразу при відкритті
+      interval = setInterval(fetchMessages, 3000); // Потім кожні 3 секунди
+    }
+    return () => clearInterval(interval);
+  }, [isOpen, authUser]);
 
   const closeChat = () => { setIsOpen(false); sessionStorage.setItem('chatInteracted', 'true'); };
 
@@ -204,6 +200,7 @@ export default function SupportChat() {
     const textToSend = message.trim();
     setMessage(''); 
     
+    // Миттєво малюємо в інтерфейсі повідомлення клієнта
     setChatHistory(prev => [...prev, { text: textToSend, sender: 'user' }]);
     setSystemMsg('');
     setIsTyping(true);
@@ -222,9 +219,11 @@ export default function SupportChat() {
       }
     }
     
+    // Через 2.5 секунди показуємо жовту плашку очікування менеджера
     setTimeout(() => {
       setIsTyping(false);
-      setSystemMsg(t('systemWait'));
+      // Плашка з'явиться тільки якщо радар ще не встиг підтягнути відповідь від адміна
+      setSystemMsg(prev => chatHistory.length > 0 && chatHistory[chatHistory.length - 1]?.sender === 'admin' ? '' : t('systemWait'));
     }, 2500);
   };
 
