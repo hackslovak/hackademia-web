@@ -958,14 +958,15 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (З ПІДТРИМКОЮ ФОТО) ---
 function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [messages, setMessages] = React.useState([]);
   const [chatText, setChatText] = React.useState('');
   const [chatUsers, setChatUsers] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
-  const [unreadPerUser, setUnreadPerUser] = React.useState({}); // НОВИЙ СТАН ДЛЯ БЕЙДЖІВ
+  const [unreadPerUser, setUnreadPerUser] = React.useState({});
+  const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   const messagesEndRef = React.useRef(null);
 
   const scrollToBottom = () => {
@@ -984,7 +985,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     }
   }, [isAdmin]);
 
-  // ФУНКЦІЯ ДЛЯ ПІДРАХУНКУ НЕПРОЧИТАНИХ ПО КОЖНОМУ УЧНЮ
   const fetchUnreadPerUser = async () => {
     if (!isAdmin) return;
     const { data } = await supabase
@@ -1011,7 +1011,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
       .order('created_at', { ascending: true });
     if (data) setMessages(data);
     
-    // Помічаємо як прочитані
     await supabase.from('messages')
       .update({ is_read: true })
       .eq('user_id', activeChatUserId)
@@ -1021,26 +1020,67 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   React.useEffect(() => {
     fetchMessages();
-    fetchUnreadPerUser(); // Викликаємо при старті
+    fetchUnreadPerUser();
     setTimeout(scrollToBottom, 300);
     const interval = setInterval(() => {
       fetchMessages();
-      fetchUnreadPerUser(); // Оновлюємо бейджі
+      fetchUnreadPerUser();
     }, 3000);
     return () => clearInterval(interval);
   }, [activeChatUserId, isAdmin, dbUserId]);
 
-  const sendMessage = async (e) => {
-    e.preventDefault();
-    if (!chatText.trim() || !activeChatUserId) return;
+  // Універсальна функція відправки повідомлення (текст або посилання на фото)
+  const sendContent = async (textToSend) => {
+    if (!textToSend.trim() || !activeChatUserId) return;
     
-    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: chatText.trim(), is_read: false };
-    setChatText(''); 
-    
+    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: textToSend.trim(), is_read: false };
     await supabase.from('messages').insert([newMsg]);
     fetchMessages();
     setTimeout(scrollToBottom, 100);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
+  };
+
+  const handleSendMessageSubmit = async (e) => {
+    e.preventDefault();
+    await sendContent(chatText);
+    setChatText('');
+  };
+
+  // ЗАВАНТАЖЕННЯ ФОТО (ЧЕРЕЗ КНОПКУ АБО CTRL+V)
+  const uploadAndSendImage = async (file) => {
+    if (!file || !activeChatUserId) return;
+    setIsUploadingImage(true);
+    try {
+      const fileExt = file.name ? file.name.split('.').pop() : 'png';
+      const fileName = `chat_${dbUserId}_${Date.now()}.${fileExt}`;
+      
+      const { error: uploadError } = await supabase.storage.from('chat-images').upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(fileName);
+      
+      // Відправляємо як спеціальне посилання на картинку
+      await sendContent(publicUrl);
+    } catch (err) {
+      alert("❌ Помилка завантаження фото: " + err.message);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  // ОБРОБКА ВСТАВКИ З БУФЕРА ОБМІНУ (CTRL+V)
+  const handlePaste = (e) => {
+    const items = e.clipboardData?.items;
+    if (!items) return;
+    for (let i = 0; i < items.length; i++) {
+      if (items[i].type.indexOf('image') !== -1) {
+        const file = items[i].getAsFile();
+        if (file) {
+          e.preventDefault();
+          uploadAndSendImage(file);
+        }
+      }
+    }
   };
 
   const formatTime = (iso) => {
@@ -1057,11 +1097,9 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   const handleSelectUser = (userId) => {
     setActiveChatUserId(userId);
-    // Одразу візуально скидаємо лічильник для цього юзера
     setUnreadPerUser(prev => ({ ...prev, [userId]: 0 }));
   };
 
-  // СОРТУВАННЯ: Учні з непрочитаними піднімаються наверх!
   const sortedUsers = [...chatUsers].sort((a, b) => {
     const unreadA = unreadPerUser[a.id] ? 1 : 0;
     const unreadB = unreadPerUser[b.id] ? 1 : 0;
@@ -1074,7 +1112,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
     const email = (u.email || '').toLowerCase();
     const tgId = (u.telegram_id || '').toString();
-    
     return fullName.includes(q) || email.includes(q) || tgId.includes(q);
   });
 
@@ -1123,7 +1160,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                         </div>
                       )}
                     </div>
-                    {/* НОВИЙ БЕЙДЖ НЕПРОЧИТАНИХ ПОВІДОМЛЕНЬ */}
                     {unreadPerUser[u.id] > 0 && (
                       <div style={{ background: '#E0A345', color: 'white', fontSize: '12px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(224,163,69,0.3)' }}>
                         {unreadPerUser[u.id]}
@@ -1152,8 +1188,17 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                         <div style={{ maxWidth: '75%', padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5' }}>
                           {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
                             if (part.match(/(https?:\/\/[^\s]+)/g)) {
+                              // Рендеримо аудіо
                               if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
                                 return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
+                              }
+                              // Рендеримо зображення зразка бази або сховища
+                              if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
+                                return (
+                                  <div key={i} style={{ marginTop: '8px' }}>
+                                    <img src={part} alt="attachment" style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '12px', objectFit: 'cover', display: 'block' }} />
+                                  </div>
+                                );
                               }
                               return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
                             }
@@ -1170,8 +1215,26 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              <form onSubmit={sendMessage} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} placeholder="Написати повідомлення..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
+              {/* ФОРМА ВВЕДЕННЯ З КНОПКОЮ СКРІПКИ ДЛЯ ФОТО */}
+              <form onSubmit={handleSendMessageSubmit} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
+                
+                {/* КНОПКА СКРІПКИ ДЛЯ ЗАВАНТАЖЕННЯ ФОТО */}
+                <label className="hover-card" title="Прикріпити фото" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.textSecondary, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                  {isUploadingImage ? '⏳' : (
+                    <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
+                  )}
+                  <input type="file" accept="image/*" onChange={(e) => uploadAndSendImage(e.target.files[0])} style={{ display: 'none' }} />
+                </label>
+
+                <input 
+                  type="text" 
+                  value={chatText} 
+                  onChange={e => setChatText(e.target.value)} 
+                  onPaste={handlePaste}
+                  placeholder="Написати повідомлення або вставити фото (Ctrl+V)..." 
+                  style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} 
+                />
+                
                 <button type="submit" className="hover-card" disabled={!chatText.trim()} style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: chatText.trim() ? 'pointer' : 'not-allowed', opacity: chatText.trim() ? 1 : 0.5 }}>
                   <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
