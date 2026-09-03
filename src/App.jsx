@@ -958,7 +958,7 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.2: ЧИСТИЙ TELEGRAM UX) ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.3: КОМПАКТНИЙ TELEGRAM UI) ---
 function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const isTeacher = userProfile?.role === 'teacher';
   const showUserList = isAdmin || isTeacher;
@@ -1124,7 +1124,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   return (
     <div style={{ flex: 1, padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', position: 'relative' }}>
       
-      {/* МЕНЮ ПРАВОГО КЛІКУ (КОНТЕКСТНЕ МЕНЮ) */}
+      {/* МЕНЮ ПРАВОГО КЛІКУ */}
       {contextMenu.visible && (
         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', zIndex: 100000, overflow: 'hidden', minWidth: '220px', animation: 'fadeIn 0.15s ease-out' }}>
           
@@ -1305,18 +1305,15 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                         </div>
                         
                         {/* РЕАКЦІЇ ТА ЧАС */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', justifyContent: isMine ? 'flex-end' : 'flex-start', width: '100%' }}>
+                        <div style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
                           
-                          {/* НЕВИДИМА КНОПКА "ВІДПОВІСТИ", ЯКА ПРОЯВЛЯЄТЬСЯ НА ХОВЕРІ БЕЗ СТРИБКІВ */}
                           <span 
                             onClick={() => setReplyingTo(msg)} 
                             style={{ 
                               fontSize: '11px', fontWeight: 'bold', color: '#E0A345', cursor: 'pointer', 
                               opacity: hoveredMsgId === msg.id ? 0.8 : 0, 
                               pointerEvents: hoveredMsgId === msg.id ? 'auto' : 'none',
-                              transition: 'opacity 0.2s ease',
-                              marginRight: isMine ? 'auto' : '0', // Щоб завжди було з потрібного боку
-                              marginLeft: isMine ? '0' : 'auto'
+                              transition: 'opacity 0.2s ease'
                             }} 
                             onMouseOver={e => e.target.style.opacity = 1} 
                             onMouseOut={e => e.target.style.opacity = 0.8}
@@ -1334,6 +1331,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                               ))}
                             </div>
                           )}
+                          
                           <span style={{ fontSize: '11px', color: theme.textSecondary }}>{formatTime(msg.created_at)}</span>
                         </div>
                       </div>
