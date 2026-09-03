@@ -958,17 +958,21 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (ФОТО-ЗУМ, TELEGRAM-БЕЙДЖІ, РЕДАГУВАННЯ УЧНІВ) ---
-function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (ФОТО-ЗУМ, TELEGRAM-БЕЙДЖІ, РОЛІ ТА ГРУПИ) ---
+function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
+  // Визначаємо ролі
+  const isTeacher = userProfile?.role === 'teacher';
+  const showUserList = isAdmin || isTeacher; // І адмін, і викладач бачать ліву панель
+
   const [messages, setMessages] = React.useState([]);
   const [chatText, setChatText] = React.useState('');
   const [chatUsers, setChatUsers] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState('');
-  const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
+  const [activeChatUserId, setActiveChatUserId] = React.useState(showUserList ? null : dbUserId);
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   
-  // НОВІ СТАНИ ДЛЯ ФУЛСКРІНА ТА РЕДАГУВАННЯ
+  // СТАНИ ДЛЯ ФУЛСКРІНА ТА РЕДАГУВАННЯ
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
   const [editingUser, setEditingUser] = React.useState(null);
   const [editFormData, setEditFormData] = React.useState({});
@@ -979,25 +983,27 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // ОНОВЛЕНИЙ ГЕНЕРАТОР КОЛЬОРІВ (ТЕЛЕГРАМ СТИЛЬ)
+  // ГЕНЕРАТОР КОЛЬОРІВ (ТЕЛЕГРАМ СТИЛЬ)
   const getGroupBadgeStyle = (groupName) => {
     if (!groupName || groupName === '(Без групи)') return { show: false };
     let hash = 0;
     for (let i = 0; i < groupName.length; i++) {
       hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
     }
-    // Множимо на 137, щоб навіть схожі назви (100 і 101) мали кардинально різні кольори
     const hue = Math.abs((hash * 137) % 360); 
-    // Пастельний фон (світлота 92%), темний текст (світлота 35%)
     return { bg: `hsl(${hue}, 80%, 92%)`, text: `hsl(${hue}, 80%, 35%)`, show: true };
   };
 
   const fetchUsers = async () => {
-    if (!isAdmin) return;
-    const { data } = await supabase
-      .from('users')
-      .select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id');
+    if (!showUserList) return;
+    let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id');
+    
+    // Якщо це викладач, він бачить ТІЛЬКИ тих, у кого така сама група
+    if (isTeacher && !isAdmin) {
+      query = query.eq('group_id', userProfile.group_id);
+    }
       
+    const { data } = await query;
     if (data) {
       const validUsers = data.filter(u => u.first_name || u.email);
       setChatUsers(validUsers);
@@ -1006,10 +1012,10 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   React.useEffect(() => {
     fetchUsers();
-  }, [isAdmin]);
+  }, [showUserList]);
 
   const fetchUnreadPerUser = async () => {
-    if (!isAdmin) return;
+    if (!showUserList) return;
     const { data } = await supabase
       .from('messages')
       .select('user_id')
@@ -1053,7 +1059,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     }, 3000);
     
     return () => clearInterval(interval);
-  }, [activeChatUserId, isAdmin, dbUserId]);
+  }, [activeChatUserId, showUserList, dbUserId]);
 
   const sendContent = async (textToSend) => {
     if (!textToSend.trim() || !activeChatUserId) return;
@@ -1112,12 +1118,17 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   const handleSaveUserEdit = async (e) => {
     e.preventDefault();
-    const { error } = await supabase.from('users').update({
+    
+    // Формуємо дані для бази, додаючи роль
+    const updateData = {
        first_name: editFormData.first_name,
-       group_id: editFormData.group_id,
-       telegram_id: editFormData.telegram_id,
-       email: editFormData.email
-    }).eq('id', editingUser.id);
+       group_id: editFormData.group_id || null,
+       telegram_id: editFormData.telegram_id || null,
+       email: editFormData.email,
+       role: editFormData.role || 'student' // Записуємо нову роль
+    };
+
+    const { error } = await supabase.from('users').update(updateData).eq('id', editingUser.id);
 
     if (!error) {
        fetchUsers();
@@ -1154,7 +1165,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const filteredUsers = sortedUsers.filter(u => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const searchString = `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id}`.toLowerCase();
+    const searchString = `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase();
     return searchString.includes(q);
   });
 
@@ -1166,7 +1177,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <button onClick={() => setFullscreenImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           <img src={fullscreenImg} alt="Zoomed" style={{ maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
-          {isAdmin && (
+          {showUserList && (
              <button onClick={() => alert("Функція малювання (Canvas) буде додана в наступних оновленнях! 🎨")} style={{ marginTop: '20px', background: '#E0A345', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(224,163,69,0.3)' }}>
                ✏️ Малювати на фото
              </button>
@@ -1174,14 +1185,25 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
         </div>
       )}
 
-      {/* МОДАЛКА РЕДАГУВАННЯ УЧНЯ */}
+      {/* МОДАЛКА РЕДАГУВАННЯ УЧНЯ (З ВИБОРОМ РОЛІ) */}
       {editingUser && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.6)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', width: '100%', maxWidth: '400px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 20px 50px rgba(0,0,0,0.2)' }}>
-            <h3 style={{ margin: '0 0 20px 0', color: theme.text }}>Налаштування учня</h3>
+            <h3 style={{ margin: '0 0 20px 0', color: theme.text }}>Налаштування користувача</h3>
             <form onSubmit={handleSaveUserEdit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               <input type="text" placeholder="Ім'я" value={editFormData.first_name || ''} onChange={e => setEditFormData({...editFormData, first_name: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
-              <input type="text" placeholder="Група (напр. 100, 101)" value={editFormData.group_id || ''} onChange={e => setEditFormData({...editFormData, group_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
+              
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <input type="text" placeholder="Група (напр. 100)" value={editFormData.group_id || ''} onChange={e => setEditFormData({...editFormData, group_id: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
+                
+                {/* ОСЬ НАШ ВИПАДАЮЧИЙ СПИСОК ДЛЯ РОЛЕЙ */}
+                <select value={editFormData.role || 'student'} onChange={e => setEditFormData({...editFormData, role: e.target.value})} style={{ flex: 1, padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontWeight: 'bold' }}>
+                  <option value="student">🎓 Учень</option>
+                  <option value="teacher">👩‍🏫 Викладач</option>
+                  <option value="admin">👑 Адмін</option>
+                </select>
+              </div>
+
               <input type="email" placeholder="Email" value={editFormData.email || ''} onChange={e => setEditFormData({...editFormData, email: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
               <input type="number" placeholder="Telegram ID" value={editFormData.telegram_id || ''} onChange={e => setEditFormData({...editFormData, telegram_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
               
@@ -1200,17 +1222,17 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Назад
         </button>
         <h2 style={{ color: theme.text, fontSize: '32px', margin: 0, fontWeight: '900' }}>
-          <span style={{ opacity: 0.8 }}>💬</span> {t('chatBtn')}
+          <span style={{ opacity: 0.8 }}>💬</span> {t('chatBtn')} {isTeacher && !isAdmin && <span style={{fontSize: '16px', color: '#E0A345'}}>(Група {userProfile.group_id})</span>}
         </h2>
       </div>
 
       <div style={{ flex: 1, background: theme.cardBg, borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, display: 'flex', overflow: 'hidden' }}>
         
-        {/* БОКОВА ПАНЕЛЬ АДМІНА */}
-        {isAdmin && (
+        {/* БОКОВА ПАНЕЛЬ ДЛЯ АДМІНА АБО ВИКЛАДАЧА */}
+        {showUserList && (
           <div style={{ width: '320px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
             <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>
-              Список учнів
+              Список {isAdmin ? 'користувачів' : 'учнів'}
               <input type="text" placeholder="🔍 Пошук..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text, fontSize: '13px', boxSizing: 'border-box' }} />
             </div>
             <div style={{ overflowY: 'auto', flex: 1 }}>
@@ -1228,7 +1250,11 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                           <span style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getDisplayName(u)}</span>
                           
-                          {/* ТЕЛЕГРАМ-БЕЙДЖ ГРУПИ В СПИСКУ УЧНІВ */}
+                          {/* ПОЗНАЧКА РОЛІ */}
+                          {u.role === 'teacher' && <span title="Викладач" style={{ fontSize: '12px' }}>👩‍🏫</span>}
+                          {u.role === 'admin' && <span title="Адміністратор" style={{ fontSize: '12px' }}>👑</span>}
+                          
+                          {/* ТЕЛЕГРАМ-БЕЙДЖ ГРУПИ В СПИСКУ */}
                           {badge.show && (
                             <span style={{ background: badge.bg, color: badge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap' }}>{u.group_id}</span>
                           )}
@@ -1238,8 +1264,10 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                         </div>
                       </div>
                       
-                      {/* МЕНЮ НАЛАШТУВАНЬ (3 крапки) */}
-                      <button onClick={(e) => { e.stopPropagation(); setEditFormData(u); setEditingUser(u); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px' }}>⋮</button>
+                      {/* МЕНЮ НАЛАШТУВАНЬ (3 крапки) - ТІЛЬКИ ДЛЯ АДМІНА */}
+                      {isAdmin && (
+                         <button onClick={(e) => { e.stopPropagation(); setEditFormData(u); setEditingUser(u); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px' }}>⋮</button>
+                      )}
                       
                       {unreadPerUser[u.id] > 0 && (
                         <div style={{ position: 'absolute', top: '15px', right: '15px', background: '#E0A345', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(224,163,69,0.3)' }}>{unreadPerUser[u.id]}</div>
@@ -1270,11 +1298,13 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                     return (
                       <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                         
-                        {/* Бейдж групи біля повідомлення викладача/адміна у чаті */}
-                        {!isMine && msgBadge.show && (
-                           <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', marginBottom: '4px', marginLeft: '10px', display: 'inline-block' }}>
-                             {msgUser.group_id}
-                           </span>
+                        {/* Бейдж групи або ролі біля повідомлення викладача/адміна */}
+                        {!isMine && msgUser && (
+                           <div style={{ marginBottom: '4px', marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                             {msgUser.role === 'admin' && <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#E0A345' }}>👑 Адміністратор</span>}
+                             {msgUser.role === 'teacher' && <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#3182ce' }}>👩‍🏫 Викладач</span>}
+                             {msgBadge.show && <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>{msgUser.group_id}</span>}
+                           </div>
                         )}
 
                         <div style={{ maxWidth: '75%', padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5' }}>
@@ -1285,7 +1315,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                                 return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
                               }
                               
-                              // ЗОБРАЖЕННЯ З ЗУМОМ
                               if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
                                 return (
                                   <div key={i} style={{ marginTop: '8px' }}>
@@ -1308,7 +1337,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* ФОРМА ВВЕДЕННЯ З КНОПКОЮ СКРІПКИ ДЛЯ ФОТО */}
               <form onSubmit={handleSendMessageSubmit} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
                 <label className="hover-card" title="Прикріпити фото" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.textSecondary, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                   {isUploadingImage ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
@@ -3668,6 +3696,7 @@ useEffect(() => {
         <ChatView 
           dbUserId={dbUserId} 
           isAdmin={effectiveIsAdmin} 
+		  userProfile={userProfile} // ДОДАЛИ ЦЕЙ РЯДОК
           theme={theme} 
           t={t} 
           onBack={() => setGlobalView(null)} 
