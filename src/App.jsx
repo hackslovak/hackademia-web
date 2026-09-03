@@ -958,7 +958,7 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2: ЦИТУВАННЯ ТА РЕАКЦІЇ) ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.1: TELEGRAM UX, КОНТЕКСТНЕ МЕНЮ, ПОДВІЙНИЙ КЛІК) ---
 function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const isTeacher = userProfile?.role === 'teacher';
   const showUserList = isAdmin || isTeacher;
@@ -975,23 +975,26 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [editingUser, setEditingUser] = React.useState(null);
   const [editFormData, setEditFormData] = React.useState({});
   
-  // НОВІ СТАНИ ДЛЯ СПРИНТУ 2
   const [replyingTo, setReplyingTo] = React.useState(null);
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
-  const [showReactionPicker, setShowReactionPicker] = React.useState(null);
+  
+  // СТАН ДЛЯ МЕНЮ ПРАВОГО КЛІКУ
+  const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, msg: null });
   
   const messagesEndRef = React.useRef(null);
+  const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  // Закриваємо контекстне меню при кліку будь-де
+  React.useEffect(() => {
+    const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0, msg: null });
+    window.addEventListener('click', handleClickOutside);
+    return () => window.removeEventListener('click', handleClickOutside);
+  }, []);
 
   const getGroupBadgeStyle = (groupName) => {
     if (!groupName || groupName === '(Без групи)') return { show: false };
     let hash = 0;
-    for (let i = 0; i < groupName.length; i++) {
-      hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
-    }
+    for (let i = 0; i < groupName.length; i++) hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
     const hue = Math.abs((hash * 137) % 360); 
     return { bg: `hsl(${hue}, 80%, 92%)`, text: `hsl(${hue}, 80%, 35%)`, show: true };
   };
@@ -999,22 +1002,15 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const fetchUsers = async () => {
     if (!showUserList) return;
     let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id');
-    
     if (isTeacher && !isAdmin) {
       const safeGroup = userProfile?.group_id || 'no-group';
       query = query.or(`group_id.eq.${safeGroup},role.eq.admin`);
     }
-
     const { data } = await query;
-    if (data) {
-      const validUsers = data.filter(u => u.first_name || u.email);
-      setChatUsers(validUsers);
-    }
+    if (data) setChatUsers(data.filter(u => u.first_name || u.email));
   };
 
-  React.useEffect(() => {
-    fetchUsers();
-  }, [showUserList]);
+  React.useEffect(() => { fetchUsers(); }, [showUserList]);
 
   const fetchUnreadPerUser = async () => {
     if (!showUserList) return;
@@ -1030,13 +1026,11 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     if (!activeChatUserId) return;
     const { data } = await supabase.from('messages').select('*').eq('user_id', activeChatUserId).order('created_at', { ascending: true });
     if (data) setMessages(data);
-    
     await supabase.from('messages').update({ is_read: true }).eq('user_id', activeChatUserId).neq('sender_id', dbUserId).eq('is_read', false);
   };
 
   React.useEffect(() => {
-    fetchMessages();
-    fetchUnreadPerUser();
+    fetchMessages(); fetchUnreadPerUser();
     setTimeout(scrollToBottom, 300);
     const interval = setInterval(() => { fetchMessages(); fetchUnreadPerUser(); }, 3000);
     return () => clearInterval(interval);
@@ -1044,27 +1038,14 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
 
   const sendContent = async (textToSend) => {
     if (!textToSend.trim() || !activeChatUserId) return;
-    
-    const newMsg = { 
-      user_id: activeChatUserId, 
-      sender_id: dbUserId, 
-      text: textToSend.trim(), 
-      is_read: false,
-      reply_to_id: replyingTo ? replyingTo.id : null // ДОДАЄМО ID ЦИТАТИ
-    };
-    
-    setReplyingTo(null); // Очищаємо цитату після відправки
+    const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: textToSend.trim(), is_read: false, reply_to_id: replyingTo ? replyingTo.id : null };
+    setReplyingTo(null);
     await supabase.from('messages').insert([newMsg]);
-    fetchMessages();
-    setTimeout(scrollToBottom, 100);
+    fetchMessages(); setTimeout(scrollToBottom, 100);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
   };
 
-  const handleSendMessageSubmit = async (e) => {
-    e.preventDefault();
-    await sendContent(chatText);
-    setChatText('');
-  };
+  const handleSendMessageSubmit = async (e) => { e.preventDefault(); await sendContent(chatText); setChatText(''); };
 
   const uploadAndSendImage = async (file) => {
     if (!file || !activeChatUserId) return;
@@ -1074,10 +1055,9 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
       const fileName = `chat_${dbUserId}_${Date.now()}.${fileExt}`;
       const { error: uploadError } = await supabase.storage.from('chat-images').upload(fileName, file);
       if (uploadError) throw uploadError;
-
       const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(fileName);
       await sendContent(publicUrl);
-    } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); } 
+    } catch (err) { alert("❌ Помилка: " + err.message); } 
     finally { setIsUploadingImage(false); }
   };
 
@@ -1094,40 +1074,37 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
 
   const handleSaveUserEdit = async (e) => {
     e.preventDefault();
-    const updateData = {
-       first_name: editFormData.first_name,
-       group_id: editFormData.group_id || null,
-       telegram_id: editFormData.telegram_id || null,
-       email: editFormData.email,
-       role: editFormData.role || 'student'
-    };
+    const updateData = { first_name: editFormData.first_name, group_id: editFormData.group_id || null, telegram_id: editFormData.telegram_id || null, email: editFormData.email, role: editFormData.role || 'student' };
     const { error } = await supabase.from('users').update(updateData).eq('id', editingUser.id);
-    if (!error) {
-       fetchUsers(); setEditingUser(null);
-       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } else { alert(error.message); }
+    if (!error) { fetchUsers(); setEditingUser(null); if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); } 
+    else { alert(error.message); }
   };
 
-  // ЛОГІКА РЕАКЦІЙ
   const handleReaction = async (msgId, currentReactions, emoji) => {
     let newReactions = { ...currentReactions };
     if (!newReactions[emoji]) newReactions[emoji] = [];
     
-    // Якщо користувач вже ставив цей емодзі - забираємо його (тогл)
     if (newReactions[emoji].includes(dbUserId)) {
         newReactions[emoji] = newReactions[emoji].filter(id => id !== dbUserId);
         if (newReactions[emoji].length === 0) delete newReactions[emoji];
     } else {
-        newReactions[emoji].push(dbUserId); // Інакше додаємо
+        newReactions[emoji].push(dbUserId);
     }
     
-    // Оновлюємо локально для миттєвого відображення
     setMessages(messages.map(m => m.id === msgId ? { ...m, reactions: newReactions } : m));
-    setShowReactionPicker(null); // Ховаємо пікер
+    setContextMenu({ visible: false, x: 0, y: 0, msg: null });
     
-    // Відправляємо в базу
     await supabase.from('messages').update({ reactions: newReactions }).eq('id', msgId);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.selectionChanged();
+  };
+
+  // ОБРОБКА ПРАВОГО КЛІКУ
+  const handleContextMenu = (e, msg) => {
+    e.preventDefault();
+    // Щоб меню не вилазило за край екрану
+    const menuWidth = 250;
+    const xPos = e.pageX + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 20 : e.pageX;
+    setContextMenu({ visible: true, x: xPos, y: e.pageY, msg: msg });
   };
 
   const formatTime = (iso) => new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
@@ -1140,30 +1117,44 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     return 'Невідомий учень';
   };
 
-  const handleSelectUser = (userId) => {
-    setActiveChatUserId(userId);
-    setUnreadPerUser(prev => ({ ...prev, [userId]: 0 }));
-  };
-
+  const handleSelectUser = (userId) => { setActiveChatUserId(userId); setUnreadPerUser(prev => ({ ...prev, [userId]: 0 })); };
   const sortedUsers = [...chatUsers].sort((a, b) => (unreadPerUser[b.id] ? 1 : 0) - (unreadPerUser[a.id] ? 1 : 0));
   const filteredUsers = sortedUsers.filter(u => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
-    const searchString = `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase();
-    return searchString.includes(q);
+    return `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase().includes(q);
   });
 
   return (
     <div style={{ flex: 1, padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', position: 'relative' }}>
       
+      {/* МЕНЮ ПРАВОГО КЛІКУ (КОНТЕКСТНЕ МЕНЮ) */}
+      {contextMenu.visible && (
+        <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', zIndex: 100000, overflow: 'hidden', minWidth: '220px', animation: 'fadeIn 0.15s ease-out' }}>
+          
+          <div style={{ padding: '12px', borderBottom: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', background: 'rgba(0,0,0,0.02)' }}>
+             {['👍', '👎', '❤️', '🔥', '😂', '👏', '😢', '🎉'].map(emoji => (
+                <button key={emoji} onClick={(e) => { e.stopPropagation(); handleReaction(contextMenu.msg.id, contextMenu.msg.reactions || {}, emoji); }} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', padding: '4px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.2)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>
+                  {emoji}
+                </button>
+             ))}
+          </div>
+
+          <div 
+            onClick={(e) => { e.stopPropagation(); setReplyingTo(contextMenu.msg); setContextMenu({visible: false, x: 0, y: 0, msg: null}); }} 
+            style={{ padding: '14px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', color: theme.text, fontWeight: 'bold', fontSize: '15px' }}
+            onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}
+          >
+            ↩️ Відповісти
+          </div>
+        </div>
+      )}
+
       {/* ФУЛСКРІН ЗУМ */}
       {fullscreenImg && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <button onClick={() => setFullscreenImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
           <img src={fullscreenImg} alt="Zoomed" style={{ maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
-          {showUserList && (
-             <button onClick={() => alert("Малювання буде додано згодом! 🎨")} style={{ marginTop: '20px', background: '#E0A345', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>✏️ Малювати на фото</button>
-          )}
         </div>
       )}
 
@@ -1257,7 +1248,6 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                     const msgUser = chatUsers.find(u => u.id === msg.sender_id) || (isMine ? userProfile : null);
                     const msgBadge = getGroupBadgeStyle(msgUser?.group_id);
                     
-                    // Шукаємо оригінал повідомлення, якщо це відповідь
                     const quotedMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
                     const quotedUser = quotedMsg ? (chatUsers.find(u => u.id === quotedMsg.sender_id) || (quotedMsg.sender_id === dbUserId ? userProfile : null)) : null;
 
@@ -1265,86 +1255,91 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                       <div 
                         key={msg.id} 
                         onMouseEnter={() => setHoveredMsgId(msg.id)}
-                        onMouseLeave={() => { setHoveredMsgId(null); setShowReactionPicker(null); }}
-                        style={{ display: 'flex', flexDirection: isMine ? 'row-reverse' : 'row', alignItems: 'flex-start', gap: '10px', position: 'relative' }}
+                        onMouseLeave={() => setHoveredMsgId(null)}
+                        style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', position: 'relative' }}
                       >
                         
-                        {/* КНОПКИ ДІЙ (ВІДПОВІСТИ / РЕАКЦІЯ) - З'ЯВЛЯЮТЬСЯ ПРИ НАВЕДЕННІ */}
-                        {hoveredMsgId === msg.id && (
-                          <div style={{ display: 'flex', gap: '5px', marginTop: '5px', position: 'relative' }}>
-                            <button onClick={() => setReplyingTo(msg)} title="Відповісти" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>↩️</button>
-                            <button onClick={() => setShowReactionPicker(showReactionPicker === msg.id ? null : msg.id)} title="Реакція" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '50%', width: '30px', height: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>😀</button>
-                            
-                            {/* ПІКЕР ЕМОДЗІ */}
-                            {showReactionPicker === msg.id && (
-                              <div style={{ position: 'absolute', top: '-40px', left: isMine ? 'auto' : '100%', right: isMine ? '100%' : 'auto', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '5px 10px', display: 'flex', gap: '8px', boxShadow: '0 5px 15px rgba(0,0,0,0.1)', zIndex: 10 }}>
-                                {['👍', '❤️', '🔥', '😂', '💯'].map(emoji => (
-                                  <span key={emoji} onClick={() => handleReaction(msg.id, msg.reactions || {}, emoji)} style={{ cursor: 'pointer', fontSize: '18px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.3)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>{emoji}</span>
-                                ))}
-                              </div>
-                            )}
-                          </div>
+                        {/* ПЛАШКИ НАД ПОВІДОМЛЕННЯМ */}
+                        {!isMine && msgUser && (msgUser.role === 'admin' || msgUser.role === 'teacher' || msgBadge.show) && (
+                           <div style={{ marginBottom: '4px', marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{getDisplayName(msgUser)}</span>
+                             {msgUser.role === 'admin' && <span style={{ background: '#E0A345', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👑 Адмін</span>}
+                             {msgUser.role === 'teacher' && <span style={{ background: '#4A90E2', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👩‍🏫 Викладач</span>}
+                             {msgBadge.show && <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>{msgUser.group_id}</span>}
+                           </div>
                         )}
 
-                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start', maxWidth: '75%' }}>
+                        {/* БАБЛ ПОВІДОМЛЕННЯ (ІВЕНТИ ДЛЯ ПОДВІЙНОГО КЛІКУ І ПРАВОЇ КНОПКИ) */}
+                        <div 
+                          onDoubleClick={() => handleReaction(msg.id, msg.reactions || {}, '❤️')}
+                          onContextMenu={(e) => handleContextMenu(e, msg)}
+                          style={{ 
+                            position: 'relative', maxWidth: '75%', padding: '14px 20px', 
+                            borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', 
+                            background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, 
+                            color: isMine ? '#fff' : theme.text, 
+                            boxShadow: '0 4px 10px rgba(0,0,0,0.05)', 
+                            border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, 
+                            fontSize: '15px', lineHeight: '1.5', cursor: 'default'
+                          }}
+                        >
                           
-                          {/* ПЛАШКИ НАД ПОВІДОМЛЕННЯМ */}
-                          {!isMine && msgUser && (msgUser.role === 'admin' || msgUser.role === 'teacher' || msgBadge.show) && (
-                             <div style={{ marginBottom: '4px', marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                               <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{getDisplayName(msgUser)}</span>
-                               {msgUser.role === 'admin' && <span style={{ background: '#E0A345', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👑 Адмін</span>}
-                               {msgUser.role === 'teacher' && <span style={{ background: '#4A90E2', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👩‍🏫 Викладач</span>}
-                               {msgBadge.show && <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>{msgUser.group_id}</span>}
-                             </div>
+                          {/* ХОВЕР ШВИДКІ РЕАКЦІЇ (ПОВЕРХ БАБЛА) */}
+                          {hoveredMsgId === msg.id && (
+                            <div style={{ position: 'absolute', top: '-16px', right: isMine ? 'auto' : '10px', left: isMine ? '10px' : 'auto', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '4px 8px', display: 'flex', gap: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10 }}>
+                              {['👍', '❤️', '🔥'].map(emoji => (
+                                <span key={emoji} onClick={(e) => { e.stopPropagation(); handleReaction(msg.id, msg.reactions || {}, emoji); }} style={{ cursor: 'pointer', fontSize: '15px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.2)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>{emoji}</span>
+                              ))}
+                            </div>
                           )}
 
-                          {/* БАБЛ ПОВІДОМЛЕННЯ */}
-                          <div style={{ padding: '14px 20px', borderRadius: isMine ? '20px 20px 4px 20px' : '20px 20px 20px 4px', background: isMine ? 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)' : theme.cardBg, color: isMine ? '#fff' : theme.text, boxShadow: '0 4px 10px rgba(0,0,0,0.05)', border: isMine ? 'none' : `1px solid ${theme.inputBorder}`, fontSize: '15px', lineHeight: '1.5', width: '100%', boxSizing: 'border-box' }}>
-                            
-                            {/* БЛОК ЦИТАТИ ВСЕРЕДИНІ ПОВІДОМЛЕННЯ */}
-                            {quotedMsg && (
-                              <div style={{ background: 'rgba(0,0,0,0.15)', borderLeft: `3px solid ${isMine ? '#fff' : '#E0A345'}`, borderRadius: '6px', padding: '8px 12px', marginBottom: '10px', fontSize: '13px', color: isMine ? 'rgba(255,255,255,0.9)' : theme.textSecondary }}>
-                                <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{getDisplayName(quotedUser)}</div>
-                                <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {quotedMsg.text.match(/(https?:\/\/[^\s]+)/) ? '🖼️ Медіафайл' : quotedMsg.text}
-                                </div>
+                          {quotedMsg && (
+                            <div style={{ background: 'rgba(0,0,0,0.15)', borderLeft: `3px solid ${isMine ? '#fff' : '#E0A345'}`, borderRadius: '6px', padding: '8px 12px', marginBottom: '10px', fontSize: '13px', color: isMine ? 'rgba(255,255,255,0.9)' : theme.textSecondary }}>
+                              <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{getDisplayName(quotedUser)}</div>
+                              <div style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {quotedMsg.text.match(/(https?:\/\/[^\s]+)/) ? '🖼️ Медіафайл' : quotedMsg.text}
                               </div>
-                            )}
+                            </div>
+                          )}
 
-                            {/* ТЕКСТ АБО ФОТО */}
-                            {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
-                              if (part.match(/(https?:\/\/[^\s]+)/g)) {
-                                if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
-                                if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
-                                  return (
-                                    <div key={i} style={{ marginTop: '8px' }}>
-                                      <img src={part} alt="attachment" onClick={() => setFullscreenImg(part)} style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '12px', objectFit: 'cover', display: 'block', cursor: 'zoom-in', border: isMine ? '2px solid rgba(255,255,255,0.3)' : `1px solid ${theme.inputBorder}` }} />
-                                    </div>
-                                  );
-                                }
-                                return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
-                              }
-                              return <span key={i}>{part}</span>;
-                            })}
-                          </div>
-                          
-                          {/* РЕАКЦІЇ ТА ЧАС */}
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', justifyContent: isMine ? 'flex-end' : 'flex-start', width: '100%' }}>
-                            {/* БЛОК РЕАКЦІЙ */}
-                            {msg.reactions && Object.keys(msg.reactions).length > 0 && (
-                              <div style={{ display: 'flex', gap: '4px' }}>
-                                {Object.entries(msg.reactions).map(([emoji, usersArr]) => (
-                                  <div key={emoji} onClick={() => handleReaction(msg.id, msg.reactions, emoji)} style={{ background: usersArr.includes(dbUserId) ? 'rgba(224, 163, 69, 0.2)' : theme.inputBg, border: `1px solid ${usersArr.includes(dbUserId) ? '#E0A345' : theme.inputBorder}`, padding: '2px 8px', borderRadius: '12px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                    <span>{emoji}</span>
-                                    <span style={{ fontWeight: 'bold', color: theme.textSecondary }}>{usersArr.length}</span>
+                          {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
+                            if (part.match(/(https?:\/\/[^\s]+)/g)) {
+                              if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
+                              if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
+                                return (
+                                  <div key={i} style={{ marginTop: '8px' }}>
+                                    <img src={part} alt="attachment" onClick={() => setFullscreenImg(part)} style={{ maxWidth: '100%', maxHeight: '250px', borderRadius: '12px', objectFit: 'cover', display: 'block', cursor: 'zoom-in', border: isMine ? '2px solid rgba(255,255,255,0.3)' : `1px solid ${theme.inputBorder}` }} />
                                   </div>
-                                ))}
-                              </div>
-                            )}
-                            <span style={{ fontSize: '11px', color: theme.textSecondary }}>{formatTime(msg.created_at)}</span>
-                          </div>
+                                );
+                              }
+                              return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: 'inherit', textDecoration: 'underline' }}>{part}</a>;
+                            }
+                            return <span key={i}>{part}</span>;
+                          })}
                         </div>
+                        
+                        {/* РЕАКЦІЇ ТА ЧАС (ПЛЮС ХОВЕР КНОПКА "ВІДПОВІСТИ") */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', justifyContent: isMine ? 'flex-end' : 'flex-start', width: '100%' }}>
+                          
+                          {/* ХОВЕР ВІДПОВІСТИ */}
+                          {hoveredMsgId === msg.id && (
+                             <span onClick={() => setReplyingTo(msg)} style={{ fontSize: '11px', fontWeight: 'bold', color: '#E0A345', cursor: 'pointer', opacity: 0.8 }} onMouseOver={e => e.target.style.opacity = 1} onMouseOut={e => e.target.style.opacity = 0.8}>
+                               ↩️ Відповісти
+                             </span>
+                          )}
 
+                          {msg.reactions && Object.keys(msg.reactions).length > 0 && (
+                            <div style={{ display: 'flex', gap: '4px' }}>
+                              {Object.entries(msg.reactions).map(([emoji, usersArr]) => (
+                                <div key={emoji} onClick={() => handleReaction(msg.id, msg.reactions, emoji)} style={{ background: usersArr.includes(dbUserId) ? 'rgba(224, 163, 69, 0.2)' : theme.inputBg, border: `1px solid ${usersArr.includes(dbUserId) ? '#E0A345' : theme.inputBorder}`, padding: '2px 8px', borderRadius: '12px', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                  <span>{emoji}</span>
+                                  <span style={{ fontWeight: 'bold', color: theme.textSecondary }}>{usersArr.length}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                          <span style={{ fontSize: '11px', color: theme.textSecondary }}>{formatTime(msg.created_at)}</span>
+                        </div>
                       </div>
                     )
                   })
@@ -1352,7 +1347,6 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                 <div ref={messagesEndRef} />
               </div>
 
-              {/* ПАНЕЛЬ ПЕРЕГЛЯДУ ЦИТАТИ (НАД ПОЛЕМ ВВОДУ) */}
               {replyingTo && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(224, 163, 69, 0.05)', borderTop: `1px solid ${theme.inputBorder}`, borderLeft: '4px solid #E0A345' }}>
                   <div style={{ overflow: 'hidden' }}>
