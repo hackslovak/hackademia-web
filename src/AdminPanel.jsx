@@ -90,7 +90,10 @@ const AdminPanel = () => {
         setUserCourses({ ...userCourses, [telegramId]: currentCourses.filter(id => id !== courseId) });
       } else {
         // Записуємо в базу
-        const { error } = await supabase.from('user_courses').insert({ user_telegram_id: telegramId, course_id: courseId });
+        const { error } = await supabase.from('user_courses').upsert(
+  { user_telegram_id: telegramId, course_id: courseId }, 
+  { onConflict: 'user_telegram_id, course_id' }
+);
         if (error) throw error;
 
         setUserCourses({ ...userCourses, [telegramId]: [...currentCourses, courseId] });
