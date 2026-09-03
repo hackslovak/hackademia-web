@@ -902,23 +902,6 @@ const ffFlashcards = falseFriendsDatabase.map(ff => ({
   isFfConverted: true
 }));
 
-// --- ФОНОВІ ІКОНКИ ДЛЯ ВСІЄЇ ПЛАТФОРМИ ---
-const BgIconBook = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M11.25 4.533A9.707 9.707 0 006 3a9.735 9.735 0 00-3.25.555.75.75 0 00-.5.707v14.25a.75.75 0 001 .707A8.237 8.237 0 016 18.75c1.995 0 3.823.707 5.25 1.886V4.533zM12.75 20.636A8.214 8.214 0 0118 18.75c1.66 0 3.218.51 4.5 1.38v-14.25a.75.75 0 00-.5-.707A9.735 9.735 0 0018 3a9.707 9.707 0 00-5.25 1.533v16.103z" /></svg>;
-const BgIconAcademic = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 3L1 9l4 2.18v6L12 21l7-3.82v-6l2-1.09V17h2V9L12 3zm6.82 6L12 12.72 5.18 9 12 5.28 18.82 9zM17 15.99l-5 2.73-5-2.73v-3.72L12 15l5-2.73v3.72z"/></svg>;
-const BgIconGlobe = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.896 1.157C8.583 4.251 7.235 5.564 6.22 7.214h4.482l-.598-3.807zM5.535 8.714C5.19 9.738 5 10.84 5 12c0 1.16.19 2.262.535 3.286h4.862l-.768-3.286-1.63 1.63a.75.75 0 01-1.06-1.06l3-3a.75.75 0 011.06 0l3 3a.75.75 0 11-1.06 1.06l-1.63-1.63.768 3.286h4.862c.345-1.024.535-2.126.535-3.286 0-1.16-.19-2.262-.535-3.286H5.535zm12.245 8.497H13.3l.598 3.807c1.521-.843 2.869-2.156 3.882-3.807zm-9.56 0H6.22a8.216 8.216 0 003.882 3.807l.598-3.807h-2.48zM13.3 3.407l-.598 3.807h4.482a8.216 8.216 0 00-3.884-3.807z" clipRule="evenodd" /></svg>;
-const BgIconChat = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" /></svg>;
-const BgIconTranslate = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>;
-
-const FloatingBackgrounds = ({ theme }) => (
-  <>
-    <div className="bg-element" style={{ top: '15%', left: '8%', width: '80px', animation: 'floatBg 9s ease-in-out infinite' }}><BgIconBook /></div>
-    <div className="bg-element" style={{ top: '65%', right: '8%', width: '100px', animation: 'floatBg 12s ease-in-out infinite 1s' }}><BgIconAcademic /></div>
-    <div className="bg-element" style={{ top: '30%', right: '12%', width: '70px', animation: 'floatBg 10s ease-in-out infinite 2s' }}><BgIconChat /></div>
-    <div className="bg-element" style={{ bottom: '15%', left: '15%', width: '90px', animation: 'floatBg 11s ease-in-out infinite 0.5s' }}><BgIconGlobe /></div>
-    <div className="bg-element" style={{ top: '12%', right: '28%', width: '110px', animation: 'floatBg 14s ease-in-out infinite 1.5s', opacity: theme.bgIconOpacity * 0.8 }}><BgIconTranslate /></div>
-  </>
-);
-
 // --- ГОЛОСОВИЙ ДВИЖОК (Telegram-Safe Гібрид + Magic Link) ---
 const globalAudioPlayer = new Audio();
 
