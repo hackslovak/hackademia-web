@@ -965,6 +965,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
   const [chatUsers, setChatUsers] = React.useState([]);
   const [searchQuery, setSearchQuery] = React.useState('');
   const [activeChatUserId, setActiveChatUserId] = React.useState(isAdmin ? null : dbUserId);
+  const [unreadPerUser, setUnreadPerUser] = React.useState({}); // НОВИЙ СТАН ДЛЯ БЕЙДЖІВ
   const messagesEndRef = React.useRef(null);
 
   const scrollToBottom = () => {
@@ -973,7 +974,6 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   React.useEffect(() => {
     if (isAdmin) {
-      // ПРИБРАНО ФІЛЬТР, ЩОБ АДМІН БАЧИВ СВІЙ ТЕСТОВИЙ АКАУНТ У СПИСКУ
       supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id')
         .then(({data}) => {
          if (data) {
@@ -984,6 +984,24 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     }
   }, [isAdmin]);
 
+  // ФУНКЦІЯ ДЛЯ ПІДРАХУНКУ НЕПРОЧИТАНИХ ПО КОЖНОМУ УЧНЮ
+  const fetchUnreadPerUser = async () => {
+    if (!isAdmin) return;
+    const { data } = await supabase
+      .from('messages')
+      .select('user_id')
+      .eq('is_read', false)
+      .neq('sender_id', dbUserId);
+
+    if (data) {
+      const counts = {};
+      data.forEach(msg => {
+        counts[msg.user_id] = (counts[msg.user_id] || 0) + 1;
+      });
+      setUnreadPerUser(counts);
+    }
+  };
+
   const fetchMessages = async () => {
     if (!activeChatUserId) return;
     const { data } = await supabase
@@ -993,6 +1011,7 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
       .order('created_at', { ascending: true });
     if (data) setMessages(data);
     
+    // Помічаємо як прочитані
     await supabase.from('messages')
       .update({ is_read: true })
       .eq('user_id', activeChatUserId)
@@ -1002,10 +1021,14 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
 
   React.useEffect(() => {
     fetchMessages();
+    fetchUnreadPerUser(); // Викликаємо при старті
     setTimeout(scrollToBottom, 300);
-    const interval = setInterval(fetchMessages, 3000);
+    const interval = setInterval(() => {
+      fetchMessages();
+      fetchUnreadPerUser(); // Оновлюємо бейджі
+    }, 3000);
     return () => clearInterval(interval);
-  }, [activeChatUserId]);
+  }, [activeChatUserId, isAdmin, dbUserId]);
 
   const sendMessage = async (e) => {
     e.preventDefault();
@@ -1032,7 +1055,20 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
     return 'Невідомий учень';
   };
 
-  const filteredUsers = chatUsers.filter(u => {
+  const handleSelectUser = (userId) => {
+    setActiveChatUserId(userId);
+    // Одразу візуально скидаємо лічильник для цього юзера
+    setUnreadPerUser(prev => ({ ...prev, [userId]: 0 }));
+  };
+
+  // СОРТУВАННЯ: Учні з непрочитаними піднімаються наверх!
+  const sortedUsers = [...chatUsers].sort((a, b) => {
+    const unreadA = unreadPerUser[a.id] ? 1 : 0;
+    const unreadB = unreadPerUser[b.id] ? 1 : 0;
+    return unreadB - unreadA; 
+  });
+
+  const filteredUsers = sortedUsers.filter(u => {
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     const fullName = `${u.first_name || ''} ${u.last_name || ''}`.toLowerCase();
@@ -1073,11 +1109,11 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                 <div style={{ padding: '20px', textAlign: 'center', color: theme.textSecondary, fontSize: '13px' }}>Нікого не знайдено 🕵️‍♂️</div>
               ) : (
                 filteredUsers.map(u => (
-                  <div key={u.id} onClick={() => setActiveChatUserId(u.id)} className="hover-card" style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}>
+                  <div key={u.id} onClick={() => handleSelectUser(u.id)} className="hover-card" style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s' }}>
                     <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: u.avatar_url ? 'transparent' : '#E0A345', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
                       {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
                     </div>
-                    <div style={{ overflow: 'hidden' }}>
+                    <div style={{ flex: 1, overflow: 'hidden' }}>
                       <div style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                         {getDisplayName(u)}
                       </div>
@@ -1087,6 +1123,12 @@ function ChatView({ dbUserId, isAdmin, theme, t, onBack }) {
                         </div>
                       )}
                     </div>
+                    {/* НОВИЙ БЕЙДЖ НЕПРОЧИТАНИХ ПОВІДОМЛЕНЬ */}
+                    {unreadPerUser[u.id] > 0 && (
+                      <div style={{ background: '#E0A345', color: 'white', fontSize: '12px', fontWeight: 'bold', padding: '2px 8px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(224,163,69,0.3)' }}>
+                        {unreadPerUser[u.id]}
+                      </div>
+                    )}
                   </div>
                 ))
               )}
@@ -1410,7 +1452,7 @@ function Platform() {
         <button title={t('chatBtn')} onClick={() => { setGlobalView('chat'); setSelectedCourse(null); setActiveModule(null); }} className={`hover-menu-btn ${globalView === 'chat' ? 'active' : ''}`} style={{ position: 'relative', width: '100%', border: 'none', color: '#fff', padding: '14px 0', borderRadius: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <svg width="26" height="26" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
           {unreadChatCount > 0 && (
-            <span style={{ position: 'absolute', top: '2px', right: '14px', background: '#FF007F', color: 'white', fontSize: '11px', fontWeight: 'bold', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
+            <span style={{ position: 'absolute', top: '2px', right: '14px', background: '#E0A345', color: 'white', fontSize: '11px', fontWeight: 'bold', width: '18px', height: '18px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 5px rgba(0,0,0,0.2)' }}>
               {unreadChatCount}
             </span>
           )}
