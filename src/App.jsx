@@ -885,33 +885,60 @@ const ffFlashcards = falseFriendsDatabase.map(ff => ({
   isFfConverted: true
 }));
 
-// --- ГОЛОСОВИЙ ДВИЖОК (Google TTS) ---
+// --- ГОЛОСОВИЙ ДВИЖОК (Telegram-Safe Гібрид + Magic Link) ---
 const globalAudioPlayer = new Audio();
 
 function speakSlovak(text) {
   if (!text) return;
 
-  // Завжди використовуємо Google TTS для ідеальної словацької вимови
-  const audioUrl = `https://translate.googleapis.com/translate_tts?client=gtx&ie=UTF-8&tl=sk&q=${encodeURIComponent(text)}`;
+  // 1. Пробуємо Google API (найкраща вимова)
+  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=sk&client=tw-ob&q=${encodeURIComponent(text)}`;
   globalAudioPlayer.src = audioUrl;
   
   globalAudioPlayer.play().catch(err => {
-    console.warn("Помилка Google TTS, пробуємо системний:", err);
-    // Якщо Google заблоковано, використовуємо системний як резерв
+    console.warn("Мережеве аудіо не спрацювало:", err);
+    
+    // 2. Якщо заблоковано, використовуємо системний голос
     if (window.speechSynthesis) {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.lang = 'sk-SK';
-      window.speechSynthesis.speak(utterance);
+      utterance.rate = 0.85;
+
+      // Перевіряємо, чи є в системі саме словацький голос
+      const voices = window.speechSynthesis.getVoices();
+      const slovakVoice = voices.find(v => v.lang === 'sk-SK' || v.lang.startsWith('sk'));
+      
+      if (slovakVoice) {
+        // Якщо є — читаємо
+        utterance.voice = slovakVoice;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        // Якщо немає (щоб не читало англійським акцентом!) — виводимо Popup
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showPopup({
+            title: "Блокування звуку 🔇",
+            message: "Ваш пристрій блокує звук у Telegram і не має словацького голосу.\n\nВідкрийте платформу у звичайному браузері (Chrome/Safari), щоб звук працював ідеально. Прогрес збережеться!",
+            buttons: [
+              { id: "open_web", type: "default", text: "🌐 Відкрити в браузері" },
+              { type: "cancel", text: "Закрити" }
+            ]
+          }, (btnId) => {
+            if (btnId === "open_web") {
+              const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+              let url = "https://hackademia-web.vercel.app/";
+              if (tgUser) {
+                const authData = JSON.stringify({ id: tgUser.id, first_name: tgUser.first_name });
+                const authStr = btoa(encodeURIComponent(authData));
+                url += "?auth=" + authStr;
+              }
+              window.Telegram.WebApp.openLink(url);
+            }
+          });
+        }
+      }
     }
   });
-}
-
-// Допоміжна функція для надійного аудіо
-function playGoogleTTS(text) {
-  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=sk&client=tw-ob&q=${encodeURIComponent(text)}`;
-  const audio = new Audio(audioUrl);
-  audio.play().catch(e => console.warn("Помилка TTS:", e));
 }
 
 // --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ ---

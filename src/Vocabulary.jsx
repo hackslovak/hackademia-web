@@ -18,6 +18,55 @@ const BgIconAcademic = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns=
 const BgIconGlobe = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M12 2.25c-5.385 0-9.75 4.365-9.75 9.75s4.365 9.75 9.75 9.75 9.75-4.365 9.75-9.75S17.385 2.25 12 2.25zm-1.896 1.157C8.583 4.251 7.235 5.564 6.22 7.214h4.482l-.598-3.807zM5.535 8.714C5.19 9.738 5 10.84 5 12c0 1.16.19 2.262.535 3.286h4.862l-.768-3.286-1.63 1.63a.75.75 0 01-1.06-1.06l3-3a.75.75 0 011.06 0l3 3a.75.75 0 11-1.06 1.06l-1.63-1.63.768 3.286h4.862c.345-1.024.535-2.126.535-3.286 0-1.16-.19-2.262-.535-3.286H5.535zm12.245 8.497H13.3l.598 3.807c1.521-.843 2.869-2.156 3.882-3.807zm-9.56 0H6.22a8.216 8.216 0 003.882 3.807l.598-3.807h-2.48zM13.3 3.407l-.598 3.807h4.482a8.216 8.216 0 00-3.884-3.807z" clipRule="evenodd" /></svg>;
 const BgIconChat = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" /></svg>;
 
+// --- ГОЛОСОВИЙ ДВИЖОК ---
+const globalAudioPlayer = new Audio();
+
+function speakSlovak(text) {
+  if (!text) return;
+  const audioUrl = `https://translate.google.com/translate_tts?ie=UTF-8&tl=sk&client=tw-ob&q=${encodeURIComponent(text)}`;
+  globalAudioPlayer.src = audioUrl;
+  
+  globalAudioPlayer.play().catch(err => {
+    console.warn("Мережеве аудіо не спрацювало:", err);
+    if (window.speechSynthesis) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'sk-SK';
+      utterance.rate = 0.85;
+      
+      const voices = window.speechSynthesis.getVoices();
+      const slovakVoice = voices.find(v => v.lang === 'sk-SK' || v.lang.startsWith('sk'));
+      
+      if (slovakVoice) {
+        utterance.voice = slovakVoice;
+        window.speechSynthesis.speak(utterance);
+      } else {
+        if (window.Telegram?.WebApp) {
+          window.Telegram.WebApp.showPopup({
+            title: "Блокування звуку 🔇",
+            message: "Ваш пристрій блокує звук у Telegram і не має словацького голосу.\n\nВідкрийте словник у звичайному браузері (Chrome/Safari).",
+            buttons: [
+              { id: "open_web", type: "default", text: "🌐 Відкрити в браузері" },
+              { type: "cancel", text: "Закрити" }
+            ]
+          }, (btnId) => {
+            if (btnId === "open_web") {
+              const tgUser = window.Telegram.WebApp.initDataUnsafe?.user;
+              let url = "https://hackademia-web.vercel.app/vocabulary";
+              if (tgUser) {
+                const authData = JSON.stringify({ id: tgUser.id, first_name: tgUser.first_name });
+                const authStr = btoa(encodeURIComponent(authData));
+                url += "?auth=" + authStr;
+              }
+              window.Telegram.WebApp.openLink(url);
+            }
+          });
+        }
+      }
+    }
+  });
+}
+
 export default function Vocabulary() {
   const navigate = useNavigate();
   
@@ -264,13 +313,14 @@ export default function Vocabulary() {
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', width: '50%' }}>
                           <span style={{ fontSize: '20px' }}>{word.emoji}</span>
                           <span style={{ fontWeight: '600', color: theme.text }}>
-                            {/* БЕРЕМО СЛОВО ПОТОЧНОЮ МОВОЮ (або українською як запасний варіант) */}
                             {word[lang] || word.ua || word.uk}
                           </span>
                         </div>
-                        <div style={{ width: '50%', textAlign: 'right', color: '#FF7B54', fontWeight: '800' }}>
-                          {word.sk}
+                        <div style={{ width: '50%', textAlign: 'right', color: '#FF7B54', fontWeight: '800', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '8px' }}>
+                          <span>{word.sk}</span>
+                          <button onClick={(e) => { e.stopPropagation(); speakSlovak(word.sk); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', padding: 0, opacity: 0.8, transition: '0.2s' }} className="hover-card">🔊</button>
                         </div>
+                      </div>
                       </div>
                     ))}
                   </div>
