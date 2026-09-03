@@ -323,7 +323,7 @@ export default function Vocabulary() {
                       </div>
                       </div>
                     ))}
-                  </div>
+                  </div> 
                 </details>
               ))}
             </div>
