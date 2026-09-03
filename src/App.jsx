@@ -1327,6 +1327,27 @@ function Platform() {
       fetchFullProfile();
     }, [dbUserId]);
 
+
+// --- ЗАВАНТАЖЕННЯ ДОСТУПІВ ДО КУРСІВ ДЛЯ УЧНЯ ---
+  useEffect(() => {
+    async function fetchAllowedCourses() {
+      // Якщо в профілі ще немає telegram_id, чекаємо
+      if (!userProfile?.telegram_id) return;
+      
+      const { data, error } = await supabase
+        .from('user_courses')
+        .select('course_id')
+        .eq('user_telegram_id', userProfile.telegram_id);
+        
+      if (data) {
+        // Перетворюємо масив об'єктів на простий список ID курсів: ['a1', 'a2']
+        setAllowedCourses(data.map(row => row.course_id));
+      }
+    }
+    
+    fetchAllowedCourses();
+  }, [userProfile?.telegram_id]);
+  
   // --- 2. УСІ useEffect ТАХОЖ ВИЩЕ УСІХ УМОВНІХ РЕНДЕРІВ ---
   // (тут розміщуються твої useEffect для ініціалізації юзера, завантаження курсів тощо)
 
@@ -3800,7 +3821,7 @@ useEffect(() => {
               </Reorder.Group>
             ) : (
               courses.filter(c => !c.lang || c.lang === lang || c.lang === 'all').map((course, idx) => {
-                const hasAccess = allowedCourses.includes(course.id);
+                const hasAccess = effectiveIsAdmin || allowedCourses.includes(course.id);
                 const imgUrl = decorImages[idx % decorImages.length];
                 return (
                   <div key={course.id} className={hasAccess ? "hover-card" : ""} style={{ position: 'relative', overflow: 'hidden', zIndex: 1, background: hasAccess ? (isDarkMode ? 'linear-gradient(135deg, #2d3748 0%, #1a202c 100%)' : 'linear-gradient(135deg, #1E3A3A 0%, #2A4D4D 100%)') : (isDarkMode ? '#2d3748' : '#e2e8f0'), color: hasAccess ? '#ffffff' : theme.textSecondary, padding: '25px', borderRadius: '24px', boxShadow: hasAccess ? '0 10px 30px rgba(30,58,58,0.12)' : 'none', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', minHeight: '180px', opacity: hasAccess ? 1 : 0.75, border: '1px solid rgba(255,255,255,0.1)', boxSizing: 'border-box', cursor: hasAccess ? 'pointer' : 'not-allowed' }} onClick={() => { if (hasAccess) setSelectedCourse(course); else alert(t('lockedAlert')); }}>
