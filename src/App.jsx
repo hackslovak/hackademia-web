@@ -958,7 +958,7 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.1: TELEGRAM UX, КОНТЕКСТНЕ МЕНЮ, ПОДВІЙНИЙ КЛІК) ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.2: ЧИСТИЙ TELEGRAM UX) ---
 function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const isTeacher = userProfile?.role === 'teacher';
   const showUserList = isAdmin || isTeacher;
@@ -978,13 +978,11 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [replyingTo, setReplyingTo] = React.useState(null);
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
   
-  // СТАН ДЛЯ МЕНЮ ПРАВОГО КЛІКУ
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, msg: null });
   
   const messagesEndRef = React.useRef(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
-  // Закриваємо контекстне меню при кліку будь-де
   React.useEffect(() => {
     const handleClickOutside = () => setContextMenu({ visible: false, x: 0, y: 0, msg: null });
     window.addEventListener('click', handleClickOutside);
@@ -1098,10 +1096,8 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.selectionChanged();
   };
 
-  // ОБРОБКА ПРАВОГО КЛІКУ
   const handleContextMenu = (e, msg) => {
     e.preventDefault();
-    // Щоб меню не вилазило за край екрану
     const menuWidth = 250;
     const xPos = e.pageX + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 20 : e.pageX;
     setContextMenu({ visible: true, x: xPos, y: e.pageY, msg: msg });
@@ -1269,7 +1265,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                            </div>
                         )}
 
-                        {/* БАБЛ ПОВІДОМЛЕННЯ (ІВЕНТИ ДЛЯ ПОДВІЙНОГО КЛІКУ І ПРАВОЇ КНОПКИ) */}
+                        {/* БАБЛ ПОВІДОМЛЕННЯ */}
                         <div 
                           onDoubleClick={() => handleReaction(msg.id, msg.reactions || {}, '❤️')}
                           onContextMenu={(e) => handleContextMenu(e, msg)}
@@ -1283,16 +1279,6 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                             fontSize: '15px', lineHeight: '1.5', cursor: 'default'
                           }}
                         >
-                          
-                          {/* ХОВЕР ШВИДКІ РЕАКЦІЇ (ПОВЕРХ БАБЛА) */}
-                          {hoveredMsgId === msg.id && (
-                            <div style={{ position: 'absolute', top: '-16px', right: isMine ? 'auto' : '10px', left: isMine ? '10px' : 'auto', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '4px 8px', display: 'flex', gap: '6px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)', zIndex: 10 }}>
-                              {['👍', '❤️', '🔥'].map(emoji => (
-                                <span key={emoji} onClick={(e) => { e.stopPropagation(); handleReaction(msg.id, msg.reactions || {}, emoji); }} style={{ cursor: 'pointer', fontSize: '15px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.2)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>{emoji}</span>
-                              ))}
-                            </div>
-                          )}
-
                           {quotedMsg && (
                             <div style={{ background: 'rgba(0,0,0,0.15)', borderLeft: `3px solid ${isMine ? '#fff' : '#E0A345'}`, borderRadius: '6px', padding: '8px 12px', marginBottom: '10px', fontSize: '13px', color: isMine ? 'rgba(255,255,255,0.9)' : theme.textSecondary }}>
                               <div style={{ fontWeight: 'bold', marginBottom: '2px' }}>{getDisplayName(quotedUser)}</div>
@@ -1318,15 +1304,25 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                           })}
                         </div>
                         
-                        {/* РЕАКЦІЇ ТА ЧАС (ПЛЮС ХОВЕР КНОПКА "ВІДПОВІСТИ") */}
+                        {/* РЕАКЦІЇ ТА ЧАС */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px', justifyContent: isMine ? 'flex-end' : 'flex-start', width: '100%' }}>
                           
-                          {/* ХОВЕР ВІДПОВІСТИ */}
-                          {hoveredMsgId === msg.id && (
-                             <span onClick={() => setReplyingTo(msg)} style={{ fontSize: '11px', fontWeight: 'bold', color: '#E0A345', cursor: 'pointer', opacity: 0.8 }} onMouseOver={e => e.target.style.opacity = 1} onMouseOut={e => e.target.style.opacity = 0.8}>
-                               ↩️ Відповісти
-                             </span>
-                          )}
+                          {/* НЕВИДИМА КНОПКА "ВІДПОВІСТИ", ЯКА ПРОЯВЛЯЄТЬСЯ НА ХОВЕРІ БЕЗ СТРИБКІВ */}
+                          <span 
+                            onClick={() => setReplyingTo(msg)} 
+                            style={{ 
+                              fontSize: '11px', fontWeight: 'bold', color: '#E0A345', cursor: 'pointer', 
+                              opacity: hoveredMsgId === msg.id ? 0.8 : 0, 
+                              pointerEvents: hoveredMsgId === msg.id ? 'auto' : 'none',
+                              transition: 'opacity 0.2s ease',
+                              marginRight: isMine ? 'auto' : '0', // Щоб завжди було з потрібного боку
+                              marginLeft: isMine ? '0' : 'auto'
+                            }} 
+                            onMouseOver={e => e.target.style.opacity = 1} 
+                            onMouseOut={e => e.target.style.opacity = 0.8}
+                          >
+                            ↩️ Відповісти
+                          </span>
 
                           {msg.reactions && Object.keys(msg.reactions).length > 0 && (
                             <div style={{ display: 'flex', gap: '4px' }}>
