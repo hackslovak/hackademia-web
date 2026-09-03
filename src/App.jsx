@@ -958,7 +958,7 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 2.3: КОМПАКТНИЙ TELEGRAM UI) ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 3: МАЛЮВАННЯ НА ФОТО + CANVAS) ---
 function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const isTeacher = userProfile?.role === 'teacher';
   const showUserList = isAdmin || isTeacher;
@@ -977,9 +977,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   
   const [replyingTo, setReplyingTo] = React.useState(null);
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
-  
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, msg: null });
   
+  // === НОВІ СТАНИ ДЛЯ МАЛЮВАННЯ (CANVAS) ===
+  const [isDrawingMode, setIsDrawingMode] = React.useState(false);
+  const [drawColor, setDrawColor] = React.useState('#FF3B30'); // Червоний за замовчуванням
+  const [drawSize, setDrawSize] = React.useState(4);
+  const [isDrawing, setIsDrawing] = React.useState(false);
+  const [isSavingCanvas, setIsSavingCanvas] = React.useState(false);
+  const canvasRef = React.useRef(null);
+
   const messagesEndRef = React.useRef(null);
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
 
@@ -1081,17 +1088,12 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const handleReaction = async (msgId, currentReactions, emoji) => {
     let newReactions = { ...currentReactions };
     if (!newReactions[emoji]) newReactions[emoji] = [];
-    
     if (newReactions[emoji].includes(dbUserId)) {
         newReactions[emoji] = newReactions[emoji].filter(id => id !== dbUserId);
         if (newReactions[emoji].length === 0) delete newReactions[emoji];
-    } else {
-        newReactions[emoji].push(dbUserId);
-    }
-    
+    } else { newReactions[emoji].push(dbUserId); }
     setMessages(messages.map(m => m.id === msgId ? { ...m, reactions: newReactions } : m));
     setContextMenu({ visible: false, x: 0, y: 0, msg: null });
-    
     await supabase.from('messages').update({ reactions: newReactions }).eq('id', msgId);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.selectionChanged();
   };
@@ -1102,6 +1104,89 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     const xPos = e.pageX + menuWidth > window.innerWidth ? window.innerWidth - menuWidth - 20 : e.pageX;
     setContextMenu({ visible: true, x: xPos, y: e.pageY, msg: msg });
   };
+
+  // === ЛОГІКА МАЛЮВАННЯ ===
+  React.useEffect(() => {
+    if (isDrawingMode && fullscreenImg && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = "anonymous"; // Важливо для завантаження з Supabase
+      img.onload = () => {
+        // Рахуємо пропорції, щоб картинка влізла в екран
+        const maxWidth = window.innerWidth * 0.85;
+        const maxHeight = window.innerHeight * 0.75;
+        let width = img.width;
+        let height = img.height;
+        const ratio = Math.min(maxWidth / width, maxHeight / height);
+        
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      };
+      img.src = fullscreenImg;
+    }
+  }, [isDrawingMode, fullscreenImg]);
+
+  const getCanvasCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) {
+      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    }
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const startDrawing = (e) => {
+    if (!isDrawingMode) return;
+    const { x, y } = getCanvasCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    setIsDrawing(true);
+  };
+
+  const draw = (e) => {
+    if (!isDrawing || !isDrawingMode) return;
+    e.preventDefault(); // Забороняє скрол при малюванні пальцем
+    const { x, y } = getCanvasCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.lineTo(x, y);
+    ctx.strokeStyle = drawColor;
+    ctx.lineWidth = drawSize;
+    ctx.lineCap = 'round';
+    ctx.stroke();
+  };
+
+  const stopDrawing = () => setIsDrawing(false);
+
+  const saveAndSendCanvas = async () => {
+    if (!canvasRef.current || !activeChatUserId) return;
+    setIsSavingCanvas(true);
+    try {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], `review_${Date.now()}.png`, { type: 'image/png' });
+
+      const fileName = `chat_${dbUserId}_${Date.now()}.png`;
+      const { error } = await supabase.storage.from('chat-images').upload(fileName, file);
+      if (error) throw error;
+
+      const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(fileName);
+      await sendContent(publicUrl);
+      
+      // Закриваємо фулскрін і вимикаємо малювання
+      setFullscreenImg(null);
+      setIsDrawingMode(false);
+    } catch (err) {
+      alert("❌ Помилка відправки: " + err.message);
+    } finally {
+      setIsSavingCanvas(false);
+    }
+  };
+  // ========================
 
   const formatTime = (iso) => new Date(iso).toLocaleTimeString('uk-UA', { hour: '2-digit', minute: '2-digit' });
   const getDisplayName = (u) => {
@@ -1127,30 +1212,61 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
       {/* МЕНЮ ПРАВОГО КЛІКУ */}
       {contextMenu.visible && (
         <div style={{ position: 'fixed', top: contextMenu.y, left: contextMenu.x, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '16px', boxShadow: '0 10px 30px rgba(0,0,0,0.15)', zIndex: 100000, overflow: 'hidden', minWidth: '220px', animation: 'fadeIn 0.15s ease-out' }}>
-          
           <div style={{ padding: '12px', borderBottom: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'space-between', background: 'rgba(0,0,0,0.02)' }}>
              {['👍', '👎', '❤️', '🔥', '😂', '👏', '😢', '🎉'].map(emoji => (
-                <button key={emoji} onClick={(e) => { e.stopPropagation(); handleReaction(contextMenu.msg.id, contextMenu.msg.reactions || {}, emoji); }} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', padding: '4px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.2)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>
-                  {emoji}
-                </button>
+                <button key={emoji} onClick={(e) => { e.stopPropagation(); handleReaction(contextMenu.msg.id, contextMenu.msg.reactions || {}, emoji); }} style={{ background: 'transparent', border: 'none', fontSize: '22px', cursor: 'pointer', padding: '4px', transition: 'transform 0.1s' }} onMouseOver={e => e.target.style.transform = 'scale(1.2)'} onMouseOut={e => e.target.style.transform = 'scale(1)'}>{emoji}</button>
              ))}
           </div>
-
-          <div 
-            onClick={(e) => { e.stopPropagation(); setReplyingTo(contextMenu.msg); setContextMenu({visible: false, x: 0, y: 0, msg: null}); }} 
-            style={{ padding: '14px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', color: theme.text, fontWeight: 'bold', fontSize: '15px' }}
-            onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}
-          >
+          <div onClick={(e) => { e.stopPropagation(); setReplyingTo(contextMenu.msg); setContextMenu({visible: false, x: 0, y: 0, msg: null}); }} style={{ padding: '14px 20px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', color: theme.text, fontWeight: 'bold', fontSize: '15px' }} onMouseOver={e => e.currentTarget.style.background = 'rgba(0,0,0,0.05)'} onMouseOut={e => e.currentTarget.style.background = 'transparent'}>
             ↩️ Відповісти
           </div>
         </div>
       )}
 
-      {/* ФУЛСКРІН ЗУМ */}
+      {/* ФУЛСКРІН ЗУМ + МАЛЮВАННЯ */}
       {fullscreenImg && (
-        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-          <button onClick={() => setFullscreenImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-          <img src={fullscreenImg} alt="Zoomed" style={{ maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          
+          <button onClick={() => { setFullscreenImg(null); setIsDrawingMode(false); }} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+
+          {!isDrawingMode ? (
+            <>
+              <img src={fullscreenImg} alt="Zoomed" style={{ maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+              {showUserList && (
+                <button onClick={() => setIsDrawingMode(true)} style={{ marginTop: '20px', background: '#E0A345', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(224,163,69,0.3)' }}>
+                  ✏️ Малювати (перевірити)
+                </button>
+              )}
+            </>
+          ) : (
+            <>
+              {/* ПАНЕЛЬ ІНСТРУМЕНТІВ МАЛЮВАННЯ */}
+              <div style={{ display: 'flex', gap: '15px', background: theme.cardBg, padding: '10px 20px', borderRadius: '16px', marginBottom: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+                 <div style={{ display: 'flex', gap: '8px' }}>
+                    {['#FF3B30', '#34C759', '#007AFF', '#FFCC00', '#FFFFFF', '#000000'].map(color => (
+                       <div key={color} onClick={() => setDrawColor(color)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: color, cursor: 'pointer', border: drawColor === color ? '3px solid #E0A345' : '1px solid rgba(0,0,0,0.2)' }} />
+                    ))}
+                 </div>
+                 <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                 <input type="range" min="1" max="15" value={drawSize} onChange={(e) => setDrawSize(e.target.value)} style={{ width: '100px' }} />
+                 <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                 <button onClick={() => { setIsDrawingMode(false); }} style={{ background: 'transparent', color: theme.textSecondary, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
+                 <button onClick={saveAndSendCanvas} disabled={isSavingCanvas} style={{ background: '#38A169', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                   {isSavingCanvas ? '⏳ Збереження...' : '📤 Відправити'}
+                 </button>
+              </div>
+
+              {/* ПОЛОТНО ДЛЯ МАЛЮВАННЯ */}
+              <div style={{ position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', borderRadius: '12px', overflow: 'hidden' }}>
+                <canvas 
+                   ref={canvasRef}
+                   onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing}
+                   onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
+                   style={{ display: 'block', cursor: 'crosshair', touchAction: 'none' }}
+                />
+              </div>
+            </>
+          )}
         </div>
       )}
 
@@ -1713,7 +1829,7 @@ function Platform() {
     setStudentsNeedingCourses([]);
   };
 
-  // --- СТАНИ ДЛЯ ФЛЕШ-КАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
+  // --- СТАНИ ДЛЯ ФЛЕШКАРТОК ТА РЕЖИМІВ ТРЕНУВАННЯ ---
 
   const difficultyConfig = {
     easy: { color: '#00C853', label: '🟢 Легко', points: 10 },
