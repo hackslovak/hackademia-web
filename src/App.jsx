@@ -958,11 +958,11 @@ function speakSlovak(text) {
   });
 }
 
-// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (ФОТО-ЗУМ, TELEGRAM-БЕЙДЖІ, РОЛІ ТА ГРУПИ) ---
+// --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (ФОТО-ЗУМ, TELEGRAM-БЕЙДЖІ, РЕДАГУВАННЯ УЧНІВ) ---
 function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   // Визначаємо ролі
   const isTeacher = userProfile?.role === 'teacher';
-  const showUserList = isAdmin || isTeacher; // І адмін, і викладач бачать ліву панель
+  const showUserList = isAdmin || isTeacher;
 
   const [messages, setMessages] = React.useState([]);
   const [chatText, setChatText] = React.useState('');
@@ -972,7 +972,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   
-  // СТАНИ ДЛЯ ФУЛСКРІНА ТА РЕДАГУВАННЯ
+  // НОВІ СТАНИ ДЛЯ ФУЛСКРІНА ТА РЕДАГУВАННЯ
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
   const [editingUser, setEditingUser] = React.useState(null);
   const [editFormData, setEditFormData] = React.useState({});
@@ -983,14 +983,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-  // ГЕНЕРАТОР КОЛЬОРІВ (ТЕЛЕГРАМ СТИЛЬ)
+  // ОНОВЛЕНИЙ ГЕНЕРАТОР КОЛЬОРІВ (ТЕЛЕГРАМ СТИЛЬ)
   const getGroupBadgeStyle = (groupName) => {
     if (!groupName || groupName === '(Без групи)') return { show: false };
     let hash = 0;
     for (let i = 0; i < groupName.length; i++) {
       hash = groupName.charCodeAt(i) + ((hash << 5) - hash);
     }
+    // Множимо на 137, щоб навіть схожі назви (100 і 101) мали кардинально різні кольори
     const hue = Math.abs((hash * 137) % 360); 
+    // Пастельний фон (світлота 92%), темний текст (світлота 35%)
     return { bg: `hsl(${hue}, 80%, 92%)`, text: `hsl(${hue}, 80%, 35%)`, show: true };
   };
 
@@ -998,12 +1000,14 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     if (!showUserList) return;
     let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id');
     
-    // Якщо це викладач, він бачить ТІЛЬКИ тих, у кого така сама група
+    // Якщо це викладач, він бачить свою групу ТА адмінів
     if (isTeacher && !isAdmin) {
-      query = query.eq('group_id', userProfile.group_id);
+      const safeGroup = userProfile?.group_id || 'no-group';
+      query = query.or(`group_id.eq.${safeGroup},role.eq.admin`);
     }
-      
+
     const { data } = await query;
+      
     if (data) {
       const validUsers = data.filter(u => u.first_name || u.email);
       setChatUsers(validUsers);
@@ -1222,13 +1226,13 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
           <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg> Назад
         </button>
         <h2 style={{ color: theme.text, fontSize: '32px', margin: 0, fontWeight: '900' }}>
-          <span style={{ opacity: 0.8 }}>💬</span> {t('chatBtn')} {isTeacher && !isAdmin && <span style={{fontSize: '16px', color: '#E0A345'}}>(Група {userProfile.group_id})</span>}
+          <span style={{ opacity: 0.8 }}>💬</span> {t('chatBtn')} {isTeacher && !isAdmin && <span style={{fontSize: '16px', color: '#E0A345'}}>(Група {userProfile?.group_id})</span>}
         </h2>
       </div>
 
       <div style={{ flex: 1, background: theme.cardBg, borderRadius: '24px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', border: `1px solid ${theme.inputBorder}`, display: 'flex', overflow: 'hidden' }}>
         
-        {/* БОКОВА ПАНЕЛЬ ДЛЯ АДМІНА АБО ВИКЛАДАЧА */}
+        {/* БОКОВА ПАНЕЛЬ АДМІНА АБО ВИКЛАДАЧА */}
         {showUserList && (
           <div style={{ width: '320px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
             <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>
@@ -1247,16 +1251,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                         {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
                       </div>
                       <div style={{ flex: 1, overflow: 'hidden' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px', flexWrap: 'wrap' }}>
                           <span style={{ color: theme.text, fontWeight: 'bold', fontSize: '15px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{getDisplayName(u)}</span>
                           
-                          {/* ПОЗНАЧКА РОЛІ */}
-                          {u.role === 'teacher' && <span title="Викладач" style={{ fontSize: '12px' }}>👩‍🏫</span>}
-                          {u.role === 'admin' && <span title="Адміністратор" style={{ fontSize: '12px' }}>👑</span>}
+                          {/* ПЛАШКИ РОЛЕЙ У СПИСКУ */}
+                          {u.role === 'admin' && <span style={{ background: '#E0A345', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>👑 Адмін</span>}
+                          {u.role === 'teacher' && <span style={{ background: '#4A90E2', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>👩‍🏫 Викладач</span>}
                           
-                          {/* ТЕЛЕГРАМ-БЕЙДЖ ГРУПИ В СПИСКУ */}
+                          {/* ТЕЛЕГРАМ-БЕЙДЖ ГРУПИ В СПИСКУ УЧНІВ */}
                           {badge.show && (
-                            <span style={{ background: badge.bg, color: badge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '11px', fontWeight: '600', whiteSpace: 'nowrap' }}>{u.group_id}</span>
+                            <span style={{ background: badge.bg, color: badge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '900', whiteSpace: 'nowrap' }}>{u.group_id}</span>
                           )}
                         </div>
                         <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
@@ -1264,9 +1268,9 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                         </div>
                       </div>
                       
-                      {/* МЕНЮ НАЛАШТУВАНЬ (3 крапки) - ТІЛЬКИ ДЛЯ АДМІНА */}
+                      {/* МЕНЮ НАЛАШТУВАНЬ (3 крапки) - БАЧИТЬ ТІЛЬКИ АДМІН */}
                       {isAdmin && (
-                         <button onClick={(e) => { e.stopPropagation(); setEditFormData(u); setEditingUser(u); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px' }}>⋮</button>
+                        <button onClick={(e) => { e.stopPropagation(); setEditFormData(u); setEditingUser(u); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px' }}>⋮</button>
                       )}
                       
                       {unreadPerUser[u.id] > 0 && (
@@ -1283,7 +1287,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
         {/* ЗОНА ЧАТУ */}
         <div style={{ flex: 1, display: 'flex', flexDirection: 'column', background: theme.bg }}>
           {!activeChatUserId ? (
-            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '16px' }}>👈 Виберіть учня зліва, щоб почати діалог</div>
+            <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', color: theme.textSecondary, fontSize: '16px' }}>👈 Виберіть співрозмовника зліва, щоб почати діалог</div>
           ) : (
             <>
               <div style={{ flex: 1, overflowY: 'auto', padding: '30px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
@@ -1292,18 +1296,19 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                 ) : (
                   messages.map(msg => {
                     const isMine = msg.sender_id === dbUserId;
-                    const msgUser = chatUsers.find(u => u.id === msg.sender_id);
+                    const msgUser = chatUsers.find(u => u.id === msg.sender_id) || (isMine ? userProfile : null);
                     const msgBadge = getGroupBadgeStyle(msgUser?.group_id);
 
                     return (
                       <div key={msg.id} style={{ display: 'flex', flexDirection: 'column', alignItems: isMine ? 'flex-end' : 'flex-start' }}>
                         
-                        {/* Бейдж групи або ролі біля повідомлення викладача/адміна */}
-                        {!isMine && msgUser && (
+                        {/* ПЛАШКИ РОЛЕЙ І ГРУП НАД ПОВІДОМЛЕННЯМ (Якщо це не учень) */}
+                        {!isMine && msgUser && (msgUser.role === 'admin' || msgUser.role === 'teacher' || msgBadge.show) && (
                            <div style={{ marginBottom: '4px', marginLeft: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                             {msgUser.role === 'admin' && <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#E0A345' }}>👑 Адміністратор</span>}
-                             {msgUser.role === 'teacher' && <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#3182ce' }}>👩‍🏫 Викладач</span>}
-                             {msgBadge.show && <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '600' }}>{msgUser.group_id}</span>}
+                             <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.text }}>{getDisplayName(msgUser)}</span>
+                             {msgUser.role === 'admin' && <span style={{ background: '#E0A345', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👑 Адмін</span>}
+                             {msgUser.role === 'teacher' && <span style={{ background: '#4A90E2', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: 'bold' }}>👩‍🏫 Викладач</span>}
+                             {msgBadge.show && <span style={{ background: msgBadge.bg, color: msgBadge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>{msgUser.group_id}</span>}
                            </div>
                         )}
 
@@ -1315,6 +1320,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                                 return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
                               }
                               
+                              // ЗОБРАЖЕННЯ З ЗУМОМ
                               if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
                                 return (
                                   <div key={i} style={{ marginTop: '8px' }}>
@@ -1337,6 +1343,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                 <div ref={messagesEndRef} />
               </div>
 
+              {/* ФОРМА ВВЕДЕННЯ З КНОПКОЮ СКРІПКИ ДЛЯ ФОТО */}
               <form onSubmit={handleSendMessageSubmit} style={{ padding: '20px', background: theme.cardBg, borderTop: `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
                 <label className="hover-card" title="Прикріпити фото" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.textSecondary, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                   {isUploadingImage ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
