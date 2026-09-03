@@ -2691,6 +2691,18 @@ useEffect(() => {
           0%, 100% { transform: translateY(0px); }
           50% { transform: translateY(-25px); }
       }
+	  /* Анімація-підказка для перевороту картки */
+      @keyframes flipHintPulse {
+        0%, 100% { opacity: 0.5; transform: scale(1); filter: drop-shadow(0 0 0px transparent); color: ${theme.textSecondary}; }
+        50% { opacity: 1; transform: scale(1.05); color: #FF7B54; filter: drop-shadow(0 0 12px rgba(255, 123, 84, 0.6)); }
+      }
+      .flip-hint {
+        animation: flipHintPulse 2s infinite ease-in-out;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        pointer-events: none; /* Щоб клік проходив крізь текст на саму картку */
+      }
       .bg-element {
           position: fixed;
           color: ${theme.bgIconColor}; 
@@ -2842,7 +2854,9 @@ useEffect(() => {
               <div className="card-3d-container" onClick={() => { playUiSound('whoosh', isSoundEnabled); setIsSpacedFlipped(!isSpacedFlipped); }}>
                 <div className={`card-3d-inner ${isSpacedFlipped ? 'flipped' : ''}`} style={{ minHeight: '350px' }}>
                   <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}`, boxShadow: '0 15px 40px rgba(0,0,0,0.08)' }}>
-                    <span style={{ fontSize: '14px', opacity: 0.6, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Натисніть для перевороту</span>
+                    <span className="flip-hint" style={{ fontSize: '13px', marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: '900' }}>
+  👆 Натисніть для перевороту
+</span>
                     <span style={{ fontSize: '48px', fontWeight: '900', margin: '20px 0' }}>{currentCard.content}</span>
                     {/* КНОПКА ОЗВУЧКИ */}
                     <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.content); }} className="hover-card" style={{ background: theme.inputBg, border: 'none', fontSize: '24px', width: '60px', height: '60px', borderRadius: '50%', marginTop: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔊</button>
