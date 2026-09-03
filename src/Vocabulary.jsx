@@ -321,9 +321,8 @@ export default function Vocabulary() {
                           <button onClick={(e) => { e.stopPropagation(); speakSlovak(word.sk); }} style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '18px', padding: 0, opacity: 0.8, transition: '0.2s' }} className="hover-card">🔊</button>
                         </div>
                       </div>
-                      </div>
                     ))}
-                  </div> 
+                  </div>
                 </details>
               ))}
             </div>
