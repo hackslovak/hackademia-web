@@ -3026,7 +3026,6 @@ async function handleAddTask() {
   }
 
   function renderContent(taskContent) {
-    // Читає і старий текст, і новий об'єкт з мовами (пріоритет на поточну мову платформи)
     const text = typeof taskContent === 'object' && taskContent !== null 
       ? (taskContent[lang] || taskContent.uk || taskContent.ru || '') 
       : (taskContent || '');
@@ -3034,70 +3033,91 @@ async function handleAddTask() {
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
 
-    return parts.map((part, i) => {
-      if (part.match(urlRegex)) {
-        const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-        if (ytMatch && ytMatch[1]) {
-          const videoId = ytMatch[1];
-          return (
-            <div key={i} style={{ margin: '15px 0', position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', background: '#000' }}>
-              <iframe
-                src={`https://www.youtube.com/embed/${videoId}`}
-                title="YouTube video player"
-                style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-          );
-        }
+    const elements = [];
+    let sliceGroup = []; // Тимчасовий масив для склеювання нарізаних фрагментів
 
-        if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
-          return (
-            <div key={i} style={{ margin: '15px 0', background: theme.inputBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
-              <p style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>🎧 Аудіозапис / Аудіювання:</p>
-              <audio controls style={{ width: '100%' }}>
-                <source src={part} type="audio/mpeg" />
-                Ваш браузер не підтримує аудіо елемент.
-              </audio>
-              <div style={{ marginTop: '8px', textAlign: 'right' }}>
-                <a href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F', fontSize: '12px', textDecoration: 'none' }}>🔗 Відкрити у новому вікні</a>
-              </div>
-            </div>
-          );
-        }
-
-        if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
-          const isSlice = part.includes('#slice');
-          const cleanUrl = part.replace(/#split\d|#slice/g, ''); // Видаляємо всі теги, включно зі старим split
-
-          // Мануальна нарізка (#slice) - виводиться рівномірно в ряд (inline-block)
-          if (isSlice) {
-            return (
-              <img 
-                 key={i} src={cleanUrl} alt="slice" onClick={() => setFullscreenTaskImg(cleanUrl)}
-                 className="hover-card"
-                 style={{ display: 'inline-block', maxHeight: '350px', maxWidth: '100%', margin: '0 10px 10px 0', borderRadius: '12px', verticalAlign: 'top', cursor: 'zoom-in', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} 
-                 onError={(e)=>{e.target.style.display='none'}} 
-              />
-            );
-          }
-
-          // Звичайна велика картинка
-          return (
-            <div key={i} style={{ margin: '25px 0' }}>
-              <img 
-                src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card"
-                style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} 
-                onError={(e)=>{e.target.style.display='none'}} 
-              />
-            </div>
-          );
-        }
-        return <a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F' }}>{part}</a>;
+    const flushSlices = () => {
+      if (sliceGroup.length > 0) {
+        elements.push(
+          <div key={`slice-group-${elements.length}`} style={{ display: 'flex', gap: '15px', margin: '20px 0', width: '100%', overflowX: 'auto', paddingBottom: '10px', alignItems: 'center' }}>
+            {sliceGroup.map((url, idx) => {
+              const cleanUrl = url.replace(/#slice/g, '');
+              return (
+                <img
+                  key={`img-${idx}`}
+                  src={cleanUrl}
+                  alt="slice"
+                  onClick={() => setFullscreenTaskImg(cleanUrl)}
+                  className="hover-card"
+                  style={{ 
+                    height: '280px', // Усі нарізані фрагменти матимуть ідеально рівну висоту
+                    width: 'auto',   // Ширина адаптується, щоб зберегти пропорції
+                    objectFit: 'contain', // Без обрізання країв
+                    borderRadius: '12px', 
+                    cursor: 'zoom-in', 
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.1)', 
+                    flexShrink: 0 // Забороняє браузеру стискати зображення, активує горизонтальний свайп на телефоні
+                  }}
+                  onError={(e)=>{e.target.style.display='none'}}
+                />
+              );
+            })}
+          </div>
+        );
+        sliceGroup = []; // Очищаємо масив після виведення групи
       }
-      return part;
-    });
+    };
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+
+      // 1. Якщо це нарізаний фрагмент
+      if (part.match(urlRegex) && part.includes('#slice')) {
+        sliceGroup.push(part);
+      } 
+      // 2. Якщо ми збираємо фрагменти, і між ними трапився пробіл або перенос рядка (\n)
+      else if (sliceGroup.length > 0 && part.trim() === '') {
+        continue; // Просто ігноруємо пустий текст, щоб фрагменти не розірвалися
+      } 
+      // 3. Якщо це звичайний текст, аудіо або велика картинка
+      else {
+        flushSlices(); // Спочатку виводимо всі зібрані нарізані фрагменти
+
+        if (part.match(urlRegex)) {
+          const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+          if (ytMatch && ytMatch[1]) {
+            elements.push(
+              <div key={i} style={{ margin: '15px 0', position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', background: '#000' }}>
+                <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen />
+              </div>
+            );
+          } else if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) {
+            elements.push(
+              <div key={i} style={{ margin: '15px 0', background: theme.inputBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
+                <p style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>🎧 Аудіозапис / Аудіювання:</p>
+                <audio controls style={{ width: '100%' }}><source src={part} type="audio/mpeg" /></audio>
+                <div style={{ marginTop: '8px', textAlign: 'right' }}><a href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F', fontSize: '12px', textDecoration: 'none' }}>🔗 Відкрити у новому вікні</a></div>
+              </div>
+            );
+          } else if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
+            const cleanUrl = part.replace(/#split\d/g, ''); // очищення від старих сплітів, якщо залишилися
+            elements.push(
+              <div key={i} style={{ margin: '25px 0' }}>
+                <img src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} onError={(e)=>{e.target.style.display='none'}} />
+              </div>
+            );
+          } else {
+            elements.push(<a key={i} href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F' }}>{part}</a>);
+          }
+        } else if (part) {
+          elements.push(<span key={i}>{part}</span>);
+        }
+      }
+    }
+    
+    // Якщо текст закінчився картинками, переконуємося, що ми їх вивели
+    flushSlices(); 
+    return elements;
   }
 
   let clickTimeout = null;
