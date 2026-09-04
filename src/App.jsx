@@ -971,6 +971,11 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   
+  // --- СТАНИ ДЛЯ ГОЛОСОВИХ ПОВІДОМЛЕНЬ В ЧАТІ ---
+  const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
+  const [voiceRecorder, setVoiceRecorder] = React.useState(null);
+  const [isUploadingVoice, setIsUploadingVoice] = React.useState(false);
+
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
   const [editingUser, setEditingUser] = React.useState(null);
   const [editFormData, setEditFormData] = React.useState({});
@@ -1074,6 +1079,50 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
         const file = items[i].getAsFile();
         if (file) { e.preventDefault(); uploadAndSendImage(file); }
       }
+    }
+  };
+  
+  // --- ЛОГІКА ЗАПИСУ ГОЛОСОВОГО ПОВІДОМЛЕННЯ В ЧАТІ ---
+  const startVoiceRecording = async (e) => {
+    e.preventDefault();
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      let chunks = [];
+      recorder.ondataavailable = (e) => chunks.push(e.data);
+      recorder.onstop = async () => {
+        const blob = new Blob(chunks, { type: 'audio/mp3' });
+        await uploadAndSendVoice(blob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+      recorder.start();
+      setVoiceRecorder(recorder);
+      setIsRecordingVoice(true);
+    } catch (err) { alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message); }
+  };
+
+  const stopVoiceRecording = (e) => {
+    if (e) e.preventDefault();
+    if (voiceRecorder) {
+      voiceRecorder.stop();
+      setIsRecordingVoice(false);
+      setVoiceRecorder(null);
+    }
+  };
+
+  const uploadAndSendVoice = async (blob) => {
+    if (!activeChatUserId) return;
+    setIsUploadingVoice(true);
+    try {
+      const fileName = `chat_voice_${dbUserId}_${Date.now()}.mp3`;
+      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, blob, { contentType: 'audio/mp3' });
+      if (uploadError) throw uploadError;
+      const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
+      await sendContent(data.publicUrl);
+    } catch (err) {
+      alert("❌ Помилка відправки аудіо: " + err.message);
+    } finally {
+      setIsUploadingVoice(false);
     }
   };
 
@@ -1474,10 +1523,31 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                   {isUploadingImage ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
                   <input type="file" accept="image/*" onChange={(e) => uploadAndSendImage(e.target.files[0])} style={{ display: 'none' }} />
                 </label>
-                <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} onPaste={handlePaste} placeholder="Написати повідомлення або вставити фото (Ctrl+V)..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
-                <button type="submit" className="hover-card" disabled={!chatText.trim()} style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: chatText.trim() ? 'pointer' : 'not-allowed', opacity: chatText.trim() ? 1 : 0.5 }}>
-                  <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                </button>
+                
+                {/* ДИНАМІЧНЕ ПОЛЕ (Текст або Індикатор запису) */}
+                {isRecordingVoice ? (
+                   <div style={{ flex: 1, padding: '0 20px', height: '54px', borderRadius: '16px', background: 'rgba(229, 62, 62, 0.1)', color: '#E53E3E', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid rgba(229, 62, 62, 0.5)', boxSizing: 'border-box' }}>
+                      <span style={{ animation: 'ffPulse 1.5s infinite', display: 'inline-block', width: '12px', height: '12px', background: '#E53E3E', borderRadius: '50%' }}></span>
+                      Запис аудіо...
+                   </div>
+                ) : (
+                   <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} onPaste={handlePaste} placeholder="Написати повідомлення або вставити фото (Ctrl+V)..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
+                )}
+
+                {/* ДИНАМІЧНА КНОПКА (Мікрофон / Відправити / Стоп) */}
+                {isRecordingVoice ? (
+                   <button type="button" onClick={stopVoiceRecording} className="hover-card" style={{ background: '#E53E3E', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                     <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="3"/></svg>
+                   </button>
+                ) : chatText.trim() ? (
+                   <button type="submit" className="hover-card" style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                     <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                   </button>
+                ) : (
+                   <button type="button" onClick={startVoiceRecording} className="hover-card" title="Голосове повідомлення" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                     {isUploadingVoice ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>}
+                   </button>
+                )}
               </form>
             </>
           )}
