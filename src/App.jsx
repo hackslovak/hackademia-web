@@ -1864,6 +1864,17 @@ function Platform() {
       setTimeout(() => setEditModuleTranslateStatus('🪄 Автопереклад'), 2500);
     }
   };
+  
+  // --- ПАРСЕР ДЛЯ БАГАТОМОВНИХ НАЗВ ---
+  const getTranslatedTitle = (titleData) => {
+    let parsed = titleData;
+    if (typeof parsed === 'string' && parsed.startsWith('{')) {
+      try { parsed = JSON.parse(parsed); } catch(e) {}
+    }
+    return typeof parsed === 'object' && parsed !== null 
+      ? (parsed[lang] || parsed.uk || parsed.ru || '') 
+      : (parsed || '');
+  };
 
 const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
@@ -3842,7 +3853,7 @@ async function handleAddTask() {
           
           <div style={{ marginBottom: '40px' }}>
             <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
-            <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{activeModule.title}</h2>
+            <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
           </div>
 
           <div style={{ maxWidth: '900px' }}>
@@ -4263,7 +4274,7 @@ async function handleAddTask() {
                     <div onClick={() => setActiveModule(mod)} style={{ cursor: 'pointer', position: 'relative', zIndex: 1, flex: 1 }}>
                       <span style={{ fontSize: '13px', color: '#2B6CB0', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Модуль {idx + 1}</span>
                       <h3 style={{ fontSize: '24px', color: theme.text, marginTop: '10px', marginBottom: '0', fontWeight: '900', lineHeight: '1.3' }}>
-                        {typeof mod.title === 'object' && mod.title !== null ? (mod.title[lang] || mod.title.uk || mod.title.ru || '') : (mod.title || '')}
+                        {getTranslatedTitle(mod.title)}
                       </h3>
                     </div>
 
@@ -4293,10 +4304,14 @@ async function handleAddTask() {
                           <div style={{ display: 'flex', gap: '10px' }}>
                             <button onClick={() => { 
                               setEditingModuleId(mod.id); 
-                              if (typeof mod.title === 'object' && mod.title !== null) {
-                                setEditModuleTitleMulti(mod.title);
+                              let parsedForEdit = mod.title;
+                              if (typeof parsedForEdit === 'string' && parsedForEdit.startsWith('{')) {
+                                try { parsedForEdit = JSON.parse(parsedForEdit); } catch(e) {}
+                              }
+                              if (typeof parsedForEdit === 'object' && parsedForEdit !== null) {
+                                setEditModuleTitleMulti(parsedForEdit);
                               } else {
-                                setEditModuleTitleMulti({ uk: mod.title || '', ru: mod.title || '', en: mod.title || '', sk: mod.title || '' });
+                                setEditModuleTitleMulti({ uk: parsedForEdit || '', ru: parsedForEdit || '', en: parsedForEdit || '', sk: parsedForEdit || '' });
                               }
                               setModuleEditLang('uk');
                             }} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: theme.text }}>✏️ Редагувати</button>
