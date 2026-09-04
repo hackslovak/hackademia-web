@@ -1416,9 +1416,15 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                   <div style={{ textAlign: 'center', color: theme.textSecondary, margin: 'auto', fontSize: '15px' }}>Тут поки порожньо. Напишіть першими! 👋</div>
                 ) : (
                   messages.map(msg => {
-                    // ФІКС: Переводимо ID у формат тексту, щоб уникнути конфлікту "число-рядок"
-                    const isMine = String(msg.sender_id) === String(dbUserId);
-                    const msgUser = chatUsers.find(u => String(u.id) === String(msg.sender_id)) || (isMine ? userProfile : null);
+                    // БРОНЕБІЙНИЙ ФІКС: Перевіряємо не лише ID, а й Email та Telegram (на випадок розсинхрону сесій)
+                    const isMineRaw = String(msg.sender_id) === String(dbUserId);
+                    const foundUser = chatUsers.find(u => String(u.id) === String(msg.sender_id));
+                    
+                    const isMine = isMineRaw || 
+                      (foundUser && userProfile && foundUser.email && foundUser.email === userProfile.email) ||
+                      (foundUser && userProfile && foundUser.telegram_id && foundUser.telegram_id === userProfile.telegram_id);
+                    
+                    const msgUser = foundUser || (isMine ? userProfile : null);
                     const msgBadge = getGroupBadgeStyle(msgUser?.group_id);
                     
                     const quotedMsg = msg.reply_to_id ? messages.find(m => String(m.id) === String(msg.reply_to_id)) : null;
