@@ -1616,10 +1616,65 @@ function Platform() {
   const [editingModuleId, setEditingModuleId] = useState(null);
   const [editModuleTitleText, setEditModuleTitleText] = useState('');
 
-  const [newTaskType, setNewTaskType] = useState('text');
+const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
-  const [newTaskContent, setNewTaskContent] = useState('');
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
+  
+  // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
+  const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
+  const [sourceLang, setSourceLang] = useState('uk'); // Мова оригіналу за замовчуванням - українська
+
+  // ФУНКЦІЯ АВТОПЕРЕКЛАДУ
+  const handleAutoTranslate = async (e) => {
+    e.preventDefault(); 
+    const sourceText = newTaskContentMulti[sourceLang];
+    if (!sourceText.trim()) return alert("Спочатку введіть текст у поле оригіналу!");
+    
+    setToast("⏳ Магія перекладу...");
+    try {
+      const translate = async (target) => {
+        if (target === sourceLang) return sourceText;
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=${sourceLang}|${target}`);
+        const data = await res.json();
+        return data.responseData.translatedText;
+      };
+
+      const [uk, ru, en, sk] = await Promise.all([
+        translate('uk'), translate('ru'), translate('en'), translate('sk')
+      ]);
+
+      setNewTaskContentMulti({ uk, ru, en, sk });
+      setToast("✅ Перекладено всіма мовами!");
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      alert("❌ Помилка перекладу: " + err.message);
+    }
+  };
+
+  // ФУНКЦІЯ ВИКАЧУВАННЯ БЕКАПУ
+  const handleExportData = async () => {
+    try {
+      setToast("⏳ Збираємо дані...");
+      const { data: c } = await supabase.from('courses').select('*');
+      const { data: m } = await supabase.from('modules').select('*');
+      const { data: t } = await supabase.from('tasks').select('*');
+
+      const backup = { exportDate: new Date().toISOString(), courses: c, modules: m, tasks: t };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hackademia_backup_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setToast("✅ Бекап завантажено!");
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      alert("❌ Помилка бекапу: " + err.message);
+    }
+  };
 
   const [userAnswers, setUserAnswers] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
@@ -2439,9 +2494,9 @@ useEffect(() => {
   }
 
   async function handleAddTask() {
-    if (!newTaskContent.trim()) return;
+    // Перевіряємо, чи введено хоча б оригінальний текст
+    if (!newTaskContentMulti[sourceLang].trim()) return;
 
-    // Для флешкартки правильна відповідь обов'язкова і не приводиться до lowerCase
     const answer = newTaskType === 'quiz' 
       ? newTaskCorrectAnswer.trim().toLowerCase() 
       : (newTaskType === 'flashcard' ? newTaskCorrectAnswer.trim() : null);
@@ -2451,7 +2506,7 @@ useEffect(() => {
       .insert({ 
         module_id: activeModule.id, 
         type: newTaskType, 
-        content: newTaskContent,
+        content: newTaskContentMulti, // ЗБЕРІГАЄМО ОБ'ЄКТ МОВ
         difficulty: newTaskDifficulty,
         correct_answer: answer
       })
@@ -2460,7 +2515,7 @@ useEffect(() => {
     if (error) { alert("Помилка: " + error.message); return; }
     if (data) {
       setTasks([...tasks, data[0]]);
-      setNewTaskContent('');
+      setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' }); // Очищаємо всі мови
       setNewTaskCorrectAnswer('');
     }
   }
@@ -2943,7 +2998,12 @@ useEffect(() => {
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
 
-  function renderContent(text) {
+  function renderContent(taskContent) {
+    // Читає і старий текст, і новий об'єкт з мовами (пріоритет на поточну мову платформи)
+    const text = typeof taskContent === 'object' && taskContent !== null 
+      ? (taskContent[lang] || taskContent.uk || taskContent.ru || '') 
+      : (taskContent || '');
+
     const urlRegex = /(https?:\/\/[^\s]+)/g;
     const parts = text.split(urlRegex);
 
@@ -3597,13 +3657,28 @@ useEffect(() => {
                 </div>
 
                 <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Зміст (Текст, посилання на YouTube або фото):</label>
-                <textarea 
-                  placeholder="Введіть текст завдання..." 
-                  value={newTaskContent} 
-                  onChange={e => setNewTaskContent(e.target.value)} 
-                  rows="5" 
-                  style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', marginBottom: '20px', resize: 'vertical', fontSize: '15px' }}
-                />
+                <div style={{ background: theme.inputBg, borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      {['uk', 'ru', 'en', 'sk'].map(l => (
+                        <button key={l} onClick={(e) => { e.preventDefault(); setSourceLang(l); }} style={{ background: sourceLang === l ? '#E0A345' : 'transparent', color: sourceLang === l ? '#fff' : theme.textSecondary, border: `1px solid ${sourceLang === l ? '#E0A345' : theme.inputBorder}`, padding: '4px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                          {l.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={handleAutoTranslate} className="hover-card" title="Автоматично перекласти на інші 3 мови" style={{ background: '#3182ce', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      🪄 Автопереклад
+                    </button>
+                  </div>
+                  
+                  <textarea 
+                    placeholder={`Введіть текст завдання мовою: ${sourceLang.toUpperCase()}...`} 
+                    value={newTaskContentMulti[sourceLang] || ''} 
+                    onChange={e => setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: e.target.value})} 
+                    rows="4" 
+                    style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: theme.cardBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px' }}
+                  />
+                </div>
 
                 <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь (необов'язково для теорії):</label>
                 <input 
@@ -4251,7 +4326,15 @@ useEffect(() => {
             )}
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button onClick={handleCloudBackup} style={{ background: 'transparent', border: '1px solid #2B6CB0', color: '#2B6CB0', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>☁️ Зробити бекап у хмару</button>
-              <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>❓ Довідка</button>
+              <button 
+                onClick={handleExportData} 
+                className="hover-card"
+                title="📥 Завантажити локальний бекап (.json)"
+                style={{ background: 'transparent', border: '1px solid #38A169', color: '#38A169', width: '38px', height: '38px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+              >
+                <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
+              </button>
+			  <button onClick={() => setIsHelpOpen(true)} style={{ background: 'transparent', border: '1px solid #D69E2E', color: '#D69E2E', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>❓ Довідка</button>
               <button onClick={handleCloudRestore} style={{ background: 'transparent', border: '1px solid #C53030', color: '#C53030', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>🔄 Відновити останній бекап</button>
               <label style={{ background: 'transparent', border: '1px solid #38A169', color: '#38A169', padding: '8px 16px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 📂 Завантажити JSON бекап
