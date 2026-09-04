@@ -975,6 +975,8 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
   const [voiceRecorder, setVoiceRecorder] = React.useState(null);
   const [isUploadingVoice, setIsUploadingVoice] = React.useState(false);
+  const [recordedVoiceBlob, setRecordedVoiceBlob] = React.useState(null);
+  const [recordedVoiceUrl, setRecordedVoiceUrl] = React.useState(null);
 
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
   const [editingUser, setEditingUser] = React.useState(null);
@@ -1090,9 +1092,11 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
       const recorder = new MediaRecorder(stream);
       let chunks = [];
       recorder.ondataavailable = (e) => chunks.push(e.data);
-      recorder.onstop = async () => {
+      recorder.onstop = () => {
+        // Замість відправки - створюємо прев'ю
         const blob = new Blob(chunks, { type: 'audio/mp3' });
-        await uploadAndSendVoice(blob);
+        setRecordedVoiceBlob(blob);
+        setRecordedVoiceUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach(track => track.stop());
       };
       recorder.start();
@@ -1110,15 +1114,22 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     }
   };
 
-  const uploadAndSendVoice = async (blob) => {
-    if (!activeChatUserId) return;
+  const cancelVoiceRecording = () => {
+    setRecordedVoiceBlob(null);
+    if (recordedVoiceUrl) URL.revokeObjectURL(recordedVoiceUrl);
+    setRecordedVoiceUrl(null);
+  };
+
+  const sendRecordedVoice = async () => {
+    if (!recordedVoiceBlob || !activeChatUserId) return;
     setIsUploadingVoice(true);
     try {
       const fileName = `chat_voice_${dbUserId}_${Date.now()}.mp3`;
-      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, blob, { contentType: 'audio/mp3' });
+      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, recordedVoiceBlob, { contentType: 'audio/mp3' });
       if (uploadError) throw uploadError;
       const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       await sendContent(data.publicUrl);
+      cancelVoiceRecording(); // Очищаємо після відправки
     } catch (err) {
       alert("❌ Помилка відправки аудіо: " + err.message);
     } finally {
@@ -1455,7 +1466,13 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
 
                           {msg.text.split(/(https?:\/\/[^\s]+)/g).map((part, i) => {
                             if (part.match(/(https?:\/\/[^\s]+)/g)) {
-                              if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/")) return <audio key={i} controls src={part} style={{ width: '100%', marginTop: '8px', height: '35px' }} />;
+                              if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/") || part.includes("chat_voice_")) {
+                                return (
+                                  <div key={i} style={{ marginTop: '8px', minWidth: '220px' }}>
+                                    <audio controls src={part} style={{ width: '100%', height: '40px', outline: 'none' }} />
+                                  </div>
+                                );
+                              }
                               if (part.match(/\.(jpeg|jpg|gif|png|webp)$/i) || part.includes("chat-images") || part.includes("images")) {
                                 return (
                                   <div key={i} style={{ marginTop: '8px' }}>
@@ -1519,25 +1536,38 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
               )}
 
               <form onSubmit={handleSendMessageSubmit} style={{ padding: '20px', background: theme.cardBg, borderTop: replyingTo ? 'none' : `1px solid ${theme.inputBorder}`, display: 'flex', gap: '15px', alignItems: 'center' }}>
-                <label className="hover-card" title="Прикріпити фото" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.textSecondary, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
-                  {isUploadingImage ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
-                  <input type="file" accept="image/*" onChange={(e) => uploadAndSendImage(e.target.files[0])} style={{ display: 'none' }} />
-                </label>
                 
-                {/* ДИНАМІЧНЕ ПОЛЕ (Текст або Індикатор запису) */}
+                {/* Кнопка скрепки (ховати, якщо є аудіо прев'ю) */}
+                {!recordedVoiceBlob && (
+                  <label className="hover-card" title="Прикріпити фото" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.textSecondary, width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    {isUploadingImage ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                    <input type="file" accept="image/*" onChange={(e) => uploadAndSendImage(e.target.files[0])} style={{ display: 'none' }} />
+                  </label>
+                )}
+                
+                {/* ДИНАМІЧНЕ ПОЛЕ (Текст, Індикатор запису або Плеєр) */}
                 {isRecordingVoice ? (
                    <div style={{ flex: 1, padding: '0 20px', height: '54px', borderRadius: '16px', background: 'rgba(229, 62, 62, 0.1)', color: '#E53E3E', fontSize: '15px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '10px', border: '1px solid rgba(229, 62, 62, 0.5)', boxSizing: 'border-box' }}>
                       <span style={{ animation: 'ffPulse 1.5s infinite', display: 'inline-block', width: '12px', height: '12px', background: '#E53E3E', borderRadius: '50%' }}></span>
                       Запис аудіо...
                    </div>
+                ) : recordedVoiceUrl ? (
+                   <div style={{ flex: 1, padding: '0 10px', height: '54px', borderRadius: '16px', background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, display: 'flex', alignItems: 'center', gap: '10px', boxSizing: 'border-box' }}>
+                      <button type="button" onClick={cancelVoiceRecording} className="hover-card" title="Видалити запис" style={{ background: '#ffebee', color: '#c62828', border: 'none', width: '36px', height: '36px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>🗑</button>
+                      <audio controls src={recordedVoiceUrl} style={{ flex: 1, height: '36px', outline: 'none' }} />
+                   </div>
                 ) : (
                    <input type="text" value={chatText} onChange={e => setChatText(e.target.value)} onPaste={handlePaste} placeholder="Написати повідомлення або вставити фото (Ctrl+V)..." style={{ flex: 1, padding: '16px 20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
                 )}
 
-                {/* ДИНАМІЧНА КНОПКА (Мікрофон / Відправити / Стоп) */}
+                {/* ДИНАМІЧНА КНОПКА (Стоп / Відправити Аудіо / Відправити Текст / Мікрофон) */}
                 {isRecordingVoice ? (
                    <button type="button" onClick={stopVoiceRecording} className="hover-card" style={{ background: '#E53E3E', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                      <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="3"/></svg>
+                   </button>
+                ) : recordedVoiceBlob ? (
+                   <button type="button" onClick={sendRecordedVoice} disabled={isUploadingVoice} className="hover-card" style={{ background: '#00C853', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, opacity: isUploadingVoice ? 0.5 : 1 }}>
+                     {isUploadingVoice ? '⏳' : <svg width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>}
                    </button>
                 ) : chatText.trim() ? (
                    <button type="submit" className="hover-card" style={{ background: '#E0A345', color: '#fff', border: 'none', width: '54px', height: '54px', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
