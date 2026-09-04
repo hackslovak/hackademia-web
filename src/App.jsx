@@ -1806,9 +1806,64 @@ function Platform() {
   const [tasks, setTasks] = useState([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
 
-  const [newModuleTitle, setNewModuleTitle] = useState('');
+  const [newModuleTitleMulti, setNewModuleTitleMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
+  const [moduleSourceLang, setModuleSourceLang] = useState('uk');
+  const [moduleTranslateStatus, setModuleTranslateStatus] = useState('🪄 Автопереклад');
+
   const [editingModuleId, setEditingModuleId] = useState(null);
-  const [editModuleTitleText, setEditModuleTitleText] = useState('');
+  const [editModuleTitleMulti, setEditModuleTitleMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
+  const [moduleEditLang, setModuleEditLang] = useState('uk');
+  const [editModuleTranslateStatus, setEditModuleTranslateStatus] = useState('🪄 Автопереклад');
+
+  // Функція автоперекладу для створення модуля
+  const handleAutoTranslateModule = async (e) => {
+    e.preventDefault(); 
+    const sourceText = newModuleTitleMulti[moduleSourceLang];
+    if (!sourceText.trim()) return alert("Спочатку введіть назву оригіналу!");
+    
+    setModuleTranslateStatus('⏳...');
+    try {
+      const translate = async (target) => {
+        if (target === moduleSourceLang) return sourceText;
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=${moduleSourceLang}|${target}`);
+        const data = await res.json();
+        return data.responseData.translatedText;
+      };
+      const [uk, ru, en, sk] = await Promise.all([ translate('uk'), translate('ru'), translate('en'), translate('sk') ]);
+      setNewModuleTitleMulti({ uk, ru, en, sk });
+      setModuleTranslateStatus('✅ Готово!');
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => setModuleTranslateStatus('🪄 Автопереклад'), 2500);
+    } catch (err) {
+      setModuleTranslateStatus('❌ Помилка');
+      setTimeout(() => setModuleTranslateStatus('🪄 Автопереклад'), 2500);
+    }
+  };
+
+  // Функція автоперекладу для редагування модуля
+  const handleEditAutoTranslateModule = async (e) => {
+    e.preventDefault(); 
+    const sourceText = editModuleTitleMulti[moduleEditLang];
+    if (!sourceText?.trim()) return alert("Спочатку введіть назву!");
+    
+    setEditModuleTranslateStatus('⏳...');
+    try {
+      const translate = async (target) => {
+        if (target === moduleEditLang) return sourceText;
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=${moduleEditLang}|${target}`);
+        const data = await res.json();
+        return data.responseData.translatedText;
+      };
+      const [uk, ru, en, sk] = await Promise.all([ translate('uk'), translate('ru'), translate('en'), translate('sk') ]);
+      setEditModuleTitleMulti({ uk, ru, en, sk });
+      setEditModuleTranslateStatus('✅');
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => setEditModuleTranslateStatus('🪄 Автопереклад'), 2500);
+    } catch (err) {
+      setEditModuleTranslateStatus('❌');
+      setTimeout(() => setEditModuleTranslateStatus('🪄 Автопереклад'), 2500);
+    }
+  };
 
 const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
@@ -2776,23 +2831,23 @@ useEffect(() => {
   }
   
   async function handleAddModule() {
-    if (!newModuleTitle.trim() || !selectedCourse) return;
+    if (!newModuleTitleMulti[moduleSourceLang].trim() || !selectedCourse) return;
     const { data, error } = await supabase.from('modules').insert({ 
-      title: newModuleTitle, 
+      title: newModuleTitleMulti, 
       course_id: selectedCourse.id, 
       is_unlocked: true 
     }).select();
     if (error) { alert("Помилка: " + error.message); return; }
     if (data) {
       setModules([...modules, data[0]]);
-      setNewModuleTitle('');
+      setNewModuleTitleMulti({ uk: '', ru: '', en: '', sk: '' });
     }
   }
 
   async function handleSaveModuleTitle(modId) {
-    const { error } = await supabase.from('modules').update({ title: editModuleTitleText }).eq('id', modId);
+    const { error } = await supabase.from('modules').update({ title: editModuleTitleMulti }).eq('id', modId);
     if (error) { alert("Помилка: " + error.message); return; }
-    setModules(modules.map(m => m.id === modId ? { ...m, title: editModuleTitleText } : m));
+    setModules(modules.map(m => m.id === modId ? { ...m, title: editModuleTitleMulti } : m));
     setEditingModuleId(null);
   }
 
@@ -4169,11 +4224,25 @@ async function handleAddTask() {
 
             {/* ОНОВЛЕНИЙ ТЕПЛИЙ КОЛІР ДЛЯ КНОПКИ СТВОРЕННЯ МОДУЛЯ */}
             {effectiveIsAdmin && (
-              <div style={{ display: 'flex', gap: '10px', background: theme.adminBg, padding: '10px', borderRadius: '16px', border: `1px dashed ${theme.adminBorder}` }}>
-                <input type="text" placeholder="Назва (напр., Тиждень 1)" value={newModuleTitle} onChange={e => setNewModuleTitle(e.target.value)} style={{ padding: '10px 15px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, width: '200px' }} />
-                <button onClick={handleAddModule} className="hover-card" style={{ background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', color: '#1A3636', padding: '10px 20px', border: 'none', fontWeight: '900', cursor: 'pointer', borderRadius: '10px' }}>
-                  + Створити модуль
-                </button>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: theme.adminBg, padding: '15px', borderRadius: '16px', border: `1px dashed ${theme.adminBorder}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '5px' }}>
+                      {['uk', 'ru', 'en', 'sk'].map(l => (
+                        <button key={l} onClick={(e) => { e.preventDefault(); setModuleSourceLang(l); }} style={{ background: moduleSourceLang === l ? '#E0A345' : 'transparent', color: moduleSourceLang === l ? '#fff' : theme.adminBorder, border: `1px solid ${moduleSourceLang === l ? '#E0A345' : theme.adminBorder}`, padding: '4px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                          {l.toUpperCase()}
+                        </button>
+                      ))}
+                    </div>
+                    <button onClick={handleAutoTranslateModule} className="hover-card" title="Автоматично перекласти на інші 3 мови" style={{ background: '#3182ce', color: '#fff', border: 'none', padding: '4px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                      {moduleTranslateStatus}
+                    </button>
+                </div>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <input type="text" placeholder={`Назва мовою: ${moduleSourceLang.toUpperCase()}...`} value={newModuleTitleMulti[moduleSourceLang] || ''} onChange={e => setNewModuleTitleMulti({...newModuleTitleMulti, [moduleSourceLang]: e.target.value})} style={{ flex: 1, padding: '10px 15px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, minWidth: '200px' }} />
+                  <button onClick={handleAddModule} className="hover-card" style={{ background: 'linear-gradient(135deg, #F6AD55 0%, #D69E2E 100%)', color: '#1A3636', padding: '10px 20px', border: 'none', fontWeight: '900', cursor: 'pointer', borderRadius: '10px' }}>
+                    + Створити
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -4193,20 +4262,44 @@ async function handleAddTask() {
                     {/* Контент модуля */}
                     <div onClick={() => setActiveModule(mod)} style={{ cursor: 'pointer', position: 'relative', zIndex: 1, flex: 1 }}>
                       <span style={{ fontSize: '13px', color: '#2B6CB0', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Модуль {idx + 1}</span>
-                      <h3 style={{ fontSize: '24px', color: theme.text, marginTop: '10px', marginBottom: '0', fontWeight: '900', lineHeight: '1.3' }}>{mod.title}</h3>
+                      <h3 style={{ fontSize: '24px', color: theme.text, marginTop: '10px', marginBottom: '0', fontWeight: '900', lineHeight: '1.3' }}>
+                        {typeof mod.title === 'object' && mod.title !== null ? (mod.title[lang] || mod.title.uk || mod.title.ru || '') : (mod.title || '')}
+                      </h3>
                     </div>
 
                     {/* Керування для Адміна */}
                     {effectiveIsAdmin && (
                       <div style={{ position: 'relative', zIndex: 10, marginTop: '20px', paddingTop: '20px', borderTop: `1px solid ${theme.inputBorder}` }}>
                         {editingModuleId === mod.id ? (
-                          <div style={{ display: 'flex', gap: '5px' }}>
-                            <input type="text" value={editModuleTitleText} onChange={e => setEditModuleTitleText(e.target.value)} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `1px solid ${theme.inputBorder}` }} />
-                            <button onClick={() => handleSaveModuleTitle(mod.id)} style={{ background: '#00C853', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}>💾</button>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <div style={{ display: 'flex', gap: '4px' }}>
+                                {['uk', 'ru', 'en', 'sk'].map(l => (
+                                  <button key={l} onClick={(e) => { e.preventDefault(); setModuleEditLang(l); }} style={{ background: moduleEditLang === l ? '#E0A345' : 'transparent', color: moduleEditLang === l ? '#fff' : theme.textSecondary, border: `1px solid ${moduleEditLang === l ? '#E0A345' : theme.inputBorder}`, padding: '2px 6px', borderRadius: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>
+                                    {l.toUpperCase()}
+                                  </button>
+                                ))}
+                              </div>
+                              <button onClick={handleEditAutoTranslateModule} className="hover-card" title="Автопереклад" style={{ background: '#3182ce', color: '#fff', border: 'none', padding: '4px 8px', borderRadius: '6px', cursor: 'pointer', fontSize: '10px', fontWeight: 'bold' }}>
+                                {editModuleTranslateStatus}
+                              </button>
+                            </div>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                              <input type="text" value={editModuleTitleMulti[moduleEditLang] || ''} onChange={e => setEditModuleTitleMulti({...editModuleTitleMulti, [moduleEditLang]: e.target.value})} style={{ flex: 1, padding: '8px', borderRadius: '8px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
+                              <button onClick={() => handleSaveModuleTitle(mod.id)} style={{ background: '#00C853', color: 'white', border: 'none', padding: '8px 12px', borderRadius: '8px', cursor: 'pointer' }}>💾</button>
+                            </div>
                           </div>
                         ) : (
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => { setEditingModuleId(mod.id); setEditModuleTitleText(mod.title); }} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: theme.text }}>✏️ Редагувати</button>
+                            <button onClick={() => { 
+                              setEditingModuleId(mod.id); 
+                              if (typeof mod.title === 'object' && mod.title !== null) {
+                                setEditModuleTitleMulti(mod.title);
+                              } else {
+                                setEditModuleTitleMulti({ uk: mod.title || '', ru: mod.title || '', en: mod.title || '', sk: mod.title || '' });
+                              }
+                              setModuleEditLang('uk');
+                            }} style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', color: theme.text }}>✏️ Редагувати</button>
                             <button onClick={() => handleDeleteModule(mod.id)} style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer' }}>🗑</button>
                           </div>
                         )}
