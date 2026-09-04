@@ -1712,6 +1712,7 @@ const [newTaskType, setNewTaskType] = useState('text');
 
   const [userAnswers, setUserAnswers] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
+  const [fullscreenTaskImg, setFullscreenTaskImg] = useState(null);
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
   const [myCards, setMyCards] = useState([]);
   
@@ -2978,12 +2979,16 @@ async function handleAddTask() {
           );
         }
 
-        if (part.match(/\.(jpeg|jpg|gif|png)$/i) || part.includes("t.me") || part.includes("telegram")) {
+        if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
           return (
-            <div key={i} style={{ margin: '10px 0' }}>
-              <img src={part} alt="attachment" style={{ maxWidth: '100%', borderRadius: '8px', maxHeight: '300px', objectFit: 'cover' }} onError={(e)=>{e.target.style.display='none'}} />
-              <br/>
-              <a href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F', fontSize: '14px' }}>🔗 Відкрити посилання</a>
+            <div key={i} style={{ margin: '25px 0' }}>
+              <img 
+                src={part} 
+                alt="attachment" 
+                onClick={() => setFullscreenTaskImg(part)}
+                style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} 
+                onError={(e)=>{e.target.style.display='none'}} 
+              />
             </div>
           );
         }
@@ -4345,7 +4350,14 @@ async function handleAddTask() {
       )}
 
       {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
-      <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
+      {/* ФУЛСКРІН ЗУМ ДЛЯ КАРТИНОК У ЗАВДАННЯХ */}
+      {fullscreenTaskImg && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+          <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <img src={fullscreenTaskImg} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+        </div>
+      )}
+	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
       {effectiveIsAdmin && studentsNeedingCourses.length > 0 && (
         <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999, background: theme.cardBg, padding: '24px', borderRadius: '18px', boxShadow: '0 10px 40px rgba(0,0,0,0.2)', border: `2px solid #2B6CB0`, maxWidth: '350px', textAlign: 'left', animation: 'ffPulse 2s infinite' }}>
           <h4 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px' }}>🚨 Увага!</h4>
