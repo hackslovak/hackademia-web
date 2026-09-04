@@ -2979,13 +2979,38 @@ async function handleAddTask() {
           );
         }
 
-        if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
+        if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
+          // Читаємо тег нарізки
+          let splitCount = 1;
+          let cleanUrl = part;
+          const splitMatch = part.match(/#split(\d)/);
+          if (splitMatch) {
+              splitCount = parseInt(splitMatch[1]);
+              cleanUrl = part.replace(/#split\d/, ''); 
+          }
+
+          if (splitCount > 1) {
+              return (
+                  <div key={i} style={{ display: 'flex', gap: '15px', margin: '25px 0', width: '100%' }}>
+                      {Array.from({ length: splitCount }).map((_, sliceIdx) => (
+                          <div key={sliceIdx} onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{
+                              flex: 1, overflow: 'hidden', borderRadius: '16px', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', position: 'relative'
+                          }}>
+                              <img
+                                  src={cleanUrl} alt={`slice-${sliceIdx}`}
+                                  style={{ width: `${splitCount * 100}%`, height: 'auto', display: 'block', transform: `translateX(-${(100 / splitCount) * sliceIdx}%)`, maxWidth: 'none' }}
+                                  onError={(e) => { e.target.style.display = 'none'; }}
+                              />
+                          </div>
+                      ))}
+                  </div>
+              );
+          }
+
           return (
             <div key={i} style={{ margin: '25px 0' }}>
               <img 
-                src={part} 
-                alt="attachment" 
-                onClick={() => setFullscreenTaskImg(part)}
+                src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)}
                 style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} 
                 onError={(e)=>{e.target.style.display='none'}} 
               />
@@ -3543,6 +3568,44 @@ async function handleAddTask() {
                            </div>
                            <textarea value={editContentMulti[editLang] || ''} onChange={e => setEditContentMulti({...editContentMulti, [editLang]: e.target.value})} rows="4" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px' }} />
                          </div>
+						 {/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (РЕДАГУВАННЯ) */}
+                         {(() => {
+                           const currentTextEdit = editContentMulti[editLang] || '';
+                           const urls = currentTextEdit.match(/https?:\/\/[^\s]+/g) || [];
+                           const detectedImagesEdit = urls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/"));
+                           
+                           if (detectedImagesEdit.length === 0) return null;
+                           return (
+                             <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '12px', border: '1px dashed #E0A345', marginBottom: '15px' }}>
+                               <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото (Налаштування нарізки):</span>
+                               <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                                 {detectedImagesEdit.map((imgUrl, i) => {
+                                   const cleanUrl = imgUrl.replace(/#split\d/g, '');
+                                   const currentSplit = imgUrl.match(/#split(\d)/)?.[1] || '1';
+                                   return (
+                                     <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: theme.cardBg, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
+                                       <img src={cleanUrl} alt="preview" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                                       <select 
+                                         value={currentSplit}
+                                         onChange={(e) => {
+                                           const val = e.target.value;
+                                           const newImgUrl = cleanUrl + (val !== '1' ? `#split${val}` : '');
+                                           setEditContentMulti({ ...editContentMulti, [editLang]: currentTextEdit.replace(imgUrl, newImgUrl) });
+                                         }}
+                                         style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '13px', cursor: 'pointer', outline: 'none' }}
+                                       >
+                                         <option value="1">🖼 Ціле</option>
+                                         <option value="2">✂️ 2 колонки</option>
+                                         <option value="3">✂️ 3 колонки</option>
+                                         <option value="4">✂️ 4 колонки</option>
+                                       </select>
+                                     </div>
+                                   );
+                                 })}
+                               </div>
+                             </div>
+                           );
+                         })()}
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                          <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
@@ -3659,6 +3722,44 @@ async function handleAddTask() {
                     style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: theme.cardBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px' }}
                   />
                 </div>
+				{/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (СТВОРЕННЯ) */}
+                {(() => {
+                  const currentTextAdd = newTaskContentMulti[sourceLang] || '';
+                  const urls = currentTextAdd.match(/https?:\/\/[^\s]+/g) || [];
+                  const detectedImagesAdd = urls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/"));
+                  
+                  if (detectedImagesAdd.length === 0) return null;
+                  return (
+                    <div style={{ marginTop: '-5px', padding: '15px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '12px', border: '1px dashed #E0A345', marginBottom: '20px' }}>
+                      <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото (Налаштування нарізки):</span>
+                      <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
+                        {detectedImagesAdd.map((imgUrl, i) => {
+                          const cleanUrl = imgUrl.replace(/#split\d/g, '');
+                          const currentSplit = imgUrl.match(/#split(\d)/)?.[1] || '1';
+                          return (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: theme.cardBg, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
+                              <img src={cleanUrl} alt="preview" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
+                              <select 
+                                value={currentSplit}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  const newImgUrl = cleanUrl + (val !== '1' ? `#split${val}` : '');
+                                  setNewTaskContentMulti({ ...newTaskContentMulti, [sourceLang]: currentTextAdd.replace(imgUrl, newImgUrl) });
+                                }}
+                                style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '13px', cursor: 'pointer', outline: 'none' }}
+                              >
+                                <option value="1">🖼 Ціле</option>
+                                <option value="2">✂️ 2 колонки</option>
+                                <option value="3">✂️ 3 колонки</option>
+                                <option value="4">✂️ 4 колонки</option>
+                              </select>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь (необов'язково для теорії):</label>
                 <input 
