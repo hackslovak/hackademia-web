@@ -3842,6 +3842,53 @@ async function handleAddTask() {
             )}
           </div>
         </div>
+
+        {/* МОДАЛКИ ДЛЯ ЕКРАНУ МОДУЛЯ (ЗУМ, КРОПЕР, СПОВІЩЕННЯ) */}
+        {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
+        
+        {fullscreenTaskImg && (
+          <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            <img src={fullscreenTaskImg} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+          </div>
+        )}
+
+        {cropState && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '20px' }}>
+              <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', zIndex: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                 <div style={{ color: 'white', background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: '10px', fontSize: '14px' }}>
+                    👆 Затисніть і тягніть мишку, щоб виділити області
+                 </div>
+                 <button onClick={() => setCropState({...cropState, boxes: []})} style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Очистити все</button>
+                 <button onClick={() => setCropState(null)} style={{ background: 'transparent', color: 'white', border: '1px solid white', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
+                 <button onClick={saveCrops} disabled={isSavingCrop} style={{ background: '#00C853', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,200,83,0.4)' }}>
+                     {isSavingCrop ? '⏳ Збереження...' : `✅ Зберегти нарізку (${cropState.boxes.length} шт)`}
+                 </button>
+              </div>
+              
+              <div style={{ flex: 1, overflow: 'auto', width: '100%', textAlign: 'center', paddingBottom: '40px' }}>
+                  <div 
+                      style={{ position: 'relative', display: 'inline-block', touchAction: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                      onPointerDown={handleCropPointerDown}
+                      onPointerMove={handleCropPointerMove}
+                      onPointerUp={handleCropPointerUp}
+                      onPointerLeave={handleCropPointerUp}
+                  >
+                      <img id="crop-source-img" crossOrigin="anonymous" src={cropState.url.replace(/#split\d|#slice/g, '')} alt="crop source" style={{ maxWidth: '90vw', border: '2px dashed #4A5568', userSelect: 'none', display: 'block' }} draggable={false} />
+                      
+                      {cropState.boxes.map((b, i) => (
+                          <div key={i} style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, border: '3px solid #00C853', background: 'rgba(0,200,83,0.15)', pointerEvents: 'none' }}>
+                             <div style={{ position: 'absolute', top: -25, left: -3, background: '#00C853', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>Фрагмент {i + 1}</div>
+                          </div>
+                      ))}
+                      {cropState.currentBox && (
+                          <div style={{ position: 'absolute', left: cropState.currentBox.x, top: cropState.currentBox.y, width: cropState.currentBox.w, height: cropState.currentBox.h, border: '3px dashed #E0A345', background: 'rgba(224,163,69,0.2)', pointerEvents: 'none' }} />
+                      )}
+                  </div>
+              </div>
+          </div>
+        )}
+
       </div>
     );
   }
