@@ -1382,7 +1382,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                 filteredUsers.map(u => {
                   const badge = getGroupBadgeStyle(u.group_id);
                   return (
-                    <div key={u.id} className="hover-card" onClick={() => handleSelectUser(u.id)} style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: activeChatUserId === u.id ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s', position: 'relative' }}>
+                    <div key={u.id} className="hover-card" onClick={() => handleSelectUser(u.id)} style={{ padding: '15px 20px', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', background: String(activeChatUserId) === String(u.id) ? theme.cardBg : 'transparent', borderBottom: `1px solid ${theme.inputBorder}`, transition: '0.2s', position: 'relative' }}>
                       <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: u.avatar_url ? 'transparent' : '#E0A345', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', overflow: 'hidden', flexShrink: 0 }}>
                         {u.avatar_url ? <img src={u.avatar_url} alt="ava" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : (u.first_name ? u.first_name[0].toUpperCase() : 'У')}
                       </div>
@@ -1416,12 +1416,13 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                   <div style={{ textAlign: 'center', color: theme.textSecondary, margin: 'auto', fontSize: '15px' }}>Тут поки порожньо. Напишіть першими! 👋</div>
                 ) : (
                   messages.map(msg => {
-                    const isMine = msg.sender_id === dbUserId;
-                    const msgUser = chatUsers.find(u => u.id === msg.sender_id) || (isMine ? userProfile : null);
+                    // ФІКС: Переводимо ID у формат тексту, щоб уникнути конфлікту "число-рядок"
+                    const isMine = String(msg.sender_id) === String(dbUserId);
+                    const msgUser = chatUsers.find(u => String(u.id) === String(msg.sender_id)) || (isMine ? userProfile : null);
                     const msgBadge = getGroupBadgeStyle(msgUser?.group_id);
                     
-                    const quotedMsg = msg.reply_to_id ? messages.find(m => m.id === msg.reply_to_id) : null;
-                    const quotedUser = quotedMsg ? (chatUsers.find(u => u.id === quotedMsg.sender_id) || (quotedMsg.sender_id === dbUserId ? userProfile : null)) : null;
+                    const quotedMsg = msg.reply_to_id ? messages.find(m => String(m.id) === String(msg.reply_to_id)) : null;
+                    const quotedUser = quotedMsg ? (chatUsers.find(u => String(u.id) === String(quotedMsg.sender_id)) || (String(quotedMsg.sender_id) === String(dbUserId) ? userProfile : null)) : null;
 
                     return (
                       <div 
@@ -1526,7 +1527,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
               {replyingTo && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: 'rgba(224, 163, 69, 0.05)', borderTop: `1px solid ${theme.inputBorder}`, borderLeft: '4px solid #E0A345' }}>
                   <div style={{ overflow: 'hidden' }}>
-                    <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#E0A345', marginBottom: '2px' }}>Відповідь для {getDisplayName(chatUsers.find(u => u.id === replyingTo.sender_id) || {first_name: 'Вас'})}</div>
+                    <div style={{ fontWeight: 'bold', fontSize: '12px', color: '#E0A345', marginBottom: '2px' }}>Відповідь для {getDisplayName(chatUsers.find(u => String(u.id) === String(replyingTo.sender_id)) || {first_name: 'Вас'})}</div>
                     <div style={{ fontSize: '13px', color: theme.textSecondary, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '400px' }}>
                       {replyingTo.text.match(/(https?:\/\/[^\s]+)/) ? '🖼️ Медіафайл' : replyingTo.text}
                     </div>
