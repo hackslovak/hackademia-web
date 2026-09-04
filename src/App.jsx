@@ -1685,6 +1685,31 @@ const [newTaskType, setNewTaskType] = useState('text');
     }
   };
 
+  // ФУНКЦІЯ ВИКАЧУВАННЯ БЕКАПУ (ЯКУ МИ ЗАГУБИЛИ)
+  const handleExportData = async () => {
+    try {
+      setToast("⏳ Збираємо дані...");
+      const { data: c } = await supabase.from('courses').select('*');
+      const { data: m } = await supabase.from('modules').select('*');
+      const { data: t } = await supabase.from('tasks').select('*');
+
+      const backup = { exportDate: new Date().toISOString(), courses: c, modules: m, tasks: t };
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `hackademia_backup_${new Date().toISOString().slice(0,10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      setToast("✅ Бекап завантажено!");
+      setTimeout(() => setToast(null), 2500);
+    } catch (err) {
+      alert("❌ Помилка бекапу: " + err.message);
+    }
+  };
+
   const [userAnswers, setUserAnswers] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
@@ -2502,7 +2527,7 @@ useEffect(() => {
     setTasks(tasks.filter(t => t.id !== taskId));
   }
 
-  async function handleAddTask() {
+async function handleAddTask() {
     // Якщо вибрана 1 мова, беремо тільки її рядок. Інакше - зберігаємо весь JSON об'єкт
     const contentToSave = isSingleLang ? newTaskContentMulti[sourceLang] : newTaskContentMulti;
     if (isSingleLang && (!contentToSave || !contentToSave.trim())) return;
@@ -2523,20 +2548,6 @@ useEffect(() => {
     }
   }
 
-  async function handleSaveEdit(taskId) {
-    const taskToEdit = tasks.find(t => t.id === taskId);
-    const parsedAnswer = taskToEdit.type === 'quiz' ? editAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' ? editAnswer.trim() : null);
-    
-    // Якщо вибрана 1 мова, беремо тільки рядок.
-    const contentToSave = isEditSingleLang ? editContentMulti[editLang] : editContentMulti;
-
-    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
-
-    if (error) { alert("Помилка: " + error.message); return; }
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
-    setEditingTaskId(null);
-  }
-
   async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
@@ -2546,25 +2557,20 @@ useEffect(() => {
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('images')
-        .upload(filePath, file);
-
+      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('images')
-        .getPublicUrl(filePath);
-
+      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
-      setNewTaskContent(prev => prev + (prev ? '\n' : '') + publicUrl);
       
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    } catch (err) {
-      alert("❌ Помилка завантаження фото: " + err.message);
-    }
+      // ОНОВЛЕНО: додаємо лінк картинки у поточну обрану мову
+      setNewTaskContentMulti(prev => ({
+        ...prev,
+        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
+      }));
+      
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
   }
 
   async function handleAudioUpload(e) {
@@ -2575,25 +2581,20 @@ useEffect(() => {
       const fileExt = file.name.split('.').pop();
       const fileName = `audio_${Date.now()}.${fileExt}`;
 
-      const { error: uploadError } = await supabase.storage
-        .from('audio')
-        .upload(fileName, file);
-
+      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, file);
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('audio')
-        .getPublicUrl(fileName);
-
+      const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
-      setNewTaskContent(prev => prev + (prev ? '\n' : '') + publicUrl);
       
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    } catch (err) {
-      alert("❌ Помилка завантаження аудіо: " + err.message);
-    }
+      // ОНОВЛЕНО: додаємо лінк аудіо у поточну обрану мову
+      setNewTaskContentMulti(prev => ({
+        ...prev,
+        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
+      }));
+      
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) { alert("❌ Помилка завантаження аудіо: " + err.message); }
   }
 
   async function startRecording() {
@@ -2601,21 +2602,16 @@ useEffect(() => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       let chunks = [];
-
       recorder.ondataavailable = (e) => chunks.push(e.data);
-
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/mp3' });
         await uploadAudioBlob(blob);
         stream.getTracks().forEach(track => track.stop());
       };
-
       recorder.start();
       setMediaRecorder(recorder);
       setIsRecording(true);
-    } catch (err) {
-      alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message);
-    }
+    } catch (err) { alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message); }
   }
 
   function stopRecording() {
@@ -2628,48 +2624,37 @@ useEffect(() => {
   async function uploadAudioBlob(blob) {
     try {
       const fileName = `voice_${Date.now()}.mp3`;
-      const { error: uploadError } = await supabase.storage
-        .from('audio')
-        .upload(fileName, blob, { contentType: 'audio/mp3' });
-
+      const { error: uploadError } = await supabase.storage.from('audio').upload(fileName, blob, { contentType: 'audio/mp3' });
       if (uploadError) throw uploadError;
 
-      const { data } = supabase.storage
-        .from('audio')
-        .getPublicUrl(fileName);
-
+      const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
-      setNewTaskContent(prev => prev + (prev ? '\n' : '') + publicUrl);
       
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-      }
-    } catch (err) {
-      alert("❌ Помилка збереження голосового запису: " + err.message);
-    }
+      // ОНОВЛЕНО: додаємо лінк голосу у поточну обрану мову
+      setNewTaskContentMulti(prev => ({
+        ...prev,
+        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
+      }));
+      
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) { alert("❌ Помилка збереження голосового запису: " + err.message); }
   }
   
-  // --- ЗАПИС ТА ВІДПРАВКА АУДІО ВІД УЧНІВ ---
   async function startStudentRecording(taskId) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const recorder = new MediaRecorder(stream);
       let chunks = [];
-
       recorder.ondataavailable = (e) => chunks.push(e.data);
-
       recorder.onstop = async () => {
         const blob = new Blob(chunks, { type: 'audio/mp3' });
         await uploadStudentAudio(blob, taskId);
         stream.getTracks().forEach(track => track.stop());
       };
-
       recorder.start();
       setStudentRecorder(recorder);
       setRecordingTaskId(taskId);
-    } catch (err) {
-      alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message);
-    }
+    } catch (err) { alert("❌ Не вдалося отримати доступ до мікрофона: " + err.message); }
   }
 
   function stopStudentRecording() {
@@ -2690,14 +2675,14 @@ useEffect(() => {
 
       const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       
-      // Відправляємо повідомлення в чат
       const task = tasks.find(t => t.id === taskId);
-      const taskSnippet = task.content ? task.content.substring(0, 35).replace(/\n/g, ' ') + '...' : 'Завдання';
+      // ОНОВЛЕНО: Читаємо контент завдання безпечно, якщо це об'єкт
+      const taskContentStr = typeof task.content === 'object' && task.content !== null ? (task.content[lang] || task.content.uk || '') : (task.content || '');
+      const taskSnippet = taskContentStr ? taskContentStr.substring(0, 35).replace(/\n/g, ' ') + '...' : 'Завдання';
       const msgText = `🎤 Аудіо-відповідь на "${taskSnippet}":\n${data.publicUrl}`;
       
       await supabase.from('messages').insert([{ user_id: dbUserId, sender_id: dbUserId, text: msgText }]);
 
-      // Зараховуємо завдання
       const diff = difficultyConfig[task.difficulty || 'medium'];
       await supabase.from('progress').upsert({ user_id: dbUserId, task_id: taskId, status: 'completed', points: diff.points }, { onConflict: 'user_id, task_id' });
       setCompletedTasks(prev => [...new Set([...prev, taskId])]);
@@ -2705,9 +2690,7 @@ useEffect(() => {
       playUiSound('ding', isSoundEnabled);
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
       alert("✅ Вашу вимову відправлено вчителю на перевірку!");
-    } catch (err) {
-      alert("❌ Помилка відправки: " + err.message);
-    }
+    } catch (err) { alert("❌ Помилка відправки: " + err.message); }
   }
 
   async function handleCloudBackup() {
@@ -2732,90 +2715,9 @@ useEffect(() => {
       if (error) throw error;
 
       alert("☁️ Бекап успішно збережено у хмару Supabase!");
-    } catch (err) {
-      console.error(err);
-      alert("❌ Помилка збереження у хмару: " + err.message);
-    }
+    } catch (err) { console.error(err); alert("❌ Помилка збереження у хмару: " + err.message); }
   }
 
-  async function handleCloudRestore() {
-    if (!window.confirm("⚠️ УВАГА! Це відновить базу з ОСТАННЬОГО хмарного бекапу. Поточні дані будуть перезаписані. Продовжити?")) return;
-    
-    try {
-      const { data: files, error: listError } = await supabase.storage.from('Backups').list();
-      if (listError) throw listError;
-      
-      if (!files || files.length === 0) {
-        alert("У хмарі ще немає жодного бекапу!");
-        return;
-      }
-
-      // Шукаємо найновіший файл
-      const latestFile = files.sort((a, b) => new Date(b.created_at) - new Date(a.created_at))[0];
-      
-      const { data: fileData, error: downloadError } = await supabase.storage.from('Backups').download(latestFile.name);
-      if (downloadError) throw downloadError;
-
-      const text = await fileData.text();
-      const data = JSON.parse(text);
-
-      if (data.courses && data.courses.length > 0) await supabase.from('courses').upsert(data.courses);
-      if (data.modules && data.modules.length > 0) await supabase.from('modules').upsert(data.modules);
-      if (data.tasks && data.tasks.length > 0) await supabase.from('tasks').upsert(data.tasks);
-
-      alert(`✅ Успішно відновлено з хмарного файлу: ${latestFile.name}`);
-      
-      fetchCourses();
-      setSelectedCourse(null);
-      setActiveModule(null);
-      
-    } catch (err) {
-      console.error(err);
-      alert("❌ Помилка відновлення: " + err.message);
-    }
-  }
-
-  async function handleLocalJsonRestore(e) {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!window.confirm(`⚠️ УВАГА! Це відновить базу з локального файлу "${file.name}". Поточні дані будуть оновлені/перезаписані. Продовжити?`)) {
-      e.target.value = ''; 
-      return;
-    }
-    
-    try {
-      const text = await file.text();
-      const data = JSON.parse(text);
-
-      if (data.courses && data.courses.length > 0) {
-        const { error: cErr } = await supabase.from('courses').upsert(data.courses);
-        if (cErr) throw cErr;
-      }
-      if (data.modules && data.modules.length > 0) {
-        const { error: mErr } = await supabase.from('modules').upsert(data.modules);
-        if (mErr) throw mErr;
-      }
-      if (data.tasks && data.tasks.length > 0) {
-        const { error: tErr } = await supabase.from('tasks').upsert(data.tasks);
-        if (tErr) throw tErr;
-      }
-
-      // Використовуємо звичайний універсальний alert замість Telegram-віконця
-      alert(`✅ Успішно відновлено з файлу: ${file.name}`);
-      
-      fetchCourses();
-      setSelectedCourse(null);
-      setActiveModule(null);
-      
-    } catch (err) {
-      console.error(err);
-      alert("❌ Помилка читання або відновлення з файлу: " + err.message);
-    } finally {
-      e.target.value = ''; 
-    }
-  }
-  
   async function handleCloudRestore() {
     if (!window.confirm("⚠️ УВАГА! Це відновить базу з ОСТАННЬОГО хмарного бекапу. Поточні дані будуть перезаписані. Продовжити?")) return;
     
@@ -2854,13 +2756,48 @@ useEffect(() => {
       
     } catch (err) {
       console.error(err);
-      if (window.Telegram?.WebApp) {
-        window.Telegram.WebApp.showAlert("❌ Помилка відновлення: " + err.message);
-      } else {
-        alert("❌ Помилка відновлення: " + err.message);
-      }
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.showAlert("❌ Помилка відновлення: " + err.message);
+      else alert("❌ Помилка відновлення: " + err.message);
     }
   }
+
+  async function handleLocalJsonRestore(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!window.confirm(`⚠️ УВАГА! Це відновить базу з локального файлу "${file.name}". Поточні дані будуть оновлені/перезаписані. Продовжити?`)) {
+      e.target.value = ''; 
+      return;
+    }
+    
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (data.courses && data.courses.length > 0) { const { error: cErr } = await supabase.from('courses').upsert(data.courses); if (cErr) throw cErr; }
+      if (data.modules && data.modules.length > 0) { const { error: mErr } = await supabase.from('modules').upsert(data.modules); if (mErr) throw mErr; }
+      if (data.tasks && data.tasks.length > 0) { const { error: tErr } = await supabase.from('tasks').upsert(data.tasks); if (tErr) throw tErr; }
+
+      alert(`✅ Успішно відновлено з файлу: ${file.name}`);
+      fetchCourses(); setSelectedCourse(null); setActiveModule(null);
+    } catch (err) { console.error(err); alert("❌ Помилка читання або відновлення з файлу: " + err.message); } 
+    finally { e.target.value = ''; }
+  }
+
+  async function handleSaveEdit(taskId) {
+    const taskToEdit = tasks.find(t => t.id === taskId);
+    const parsedAnswer = taskToEdit.type === 'quiz' ? editAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' ? editAnswer.trim() : null);
+    
+    // Якщо вибрана 1 мова, беремо тільки рядок.
+    const contentToSave = isEditSingleLang ? editContentMulti[editLang] : editContentMulti;
+
+    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
+
+    if (error) { alert("Помилка: " + error.message); return; }
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
+    setEditingTaskId(null);
+  }
+
 
   // Обробка звичайного текстового тесту (quiz)
   async function handleAnswerSubmit(task) {
