@@ -1622,15 +1622,18 @@ const [newTaskType, setNewTaskType] = useState('text');
   
   // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
   const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
-  const [sourceLang, setSourceLang] = useState('uk'); // Мова оригіналу за замовчуванням - українська
+  const [sourceLang, setSourceLang] = useState('uk');
+  const [isSingleLang, setIsSingleLang] = useState(false); // Галочка вимкнення перекладу
+  const [translateStatus, setTranslateStatus] = useState('🪄 Автопереклад');
 
-  // ФУНКЦІЯ АВТОПЕРЕКЛАДУ
+  // ФУНКЦІЯ АВТОПЕРЕКЛАДУ (ДЛЯ НОВОГО ЗАВДАННЯ)
   const handleAutoTranslate = async (e) => {
     e.preventDefault(); 
+    if (isSingleLang) return; // Якщо галочка стоїть, кнопка не працює
     const sourceText = newTaskContentMulti[sourceLang];
     if (!sourceText.trim()) return alert("Спочатку введіть текст у поле оригіналу!");
     
-    setToast("⏳ Магія перекладу...");
+    setTranslateStatus('⏳ Перекладаю...'); // Сповіщення прямо на кнопці
     try {
       const translate = async (target) => {
         if (target === sourceLang) return sourceText;
@@ -1638,41 +1641,47 @@ const [newTaskType, setNewTaskType] = useState('text');
         const data = await res.json();
         return data.responseData.translatedText;
       };
-
-      const [uk, ru, en, sk] = await Promise.all([
-        translate('uk'), translate('ru'), translate('en'), translate('sk')
-      ]);
-
+      const [uk, ru, en, sk] = await Promise.all([ translate('uk'), translate('ru'), translate('en'), translate('sk') ]);
       setNewTaskContentMulti({ uk, ru, en, sk });
-      setToast("✅ Перекладено всіма мовами!");
-      setTimeout(() => setToast(null), 2500);
+      setTranslateStatus('✅ Готово!');
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => setTranslateStatus('🪄 Автопереклад'), 2500);
     } catch (err) {
-      alert("❌ Помилка перекладу: " + err.message);
+      setTranslateStatus('❌ Помилка');
+      alert("Помилка перекладу: " + err.message);
+      setTimeout(() => setTranslateStatus('🪄 Автопереклад'), 2500);
     }
   };
 
-  // ФУНКЦІЯ ВИКАЧУВАННЯ БЕКАПУ
-  const handleExportData = async () => {
-    try {
-      setToast("⏳ Збираємо дані...");
-      const { data: c } = await supabase.from('courses').select('*');
-      const { data: m } = await supabase.from('modules').select('*');
-      const { data: t } = await supabase.from('tasks').select('*');
+  // СТАНИ ТА ФУНКЦІЯ АВТОПЕРЕКЛАДУ (ДЛЯ РЕДАГУВАННЯ СТАРИХ ЗАВДАНЬ)
+  const [editContentMulti, setEditContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
+  const [editLang, setEditLang] = useState('uk');
+  const [isEditSingleLang, setIsEditSingleLang] = useState(false);
+  const [editTranslateStatus, setEditTranslateStatus] = useState('🪄 Автопереклад');
 
-      const backup = { exportDate: new Date().toISOString(), courses: c, modules: m, tasks: t };
-      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `hackademia_backup_${new Date().toISOString().slice(0,10)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      setToast("✅ Бекап завантажено!");
-      setTimeout(() => setToast(null), 2500);
+  const handleEditAutoTranslate = async (e) => {
+    e.preventDefault();
+    if (isEditSingleLang) return;
+    const sourceText = editContentMulti[editLang];
+    if (!sourceText?.trim()) return alert("Спочатку введіть текст!");
+    
+    setEditTranslateStatus('⏳ Перекладаю...');
+    try {
+      const translate = async (target) => {
+        if (target === editLang) return sourceText;
+        const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(sourceText)}&langpair=${editLang}|${target}`);
+        const data = await res.json();
+        return data.responseData.translatedText;
+      };
+      const [uk, ru, en, sk] = await Promise.all([ translate('uk'), translate('ru'), translate('en'), translate('sk') ]);
+      setEditContentMulti({ uk, ru, en, sk });
+      setEditTranslateStatus('✅ Готово!');
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+      setTimeout(() => setEditTranslateStatus('🪄 Автопереклад'), 2500);
     } catch (err) {
-      alert("❌ Помилка бекапу: " + err.message);
+      setEditTranslateStatus('❌ Помилка');
+      alert("Помилка перекладу: " + err.message);
+      setTimeout(() => setEditTranslateStatus('🪄 Автопереклад'), 2500);
     }
   };
 
@@ -2494,30 +2503,38 @@ useEffect(() => {
   }
 
   async function handleAddTask() {
-    // Перевіряємо, чи введено хоча б оригінальний текст
-    if (!newTaskContentMulti[sourceLang].trim()) return;
+    // Якщо вибрана 1 мова, беремо тільки її рядок. Інакше - зберігаємо весь JSON об'єкт
+    const contentToSave = isSingleLang ? newTaskContentMulti[sourceLang] : newTaskContentMulti;
+    if (isSingleLang && (!contentToSave || !contentToSave.trim())) return;
+    if (!isSingleLang && !newTaskContentMulti[sourceLang].trim()) return;
 
-    const answer = newTaskType === 'quiz' 
-      ? newTaskCorrectAnswer.trim().toLowerCase() 
-      : (newTaskType === 'flashcard' ? newTaskCorrectAnswer.trim() : null);
+    const answer = newTaskType === 'quiz' ? newTaskCorrectAnswer.trim().toLowerCase() : (newTaskType === 'flashcard' ? newTaskCorrectAnswer.trim() : null);
 
-    const { data, error } = await supabase
-      .from('tasks')
-      .insert({ 
-        module_id: activeModule.id, 
-        type: newTaskType, 
-        content: newTaskContentMulti, // ЗБЕРІГАЄМО ОБ'ЄКТ МОВ
-        difficulty: newTaskDifficulty,
-        correct_answer: answer
-      })
-      .select();
+    const { data, error } = await supabase.from('tasks').insert({ 
+      module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: answer
+    }).select();
       
     if (error) { alert("Помилка: " + error.message); return; }
     if (data) {
       setTasks([...tasks, data[0]]);
-      setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' }); // Очищаємо всі мови
+      setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' });
       setNewTaskCorrectAnswer('');
+      setIsSingleLang(false);
     }
+  }
+
+  async function handleSaveEdit(taskId) {
+    const taskToEdit = tasks.find(t => t.id === taskId);
+    const parsedAnswer = taskToEdit.type === 'quiz' ? editAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' ? editAnswer.trim() : null);
+    
+    // Якщо вибрана 1 мова, беремо тільки рядок.
+    const contentToSave = isEditSingleLang ? editContentMulti[editLang] : editContentMulti;
+
+    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
+
+    if (error) { alert("Помилка: " + error.message); return; }
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
+    setEditingTaskId(null);
   }
 
   async function handleImageUpload(e) {
@@ -2843,22 +2860,6 @@ useEffect(() => {
         alert("❌ Помилка відновлення: " + err.message);
       }
     }
-  }
-
-  async function handleSaveEdit(taskId) {
-    const taskToEdit = tasks.find(t => t.id === taskId);
-    const parsedAnswer = taskToEdit.type === 'quiz' 
-      ? editAnswer.trim().toLowerCase() 
-      : (taskToEdit.type === 'flashcard' ? editAnswer.trim() : null);
-
-    const { error } = await supabase
-      .from('tasks')
-      .update({ content: editContent, correct_answer: parsedAnswer, difficulty: editDifficulty })
-      .eq('id', taskId);
-
-    if (error) { alert("Помилка: " + error.message); return; }
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: editContent, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
-    setEditingTaskId(null);
   }
 
   // Обробка звичайного текстового тесту (quiz)
@@ -3557,7 +3558,19 @@ useEffect(() => {
                       {/* КНОПКИ АДМІНА (РЕДАГУВАТИ / ВИДАЛИТИ) */}
                       {effectiveIsAdmin && (
                         <div style={{ display: 'flex', gap: '10px' }}>
-                          <button onClick={() => { setEditingTaskId(task.id); setEditContent(task.content || ''); setEditAnswer(task.correct_answer || ''); setEditDifficulty(task.difficulty || 'medium'); }} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
+                          <button onClick={() => { 
+                            setEditingTaskId(task.id); 
+                            if (typeof task.content === 'object' && task.content !== null) {
+                              setEditContentMulti(task.content);
+                              setIsEditSingleLang(false);
+                            } else {
+                              setEditContentMulti({ uk: task.content || '', ru: task.content || '', en: task.content || '', sk: task.content || '' });
+                              setIsEditSingleLang(true);
+                            }
+                            setEditAnswer(task.correct_answer || ''); 
+                            setEditDifficulty(task.difficulty || 'medium'); 
+                            setEditLang('uk');
+                          }} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                           <button onClick={() => handleDeleteTask(task.id)} className="hover-card" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
                         </div>
                       )}
@@ -3567,7 +3580,27 @@ useEffect(() => {
                     {editingTaskId === task.id ? (
                        <div style={{ background: theme.inputBg, padding: '25px', borderRadius: '24px' }}>
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Текст завдання / Посилання на медіа:</label>
-                         <textarea value={editContent} onChange={e => setEditContent(e.target.value)} rows="5" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '15px', resize: 'vertical', boxSizing: 'border-box' }} />
+                         <div style={{ background: theme.cardBg, borderRadius: '14px', padding: '16px', border: `1px solid ${theme.inputBorder}`, marginBottom: '15px' }}>
+                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
+                             <div style={{ display: 'flex', gap: '5px' }}>
+                               {['uk', 'ru', 'en', 'sk'].map(l => (
+                                 <button key={l} disabled={isEditSingleLang} onClick={(e) => { e.preventDefault(); setEditLang(l); }} style={{ background: editLang === l ? '#E0A345' : 'transparent', color: editLang === l ? '#fff' : theme.textSecondary, border: `1px solid ${editLang === l ? '#E0A345' : theme.inputBorder}`, padding: '4px 10px', borderRadius: '8px', cursor: isEditSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', opacity: isEditSingleLang ? 0.5 : 1 }}>
+                                   {l.toUpperCase()}
+                                 </button>
+                               ))}
+                             </div>
+                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                               <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: theme.textSecondary, cursor: 'pointer' }}>
+                                 <input type="checkbox" checked={isEditSingleLang} onChange={e => setIsEditSingleLang(e.target.checked)} />
+                                 Тільки одна мова (без перекладу)
+                               </label>
+                               <button onClick={handleEditAutoTranslate} disabled={isEditSingleLang} className="hover-card" style={{ background: isEditSingleLang ? theme.inputBg : '#3182ce', color: isEditSingleLang ? theme.textSecondary : '#fff', border: isEditSingleLang ? `1px solid ${theme.inputBorder}` : 'none', padding: '6px 12px', borderRadius: '8px', cursor: isEditSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', transition: '0.2s' }}>
+                                 {editTranslateStatus}
+                               </button>
+                             </div>
+                           </div>
+                           <textarea value={editContentMulti[editLang] || ''} onChange={e => setEditContentMulti({...editContentMulti, [editLang]: e.target.value})} rows="4" style={{ width: '100%', padding: '12px', borderRadius: '10px', border: 'none', background: theme.inputBg, color: theme.text, boxSizing: 'border-box', resize: 'vertical', fontSize: '15px' }} />
+                         </div>
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                          <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
@@ -3656,19 +3689,24 @@ useEffect(() => {
                   </div>
                 </div>
 
-                <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Зміст (Текст, посилання на YouTube або фото):</label>
                 <div style={{ background: theme.inputBg, borderRadius: '14px', padding: '16px', marginBottom: '20px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
                     <div style={{ display: 'flex', gap: '5px' }}>
                       {['uk', 'ru', 'en', 'sk'].map(l => (
-                        <button key={l} onClick={(e) => { e.preventDefault(); setSourceLang(l); }} style={{ background: sourceLang === l ? '#E0A345' : 'transparent', color: sourceLang === l ? '#fff' : theme.textSecondary, border: `1px solid ${sourceLang === l ? '#E0A345' : theme.inputBorder}`, padding: '4px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>
+                        <button key={l} disabled={isSingleLang} onClick={(e) => { e.preventDefault(); setSourceLang(l); }} style={{ background: sourceLang === l ? '#E0A345' : 'transparent', color: sourceLang === l ? '#fff' : theme.textSecondary, border: `1px solid ${sourceLang === l ? '#E0A345' : theme.inputBorder}`, padding: '4px 10px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', opacity: isSingleLang ? 0.5 : 1 }}>
                           {l.toUpperCase()}
                         </button>
                       ))}
                     </div>
-                    <button onClick={handleAutoTranslate} className="hover-card" title="Автоматично перекласти на інші 3 мови" style={{ background: '#3182ce', color: '#fff', border: 'none', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      🪄 Автопереклад
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '13px', color: theme.textSecondary, cursor: 'pointer' }}>
+                        <input type="checkbox" checked={isSingleLang} onChange={e => setIsSingleLang(e.target.checked)} />
+                        Тільки одна мова (без перекладу)
+                      </label>
+                      <button onClick={handleAutoTranslate} disabled={isSingleLang} className="hover-card" style={{ background: isSingleLang ? theme.cardBg : '#3182ce', color: isSingleLang ? theme.textSecondary : '#fff', border: isSingleLang ? `1px solid ${theme.inputBorder}` : 'none', padding: '6px 12px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', transition: '0.2s' }}>
+                        {translateStatus}
+                      </button>
+                    </div>
                   </div>
                   
                   <textarea 
