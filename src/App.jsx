@@ -1712,7 +1712,95 @@ const [newTaskType, setNewTaskType] = useState('text');
 
   const [userAnswers, setUserAnswers] = useState({});
   const [completedTasks, setCompletedTasks] = useState([]);
+
   const [fullscreenTaskImg, setFullscreenTaskImg] = useState(null);
+  // --- ДВИЖОК НАРІЗКИ ФОТО (КРОПЕР) ---
+  const [cropState, setCropState] = useState(null);
+  const [isSavingCrop, setIsSavingCrop] = useState(false);
+
+  const startCrop = (url, langKey, isEditMode) => {
+    setCropState({ url, langKey, isEditMode, boxes: [], startPos: null, currentBox: null });
+  };
+
+  const handleCropPointerDown = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    setCropState(prev => ({ ...prev, startPos: { x, y }, currentBox: { x, y, w: 0, h: 0 } }));
+  };
+
+  const handleCropPointerMove = (e) => {
+    if (!cropState?.startPos) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
+    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+
+    const newBox = {
+        x: Math.min(cropState.startPos.x, x),
+        y: Math.min(cropState.startPos.y, y),
+        w: Math.abs(x - cropState.startPos.x),
+        h: Math.abs(y - cropState.startPos.y)
+    };
+    setCropState(prev => ({ ...prev, currentBox: newBox }));
+  };
+
+  const handleCropPointerUp = () => {
+    if (!cropState?.currentBox) return;
+    if (cropState.currentBox.w > 10 && cropState.currentBox.h > 10) {
+        setCropState(prev => ({ ...prev, boxes: [...prev.boxes, prev.currentBox], startPos: null, currentBox: null }));
+    } else {
+        setCropState(prev => ({ ...prev, startPos: null, currentBox: null }));
+    }
+  };
+
+  const saveCrops = async () => {
+    if (cropState.boxes.length === 0) { alert("Виділіть хоча б одну ділянку на фото!"); return; }
+    setIsSavingCrop(true);
+    setToast("⏳ Нарізаємо та зберігаємо...");
+    try {
+      const img = document.getElementById('crop-source-img');
+      const ratioX = img.naturalWidth / img.offsetWidth;
+      const ratioY = img.naturalHeight / img.offsetHeight;
+      const newUrls = [];
+
+      for (let i = 0; i < cropState.boxes.length; i++) {
+        const box = cropState.boxes[i];
+        if (box.w < 5 || box.h < 5) continue; 
+        const canvas = document.createElement('canvas');
+        canvas.width = box.w * ratioX;
+        canvas.height = box.h * ratioY;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, box.x * ratioX, box.y * ratioY, box.w * ratioX, box.h * ratioY, 0, 0, canvas.width, canvas.height);
+
+        const blob = await new Promise(res => canvas.toBlob(res, 'image/png'));
+        const fileName = `crop_${dbUserId}_${Date.now()}_${i}.png`;
+        const { error } = await supabase.storage.from('images').upload(fileName, blob);
+        if (error) throw error;
+        const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+        newUrls.push(data.publicUrl + '#slice');
+      }
+
+      const replacement = newUrls.join(' ');
+      if (cropState.isEditMode) {
+        const oldText = editContentMulti[cropState.langKey] || '';
+        setEditContentMulti({ ...editContentMulti, [cropState.langKey]: oldText.replace(cropState.url, replacement) });
+      } else {
+        const oldText = newTaskContentMulti[cropState.langKey] || '';
+        setNewTaskContentMulti({ ...newTaskContentMulti, [cropState.langKey]: oldText.replace(cropState.url, replacement) });
+      }
+
+      setCropState(null);
+      setToast("✅ Нарізку успішно збережено!");
+      setTimeout(() => setToast(null), 2500);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (e) {
+      alert("Помилка нарізки: " + e.message);
+      setToast(null);
+    } finally {
+      setIsSavingCrop(false);
+    }
+  };
+  
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
   const [myCards, setMyCards] = useState([]);
   
@@ -2980,37 +3068,26 @@ async function handleAddTask() {
         }
 
         if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("telegram")) {
-          // Читаємо тег нарізки
-          let splitCount = 1;
-          let cleanUrl = part;
-          const splitMatch = part.match(/#split(\d)/);
-          if (splitMatch) {
-              splitCount = parseInt(splitMatch[1]);
-              cleanUrl = part.replace(/#split\d/, ''); 
+          const isSlice = part.includes('#slice');
+          const cleanUrl = part.replace(/#split\d|#slice/g, ''); // Видаляємо всі теги, включно зі старим split
+
+          // Мануальна нарізка (#slice) - виводиться рівномірно в ряд (inline-block)
+          if (isSlice) {
+            return (
+              <img 
+                 key={i} src={cleanUrl} alt="slice" onClick={() => setFullscreenTaskImg(cleanUrl)}
+                 className="hover-card"
+                 style={{ display: 'inline-block', maxHeight: '350px', maxWidth: '100%', margin: '0 10px 10px 0', borderRadius: '12px', verticalAlign: 'top', cursor: 'zoom-in', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }} 
+                 onError={(e)=>{e.target.style.display='none'}} 
+              />
+            );
           }
 
-          if (splitCount > 1) {
-              return (
-                  <div key={i} style={{ display: 'flex', gap: '15px', margin: '25px 0', width: '100%' }}>
-                      {Array.from({ length: splitCount }).map((_, sliceIdx) => (
-                          <div key={sliceIdx} onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{
-                              flex: 1, overflow: 'hidden', borderRadius: '16px', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)', position: 'relative'
-                          }}>
-                              <img
-                                  src={cleanUrl} alt={`slice-${sliceIdx}`}
-                                  style={{ width: `${splitCount * 100}%`, height: 'auto', display: 'block', transform: `translateX(-${(100 / splitCount) * sliceIdx}%)`, maxWidth: 'none' }}
-                                  onError={(e) => { e.target.style.display = 'none'; }}
-                              />
-                          </div>
-                      ))}
-                  </div>
-              );
-          }
-
+          // Звичайна велика картинка
           return (
             <div key={i} style={{ margin: '25px 0' }}>
               <img 
-                src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)}
+                src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card"
                 style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} 
                 onError={(e)=>{e.target.style.display='none'}} 
               />
@@ -3577,28 +3654,15 @@ async function handleAddTask() {
                            if (detectedImagesEdit.length === 0) return null;
                            return (
                              <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '12px', border: '1px dashed #E0A345', marginBottom: '15px' }}>
-                               <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото (Налаштування нарізки):</span>
+                               <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото:</span>
                                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                                  {detectedImagesEdit.map((imgUrl, i) => {
-                                   const cleanUrl = imgUrl.replace(/#split\d/g, '');
-                                   const currentSplit = imgUrl.match(/#split(\d)/)?.[1] || '1';
+                                   const cleanUrl = imgUrl.replace(/#split\d|#slice/g, '');
                                    return (
                                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: theme.cardBg, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
                                        <img src={cleanUrl} alt="preview" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
-                                       <select 
-                                         value={currentSplit}
-                                         onChange={(e) => {
-                                           const val = e.target.value;
-                                           const newImgUrl = cleanUrl + (val !== '1' ? `#split${val}` : '');
-                                           setEditContentMulti({ ...editContentMulti, [editLang]: currentTextEdit.replace(imgUrl, newImgUrl) });
-                                         }}
-                                         style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '13px', cursor: 'pointer', outline: 'none' }}
-                                       >
-                                         <option value="1">🖼 Ціле</option>
-                                         <option value="2">✂️ 2 колонки</option>
-                                         <option value="3">✂️ 3 колонки</option>
-                                         <option value="4">✂️ 4 колонки</option>
-                                       </select>
+                                       <button onClick={(e) => { e.preventDefault(); setEditContentMulti({ ...editContentMulti, [editLang]: currentTextEdit.replace(imgUrl, cleanUrl) }); }} style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '12px', cursor: 'pointer' }}>🖼 Ціле</button>
+                                       <button onClick={(e) => { e.preventDefault(); startCrop(imgUrl, editLang, true); }} style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати вручну</button>
                                      </div>
                                    );
                                  })}
@@ -3731,28 +3795,15 @@ async function handleAddTask() {
                   if (detectedImagesAdd.length === 0) return null;
                   return (
                     <div style={{ marginTop: '-5px', padding: '15px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '12px', border: '1px dashed #E0A345', marginBottom: '20px' }}>
-                      <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото (Налаштування нарізки):</span>
+                      <span style={{ display: 'block', fontSize: '13px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '10px' }}>✂️ Виявлені фото:</span>
                       <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap' }}>
                         {detectedImagesAdd.map((imgUrl, i) => {
-                          const cleanUrl = imgUrl.replace(/#split\d/g, '');
-                          const currentSplit = imgUrl.match(/#split(\d)/)?.[1] || '1';
+                          const cleanUrl = imgUrl.replace(/#split\d|#slice/g, '');
                           return (
                             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', background: theme.cardBg, padding: '8px 12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
                               <img src={cleanUrl} alt="preview" style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '6px' }} />
-                              <select 
-                                value={currentSplit}
-                                onChange={(e) => {
-                                  const val = e.target.value;
-                                  const newImgUrl = cleanUrl + (val !== '1' ? `#split${val}` : '');
-                                  setNewTaskContentMulti({ ...newTaskContentMulti, [sourceLang]: currentTextAdd.replace(imgUrl, newImgUrl) });
-                                }}
-                                style={{ padding: '6px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '13px', cursor: 'pointer', outline: 'none' }}
-                              >
-                                <option value="1">🖼 Ціле</option>
-                                <option value="2">✂️ 2 колонки</option>
-                                <option value="3">✂️ 3 колонки</option>
-                                <option value="4">✂️ 4 колонки</option>
-                              </select>
+                              <button onClick={(e) => { e.preventDefault(); setNewTaskContentMulti({ ...newTaskContentMulti, [sourceLang]: currentTextAdd.replace(imgUrl, cleanUrl) }); }} style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '12px', cursor: 'pointer' }}>🖼 Ціле</button>
+                              <button onClick={(e) => { e.preventDefault(); startCrop(imgUrl, sourceLang, false); }} style={{ padding: '6px 12px', borderRadius: '6px', border: `1px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '12px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати вручну</button>
                             </div>
                           );
                         })}
@@ -4467,6 +4518,42 @@ async function handleAddTask() {
             <button onClick={() => setGlobalView('admin_panel')} style={{ flex: 1, background: '#2B6CB0', color: 'white', border: 'none', padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>⚙️ Налаштувати</button>
             <button onClick={dismissCourseAlert} style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px' }}>Пізніше</button>
           </div>
+        </div>
+      )}
+	  {/* ВІЗУАЛЬНИЙ КРОПЕР (НАРІЗКА) */}
+      {cropState && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 99999, background: 'rgba(0,0,0,0.95)', display: 'flex', flexDirection: 'column', alignItems: 'center', paddingTop: '20px' }}>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', zIndex: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+               <div style={{ color: 'white', background: 'rgba(255,255,255,0.1)', padding: '10px 15px', borderRadius: '10px', fontSize: '14px' }}>
+                  👆 Затисніть і тягніть мишку, щоб виділити області
+               </div>
+               <button onClick={() => setCropState({...cropState, boxes: []})} style={{ background: theme.inputBg, color: theme.text, border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Очистити все</button>
+               <button onClick={() => setCropState(null)} style={{ background: 'transparent', color: 'white', border: '1px solid white', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
+               <button onClick={saveCrops} disabled={isSavingCrop} style={{ background: '#00C853', color: 'white', border: 'none', padding: '10px 20px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(0,200,83,0.4)' }}>
+                   {isSavingCrop ? '⏳ Збереження...' : `✅ Зберегти нарізку (${cropState.boxes.length} шт)`}
+               </button>
+            </div>
+            
+            <div style={{ flex: 1, overflow: 'auto', width: '100%', textAlign: 'center', paddingBottom: '40px' }}>
+                <div 
+                    style={{ position: 'relative', display: 'inline-block', touchAction: 'none', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}
+                    onPointerDown={handleCropPointerDown}
+                    onPointerMove={handleCropPointerMove}
+                    onPointerUp={handleCropPointerUp}
+                    onPointerLeave={handleCropPointerUp}
+                >
+                    <img id="crop-source-img" crossOrigin="anonymous" src={cropState.url.replace(/#split\d|#slice/g, '')} alt="crop source" style={{ maxWidth: '90vw', border: '2px dashed #4A5568', userSelect: 'none', display: 'block' }} draggable={false} />
+                    
+                    {cropState.boxes.map((b, i) => (
+                        <div key={i} style={{ position: 'absolute', left: b.x, top: b.y, width: b.w, height: b.h, border: '3px solid #00C853', background: 'rgba(0,200,83,0.15)', pointerEvents: 'none' }}>
+                           <div style={{ position: 'absolute', top: -25, left: -3, background: '#00C853', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '12px', fontWeight: 'bold' }}>Фрагмент {i + 1}</div>
+                        </div>
+                    ))}
+                    {cropState.currentBox && (
+                        <div style={{ position: 'absolute', left: cropState.currentBox.x, top: cropState.currentBox.y, width: cropState.currentBox.w, height: cropState.currentBox.h, border: '3px dashed #E0A345', background: 'rgba(224,163,69,0.2)', pointerEvents: 'none' }} />
+                    )}
+                </div>
+            </div>
         </div>
       )}
     </div>
