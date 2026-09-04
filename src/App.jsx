@@ -986,12 +986,20 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, msg: null });
   
-  // === НОВІ СТАНИ ДЛЯ МАЛЮВАННЯ (CANVAS) ===
+  // === СТАНИ ДЛЯ МАЛЮВАННЯ (CANVAS) ===
   const [isDrawingMode, setIsDrawingMode] = React.useState(false);
-  const [drawColor, setDrawColor] = React.useState('#FF3B30'); // Червоний за замовчуванням
+  const [drawTool, setDrawTool] = React.useState('pen'); // 'pen' або 'rect'
+  const [drawColor, setDrawColor] = React.useState('#FF3B30');
   const [drawSize, setDrawSize] = React.useState(4);
   const [isDrawing, setIsDrawing] = React.useState(false);
   const [isSavingCanvas, setIsSavingCanvas] = React.useState(false);
+  
+  // Історія для Undo та перевірка змін
+  const [drawHistory, setDrawHistory] = React.useState([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = React.useState(false);
+  const [savedImageData, setSavedImageData] = React.useState(null); // Для прев'ю прямокутника
+  const [startCoords, setStartCoords] = React.useState({ x: 0, y: 0 });
+  
   const canvasRef = React.useRef(null);
 
   const messagesEndRef = React.useRef(null);
@@ -1165,36 +1173,58 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     setContextMenu({ visible: true, x: xPos, y: e.pageY, msg: msg });
   };
 
-  // === ЛОГІКА МАЛЮВАННЯ ===
+  // === ЛОГІКА МАЛЮВАННЯ ТА ІСТОРІЇ ===
   React.useEffect(() => {
     if (isDrawingMode && fullscreenImg && canvasRef.current) {
       const canvas = canvasRef.current;
       const ctx = canvas.getContext('2d');
       const img = new Image();
-      img.crossOrigin = "anonymous"; // Важливо для завантаження з Supabase
+      img.crossOrigin = "anonymous";
       img.onload = () => {
-        // Рахуємо пропорції, щоб картинка влізла в екран
         const maxWidth = window.innerWidth * 0.85;
         const maxHeight = window.innerHeight * 0.75;
-        let width = img.width;
-        let height = img.height;
-        const ratio = Math.min(maxWidth / width, maxHeight / height);
-        
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
+        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        
+        // Зберігаємо перше базове зображення в історію
+        setDrawHistory([canvas.toDataURL()]);
+        setHasUnsavedChanges(false);
       };
       img.src = fullscreenImg;
     }
   }, [isDrawingMode, fullscreenImg]);
 
+  // Обробка клавіші Esc
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        if (isDrawingMode) {
+          handleCloseDrawingMode();
+        } else if (fullscreenImg) {
+          setFullscreenImg(null);
+        }
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isDrawingMode, fullscreenImg, hasUnsavedChanges]);
+
+  const handleCloseDrawingMode = () => {
+    if (hasUnsavedChanges) {
+      if (!window.confirm("У вас є незбережені малюнки. Точно скасувати і вийти?")) return;
+    }
+    setIsDrawingMode(false);
+    setHasUnsavedChanges(false);
+    setDrawHistory([]);
+  };
+
   const getCanvasCoordinates = (e) => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
     const rect = canvas.getBoundingClientRect();
-    if (e.touches && e.touches.length > 0) {
-      return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
-    }
+    if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
     return { x: e.clientX - rect.left, y: e.clientY - rect.top };
   };
 
@@ -1202,27 +1232,69 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     if (!isDrawingMode) return;
     const { x, y } = getCanvasCoordinates(e);
     const ctx = canvasRef.current.getContext('2d');
-    ctx.beginPath();
-    ctx.moveTo(x, y);
+    
+    setStartCoords({ x, y });
+    setSavedImageData(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
     setIsDrawing(true);
+
+    if (drawTool === 'pen') {
+      ctx.beginPath();
+      ctx.moveTo(x, y);
+    }
   };
 
   const draw = (e) => {
     if (!isDrawing || !isDrawingMode) return;
-    e.preventDefault(); // Забороняє скрол при малюванні пальцем
+    e.preventDefault();
     const { x, y } = getCanvasCoordinates(e);
-    const ctx = canvasRef.current.getContext('2d');
-    ctx.lineTo(x, y);
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+
     ctx.strokeStyle = drawColor;
     ctx.lineWidth = drawSize;
-    ctx.lineCap = 'round';
-    ctx.stroke();
+    ctx.lineCap = drawTool === 'pen' ? 'round' : 'square';
+    ctx.lineJoin = 'round';
+
+    if (drawTool === 'pen') {
+      ctx.lineTo(x, y);
+      ctx.stroke();
+    } else if (drawTool === 'rect') {
+      if (savedImageData) ctx.putImageData(savedImageData, 0, 0); // Відновлюємо фон перед тим, як малювати новий кадр прямокутника
+      ctx.beginPath();
+      ctx.rect(startCoords.x, startCoords.y, x - startCoords.x, y - startCoords.y);
+      ctx.stroke();
+    }
   };
 
-  const stopDrawing = () => setIsDrawing(false);
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    setHasUnsavedChanges(true);
+    setDrawHistory(prev => [...prev, canvasRef.current.toDataURL()]); // Зберігаємо новий кадр в історію
+  };
+
+  const handleUndo = () => {
+    if (drawHistory.length <= 1) return; // Не можемо видалити оригінальне фото
+    const newHistory = [...drawHistory];
+    newHistory.pop(); // Видаляємо останню зміну
+    const previousState = newHistory[newHistory.length - 1];
+
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+    };
+    img.src = previousState;
+    
+    setDrawHistory(newHistory);
+    if (newHistory.length === 1) setHasUnsavedChanges(false);
+  };
 
   const saveAndSendCanvas = async () => {
     if (!canvasRef.current || !activeChatUserId) return;
+    if (!hasUnsavedChanges) { alert("Ви нічого не намалювали!"); return; }
     setIsSavingCanvas(true);
     try {
       const dataUrl = canvasRef.current.toDataURL('image/png');
@@ -1237,14 +1309,12 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
       const { data: { publicUrl } } = supabase.storage.from('chat-images').getPublicUrl(fileName);
       await sendContent(publicUrl);
       
-      // Закриваємо фулскрін і вимикаємо малювання
       setFullscreenImg(null);
       setIsDrawingMode(false);
-    } catch (err) {
-      alert("❌ Помилка відправки: " + err.message);
-    } finally {
-      setIsSavingCanvas(false);
-    }
+      setHasUnsavedChanges(false);
+      setDrawHistory([]);
+    } catch (err) { alert("❌ Помилка відправки: " + err.message); } 
+    finally { setIsSavingCanvas(false); }
   };
   // ========================
 
@@ -1287,7 +1357,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
       {fullscreenImg && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           
-          <button onClick={() => { setFullscreenImg(null); setIsDrawingMode(false); }} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+          <button onClick={() => { isDrawingMode ? handleCloseDrawingMode() : setFullscreenImg(null); }} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000 }}>✕</button>
 
           {!isDrawingMode ? (
             <>
@@ -1301,17 +1371,34 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
           ) : (
             <>
               {/* ПАНЕЛЬ ІНСТРУМЕНТІВ МАЛЮВАННЯ */}
-              <div style={{ display: 'flex', gap: '15px', background: theme.cardBg, padding: '10px 20px', borderRadius: '16px', marginBottom: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)' }}>
+              <div style={{ display: 'flex', gap: '15px', background: theme.cardBg, padding: '10px 20px', borderRadius: '16px', marginBottom: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', flexWrap: 'wrap', justifyContent: 'center' }}>
+                 
+                 {/* Інструменти (Олівець / Квадрат) */}
+                 <div style={{ display: 'flex', gap: '5px', background: theme.inputBg, padding: '4px', borderRadius: '10px' }}>
+                    <button onClick={() => setDrawTool('pen')} title="Вільне малювання" style={{ background: drawTool === 'pen' ? theme.cardBg : 'transparent', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', boxShadow: drawTool === 'pen' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none' }}>✏️</button>
+                    <button onClick={() => setDrawTool('rect')} title="Прямокутник" style={{ background: drawTool === 'rect' ? theme.cardBg : 'transparent', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', boxShadow: drawTool === 'rect' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none' }}>⬜️</button>
+                 </div>
+
+                 <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+
+                 {/* Кольори */}
                  <div style={{ display: 'flex', gap: '8px' }}>
                     {['#FF3B30', '#34C759', '#007AFF', '#FFCC00', '#FFFFFF', '#000000'].map(color => (
                        <div key={color} onClick={() => setDrawColor(color)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: color, cursor: 'pointer', border: drawColor === color ? '3px solid #E0A345' : '1px solid rgba(0,0,0,0.2)' }} />
                     ))}
                  </div>
+                 
                  <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
-                 <input type="range" min="1" max="15" value={drawSize} onChange={(e) => setDrawSize(e.target.value)} style={{ width: '100px' }} />
+                 <input type="range" min="1" max="15" value={drawSize} onChange={(e) => setDrawSize(e.target.value)} style={{ width: '80px' }} />
                  <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
-                 <button onClick={() => { setIsDrawingMode(false); }} style={{ background: 'transparent', color: theme.textSecondary, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
-                 <button onClick={saveAndSendCanvas} disabled={isSavingCanvas} style={{ background: '#38A169', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: 'pointer' }}>
+                 
+                 {/* Undo */}
+                 <button onClick={handleUndo} disabled={drawHistory.length <= 1} title="Крок назад" style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: drawHistory.length <= 1 ? 'not-allowed' : 'pointer', opacity: drawHistory.length <= 1 ? 0.3 : 1 }}>↩️</button>
+                 
+                 <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+
+                 <button onClick={handleCloseDrawingMode} style={{ background: 'transparent', color: theme.textSecondary, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
+                 <button onClick={saveAndSendCanvas} disabled={isSavingCanvas || !hasUnsavedChanges} style={{ background: '#38A169', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: (!hasUnsavedChanges || isSavingCanvas) ? 'not-allowed' : 'pointer', opacity: (!hasUnsavedChanges || isSavingCanvas) ? 0.5 : 1 }}>
                    {isSavingCanvas ? '⏳ Збереження...' : '📤 Відправити'}
                  </button>
               </div>
