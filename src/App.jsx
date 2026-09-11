@@ -3776,11 +3776,34 @@ const parseToElements = (text, prefixKey) => {
                        .replace(/\[c:green\](.*?)\[\/c\]/g, '<span style="color: #38A169; font-weight: bold;">$1</span>')
 let inlineCounter = -1;
     const safeTask = (typeof task !== 'undefined') ? task : ((typeof t !== 'undefined') ? t : { id: 'gen' });
+    
+    // Отримуємо масив правильних відповідей заздалегідь
+    const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
+
     html = html.replace(/\.{4,}/g, () => {
       inlineCounter++;
       const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
       const savedVal = localStorage.getItem(cacheKey) || '';
-      return `<input type="text" class="inline-blank-input" placeholder="..." value="${savedVal}" oninput="localStorage.setItem('task_${safeTask.id}_${inlineCounter}', this.value); this.setAttribute('value', this.value);" />`;
+      
+      const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
+      const normSaved = typeof normalizeSlovak === 'function' ? normalizeSlovak(savedVal) : savedVal.toLowerCase();
+      const normCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal) : correctVal.toLowerCase();
+
+      let extraClasses = '';
+      let extraAttrs = '';
+
+      // Відновлюємо візуальний стан (зелений/червоний) одразу при малюванні
+      if (normSaved !== '') {
+          if (normSaved === normCorrect) {
+              extraClasses = 'solved';
+              extraAttrs = 'readonly';
+          } else {
+              // Якщо є текст, але він ще не правильний — тримаємо червоний фон
+              extraAttrs = 'style="border-color: #E53E3E; background: rgba(229, 62, 62, 0.1);"';
+          }
+      }
+
+      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} oninput="localStorage.setItem('task_${safeTask.id}_${inlineCounter}', this.value); this.setAttribute('value', this.value);" />`;
     });
 
             const palettes = [
