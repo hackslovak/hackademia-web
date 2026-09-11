@@ -1,0 +1,5 @@
+git add .
+
+git commit -m "додав нові звуки та темну тему"
+
+git push

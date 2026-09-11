@@ -1,0 +1,381 @@
+{
+  "exportDate": "2026-09-04T12:41:54.407Z",
+  "courses": [
+    {
+      "id": "turbo-в1/b2-(підготовка-до-іспиту)",
+      "title": "Turbo В1/B2 (Підготовка до іспиту)",
+      "order_index": 3,
+      "lang": "uk"
+    },
+    {
+      "id": "а1",
+      "title": "А1",
+      "order_index": 0,
+      "lang": "uk"
+    },
+    {
+      "id": "в1",
+      "title": "В1",
+      "order_index": 2,
+      "lang": "uk"
+    },
+    {
+      "id": "а2",
+      "title": "А2",
+      "order_index": 1,
+      "lang": "uk"
+    }
+  ],
+  "modules": [
+    {
+      "id": 1,
+      "title": "Тиждень 1: Читання.",
+      "is_unlocked": true,
+      "created_at": "2026-07-30T18:49:44.544111+00:00",
+      "course_id": null
+    },
+    {
+      "id": 2,
+      "title": "Тиждень 1: Читання та лексика",
+      "is_unlocked": true,
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "course_id": null
+    },
+    {
+      "id": 3,
+      "title": "Тиждень 2: Граматика та аудіювання",
+      "is_unlocked": true,
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "course_id": null
+    },
+    {
+      "id": 4,
+      "title": "Тиждень 3: Говоріння та практика",
+      "is_unlocked": false,
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "course_id": null
+    },
+    {
+      "id": 5,
+      "title": "Тиждень 4: Фінальний тест",
+      "is_unlocked": false,
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "course_id": null
+    },
+    {
+      "id": 11,
+      "title": "Тиждень 2: Počúvanie s porozumením",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T11:35:34.898599+00:00",
+      "course_id": "turbo-в1/b2-(підготовка-до-іспиту)"
+    },
+    {
+      "id": 12,
+      "title": "Тиждень 3: Gramatika a slovná zásoba",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T11:35:48.110381+00:00",
+      "course_id": "turbo-в1/b2-(підготовка-до-іспиту)"
+    },
+    {
+      "id": 13,
+      "title": "Тиждень 4: Písanie",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T11:35:58.172122+00:00",
+      "course_id": "turbo-в1/b2-(підготовка-до-іспиту)"
+    },
+    {
+      "id": 14,
+      "title": "Тиждень 5: Rozprávanie",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T11:36:12.792318+00:00",
+      "course_id": "turbo-в1/b2-(підготовка-до-іспиту)"
+    },
+    {
+      "id": 10,
+      "title": "Тиждень 1: Čítanie s porozumením",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T11:31:18.063548+00:00",
+      "course_id": "turbo-в1/b2-(підготовка-до-іспиту)"
+    },
+    {
+      "id": 9,
+      "title": "1 лекція",
+      "is_unlocked": true,
+      "created_at": "2026-07-31T10:37:00.405558+00:00",
+      "course_id": "а1"
+    },
+    {
+      "id": 15,
+      "title": "2 лекція",
+      "is_unlocked": true,
+      "created_at": "2026-09-03T18:01:57.175965+00:00",
+      "course_id": "а1"
+    }
+  ],
+  "tasks": [
+    {
+      "id": 22,
+      "module_id": 9,
+      "type": "flashcard",
+      "content": {
+        "uk": "Привет. Рада тебя видеть на курсе по самостоятельному изучению языка! На первой лекции мы выучим алфавит, основные правила чтения и даже составим первый диалог"
+      },
+      "created_at": "2026-07-31T22:57:22.73065+00:00",
+      "difficulty": "medium",
+      "correct_answer": "Poznámky"
+    },
+    {
+      "id": 1,
+      "module_id": 1,
+      "type": "text",
+      "content": {
+        "uk": "Привіт! Сьогодні ми вивчаємо нові слова. Прочитай текст і підготуйся до тесту."
+      },
+      "created_at": "2026-07-30T19:57:55.828111+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 2,
+      "module_id": 1,
+      "type": "quiz",
+      "content": {
+        "uk": "Як буде \"Собака\" словацькою?"
+      },
+      "created_at": "2026-07-30T19:58:48.14396+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 3,
+      "module_id": 1,
+      "type": "text",
+      "content": {
+        "uk": "📚 Привіт! Ось твій словник на цей тиждень:\r\n1. Pán - Пан\r\n2. Ďakujem - Дякую\r\nВивчи їх до завтра!"
+      },
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 4,
+      "module_id": 1,
+      "type": "video",
+      "content": {
+        "uk": "📺 Переглянь це відео з поясненням правил читання: https://youtube.com/..."
+      },
+      "created_at": "2026-07-30T20:05:37.98548+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 5,
+      "module_id": 1,
+      "type": "text",
+      "content": {
+        "uk": "📖 TEXT D: My hráme, vy kupujete\r\n\r\nNa prázdne miesta v texte doplňte predložky: voči – pre – podľa – po – v – bez – o\r\n\r\n........ tom, koľko peňazí necháme v obchodoch, rozhoduje okrem objemu zákazníkovej peňaženky aj hudba, ktorú nám obchodníci púšťajú. Hudba je dnes už všadeprítomná – v nákupných centrách, výťahoch či letiskách. Jej stúpajúca obľuba je vysvetľovaná veľkou averziou voči tichu..."
+      },
+      "created_at": "2026-07-30T20:17:55.772646+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 6,
+      "module_id": 1,
+      "type": "quiz",
+      "content": {
+        "uk": "📝 Otázka 3: Rozhodnite, ktorá veta je podľa prečítaného textu nepravdivá:\r\na) Klimatizácia v kanceláriách má nepriaznivé účinky na psychický stav ľudí v nej.\r\nb) Džínsy málokedy kupujú starší ľudia.\r\nc) Každý, kto počúva Mozartovu hudbu, túži po luxusnom aute.\r\nd) Výber hudby je dôležitý pri predaji nejakého produktu."
+      },
+      "created_at": "2026-07-30T20:17:55.772646+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 7,
+      "module_id": 1,
+      "type": "quiz",
+      "content": {
+        "uk": "📝 Otázka 11: Doplňte činné príčastia prítomné (a, b) a trpné príčastia (c - e).\r\nVzor: Človek, ktorý píše, je píšuci človek.\r\n\r\na) Obchodníci predávajú luxusný tovar. Obchodník je ........................ človek.\r\nb) Zákazníci kupujú luxusný tovar pod vplyvom hudby. Zákazník je ........................ človek."
+      },
+      "created_at": "2026-07-30T20:17:55.772646+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 8,
+      "module_id": 1,
+      "type": "quiz",
+      "content": {
+        "uk": "Як буде словацькою ліфт?"
+      },
+      "created_at": "2026-07-30T20:29:28.544622+00:00",
+      "difficulty": "easy",
+      "correct_answer": null
+    },
+    {
+      "id": 9,
+      "module_id": 1,
+      "type": "quiz",
+      "content": {
+        "uk": "Як буде словацькою кішка?"
+      },
+      "created_at": "2026-07-30T20:43:41.550081+00:00",
+      "difficulty": "easy",
+      "correct_answer": "mačka"
+    },
+    {
+      "id": 10,
+      "module_id": 1,
+      "type": "text",
+      "content": {
+        "uk": "AgACAgQAAxkBAAMGamvGDuPakHAjHPRxNnP-lz5puFYAAssOaxt2I2BTQsoEgTDEcKkBAAMCAAN3AAM9BA"
+      },
+      "created_at": "2026-07-30T21:46:14.21321+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 25,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "https://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/images/1788462174487.png\nВ словацком алфавите 46 букв — и он немного сложнее, чем кажется на первый взгляд.\n\nЗдесь есть короткие и долгие гласные, а также особые буквы ä, ô. Согласные делятся на мягкие, твёрдые и двоякие, а ещё в словацком есть дифтонги — ia, ie, iu, ô.\n\nВ этом видео разберём словацкий алфавит, группы букв и базовые правила для чтения  — просто и понятно"
+      },
+      "created_at": "2026-09-03T19:06:27.6355+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 26,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "https://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/images/1788462433468.png\nПопробуй прочитать и запомнить эти фразы. \nСовет: лучше читай вслух, так твой мозг будет лучше запоминать информацию."
+      },
+      "created_at": "2026-09-03T19:08:40.474312+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 27,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "https://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/images/1788462610716.png\nПопробуй выполнить это задание, не подсматривая в материалы. Если ты еще не можешь все правильно написать, не тревожься. Попробуй проговорить ответы вслух."
+      },
+      "created_at": "2026-09-03T19:12:53.896603+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 28,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "https://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/images/1788462974440.jpg\nhttps://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/audio/audio_1788462982414.mp3\nПослушай запись, а потом дополни недостающие слова."
+      },
+      "created_at": "2026-09-03T19:16:56.7136+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 29,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "Посмотри видео\nhttps://www.youtube.com/watch?v=HbLO6yAhs7Q"
+      },
+      "created_at": "2026-09-03T19:18:39.251333+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 30,
+      "module_id": 9,
+      "type": "text",
+      "content": {
+        "uk": "https://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/images/1788463160204.jpg\nhttps://vysoirkwthldlidayhfy.supabase.co/storage/v1/object/public/audio/audio_1788463164832.mp3\nПослушай запись, а потом ответь на вопросы. При задании правда или неправда, обьясни по словацки почему это правда или почему это неправда."
+      },
+      "created_at": "2026-09-03T19:20:45.160094+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 11,
+      "module_id": 1,
+      "type": "text",
+      "content": {
+        "uk": "https://api.telegram.org/file/bot8882461613:AAG9RsWwPYnDjMc1gB03ycOMPKMgd66W7GY/photos/file_2.jpg"
+      },
+      "created_at": "2026-07-30T21:49:59.412893+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 12,
+      "module_id": 10,
+      "type": "text",
+      "content": {
+        "uk": "📊 Шпаргалка: Умовний спосіб (Podmieňovací spôsob) на рівні B2\n\nЗгадайте формулу: Keby som mal(a) čas, išiel (išla) by som do kina.\nПодивіться розбір типових помилок у цьому відео-уроці від носіїв мови:\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ"
+      },
+      "created_at": "2026-07-31T11:37:49.937149+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 13,
+      "module_id": 10,
+      "type": "quiz",
+      "content": {
+        "uk": "Доповніть речення правильним форматом: Keby sme vedeli, že prikrývka nestačí, ______ (kúpiť) aj deku."
+      },
+      "created_at": "2026-07-31T11:39:03.535813+00:00",
+      "difficulty": "easy",
+      "correct_answer": "kúpili by sme"
+    },
+    {
+      "id": 14,
+      "module_id": 10,
+      "type": "text",
+      "content": {
+        "uk": "📰 Стаття для розбору: „Prečo Slováci čoraz častejšie menia mesto za vidiek?“\nПрочитайте текст та зверніть увагу на конструкції з виділеними словами (наприклад: napriek tomu, v porovnaní s).\nПосилання на повну статтю: https://www.sme.sk/domov/c/slovaci-sa-coraz-viac-stahuju-z-miest-na-vidiek-chcu-kvalitnejsie-byvat "
+      },
+      "created_at": "2026-07-31T11:42:00.170011+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 15,
+      "module_id": 10,
+      "type": "quiz",
+      "content": {
+        "uk": "Яку головну проблему автор описує у другому абзаці? (Введіть слово або коротку фразу словацькою).\n"
+      },
+      "created_at": "2026-07-31T11:43:23.988291+00:00",
+      "difficulty": "medium",
+      "correct_answer": "transport"
+    },
+    {
+      "id": 16,
+      "module_id": 11,
+      "type": "video",
+      "content": {
+        "uk": "🎧 Аудіо-трек / Інтерв'ю з подкасту:\nПослухайте короткий випуск словацького подкасту про сучасні технології та освіту (орієнтовно з 01:20 по 04:50 хвилину).\nhttps://www.youtube.com/watch?v=dQw4w9WgXcQ\n\nЗавдання: Випишіть 3 нові слова, які використав гість програми, та складіть із ними власні речення."
+      },
+      "created_at": "2026-07-31T11:44:23.555819+00:00",
+      "difficulty": "medium",
+      "correct_answer": null
+    },
+    {
+      "id": 17,
+      "module_id": 11,
+      "type": "quiz",
+      "content": {
+        "uk": "Чи правда, що спікер підтримує повний перехід на дистанційне навчання? (Напишіть ano або nie)."
+      },
+      "created_at": "2026-07-31T11:45:09.722801+00:00",
+      "difficulty": "medium",
+      "correct_answer": "nie"
+    }
+  ]
+}
