@@ -3474,28 +3474,48 @@ async function handleAnswerSubmit(task) {
 
       blankInputs.forEach((input, index) => {
             const studentVal = input.value.trim();
-            const correctVal = correctAnswersRaw[index] || correctAnswersRaw[0] || '';
-            expectedList.push(correctVal);
+            const correctVal = correctAnswersRaw[index] ? correctAnswersRaw[index].trim() : '';
+            
+            if (correctVal) {
+                expectedList.push(correctVal);
+            }
 
-            // Фіксуємо введене значення, щоб браузер його не скидав
+            // Фіксуємо значення
             input.setAttribute('value', studentVal);
             input.defaultValue = studentVal;
+
+            // ЗАХИСТ 1: Якщо поле вже було розв'язане раніше — пропускаємо його повністю!
+            // Це вбиває всі фантомні звуки та реакції від попередніх слів.
+            if (input.classList.contains('solved')) {
+                return; 
+            }
 
             const normStudent = normalizeSlovak(studentVal);
             const normCorrect = normalizeSlovak(correctVal);
 
-            if (normStudent === normCorrect) {
-              input.classList.add('solved');
-              input.readOnly = true;
-              if (studentVal !== correctVal) {
-                hadDiacriticMistake = true;
-              }
+            // ЗАХИСТ 2: Перевіряємо збіг ТІЛЬКИ якщо учень реально щось ввів!
+            if (normStudent !== '' && normStudent === normCorrect) {
+                input.classList.add('solved');
+                input.readOnly = true;
+                // Слово розв'язано правильно (якщо є код звуку для окремого слова, він зіграє тут рівно 1 раз)
+
+                if (studentVal !== correctVal) {
+                    hadDiacriticMistake = true;
+                }
             } else {
-              allCorrect = false;
-              input.style.borderColor = '#E53E3E';
-              input.style.background = 'rgba(229, 62, 62, 0.1)';
+                allCorrect = false;
+                
+                // Якщо учень щось ввів, але неправильно — підсвічуємо червоним
+                if (studentVal !== '') {
+                    input.style.borderColor = '#E53E3E';
+                    input.style.background = 'rgba(229, 62, 62, 0.1)';
+                } else {
+                    // Якщо поле пусте — знімаємо червоне підсвічування
+                    input.style.borderColor = '';
+                    input.style.background = '';
+                }
             }
-          });
+      });
 
       if (allCorrect) {
         showMotivation(); 
