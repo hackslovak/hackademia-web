@@ -3169,17 +3169,25 @@ useEffect(() => {
   }
 
 async function handleAddTask() {
+    // Беремо відповідь тільки з поля вводу
     let finalCorrectAnswer = newTaskCorrectAnswer;
     
-    // Автоматично збираємо відповіді із зелених полів викладача, якщо вони заповнені
-    const activeFormContainer = document.querySelector('div[style*="background"]'); // або контейнер форми додавання
-    const teacherInputs = document.querySelectorAll('.inline-blank-input');
-    if (teacherInputs.length > 0) {
-      const answersArr = Array.from(teacherInputs).map(inp => inp.value.trim()).filter(Boolean);
-      if (answersArr.length > 0) {
-        finalCorrectAnswer = answersArr.join(', ');
-      }
+    let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
+    const contentToSave = { ...baseContent, exercise: newTaskExercise };
+
+    const { data, error } = await supabase.from('tasks').insert({ 
+      module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer
+    }).select();
+      
+    if (error) { alert("Помилка: " + error.message); return; }
+    if (data) {
+      setTasks([...tasks, data[0]]);
+      setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' });
+      setNewTaskExercise('');
+      setNewTaskCorrectAnswer('');
+      setIsSingleLang(false);
     }
+  }
 
     let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
     const contentToSave = { ...baseContent, exercise: newTaskExercise };
@@ -3437,15 +3445,20 @@ async function handleAddTask() {
   async function handleSaveEdit(taskId) {
     const taskToEdit = tasks.find(t => t.id === taskId);
     
-    // Автоматично збираємо відповіді з полів вводу, якщо вони є в формі редагування
+    // Більше ніякого сканування екрану! Беремо строго те, що збережено в пам'яті редактора.
     let finalAnswer = editAnswer;
-    const teacherInputs = document.querySelectorAll('.inline-blank-input');
-    if (teacherInputs.length > 0) {
-      const answersArr = Array.from(teacherInputs).map(inp => inp.value.trim()).filter(Boolean);
-      if (answersArr.length > 0) {
-        finalAnswer = answersArr.join(', ');
-      }
-    }
+
+    const parsedAnswer = taskToEdit.type === 'quiz' ? finalAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' || finalAnswer ? finalAnswer.trim() : null);
+    
+    let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
+    const contentToSave = { ...baseContent, exercise: editTaskExercise };
+
+    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
+
+    if (error) { alert("Помилка: " + error.message); return; }
+    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
+    setEditingTaskId(null);
+  }
 
     const parsedAnswer = taskToEdit.type === 'quiz' ? finalAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' || finalAnswer ? finalAnswer.trim() : null);
     
