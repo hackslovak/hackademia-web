@@ -2175,8 +2175,8 @@ const [newTaskType, setNewTaskType] = useState('text');
       
       const correctVal = correctAnswersRaw[index] || '';
       
-      const normStudent = normalizeSlovak(studentVal);
-      const normCorrect = normalizeSlovak(correctVal);
+      const normStudent = typeof normalizeSlovak === 'function' ? normalizeSlovak(studentVal.toLowerCase()) : studentVal.toLowerCase();
+	  const normCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal.toLowerCase()) : correctVal.toLowerCase();
       
       if (studentVal !== '' && normStudent === normCorrect) {
         if (!input.classList.contains('solved')) {
@@ -3786,19 +3786,19 @@ let inlineCounter = -1;
       const savedVal = localStorage.getItem(cacheKey) || '';
       
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
-      const normSaved = typeof normalizeSlovak === 'function' ? normalizeSlovak(savedVal) : savedVal.toLowerCase();
-      const normCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal) : correctVal.toLowerCase();
+      
+      // ДОДАНО .toLowerCase() — тепер регістр повністю ігнорується при перевірці
+      const cleanSaved = typeof normalizeSlovak === 'function' ? normalizeSlovak(savedVal.toLowerCase()) : savedVal.toLowerCase();
+      const cleanCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal.toLowerCase()) : correctVal.toLowerCase();
 
       let extraClasses = '';
       let extraAttrs = '';
 
-      // Відновлюємо візуальний стан (зелений/червоний) одразу при малюванні
-      if (normSaved !== '') {
-          if (normSaved === normCorrect) {
+      if (cleanSaved !== '') {
+          if (cleanSaved === cleanCorrect) {
               extraClasses = 'solved';
               extraAttrs = 'readonly';
           } else {
-              // Якщо є текст, але він ще не правильний — тримаємо червоний фон
               extraAttrs = 'style="border-color: #E53E3E; background: rgba(229, 62, 62, 0.1);"';
           }
       }

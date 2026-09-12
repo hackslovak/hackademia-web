@@ -1,0 +1,27 @@
+.inline-blank-input {
+    display: inline-block;
+    width: 80px; /* Зробить поля компактними */
+    min-width: 60px;
+    margin: 0 4px; /* Природний відступ між словами */
+    padding: 2px 6px;
+    text-align: center;
+    vertical-align: baseline; /* Вирівнює поле точно по лінії тексту, щоб воно не стрибало вгору/вниз */
+    font-size: inherit; /* Бере такий самий розмір шрифту, як у діалозі */
+    border-radius: 6px;
+    border: 1px solid #CBD5E0; /* Легкий сірий контур */
+    outline: none;
+    background-color: rgba(255, 255, 255, 0.9);
+    transition: all 0.2s ease;
+}
+
+.inline-blank-input:focus {
+    border-color: #3182CE;
+    box-shadow: 0 0 0 1px #3182CE;
+}
+
+.inline-blank-input.solved {
+    border-color: #38A169 !important;
+    background-color: rgba(56, 161, 105, 0.1) !important;
+    color: #22543D !important;
+    pointer-events: none; /* Блокує кліки після розв'язання */
+}
