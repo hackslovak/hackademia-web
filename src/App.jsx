@@ -3792,10 +3792,34 @@ let inlineCounter = -1;
           extraAttrs = 'readonly';
       }
 
-      // Блокуємо React-події, щоб не збивався фокус і завчасно не запускалася перевірка!
+      // Блокуємо перехоплення подій, щоб фокус ніколи не збивався
       const stopReact = "event.stopPropagation();";
-      // Коли користувач виправляє помилку, миттєво знімаємо червоний колір
-      const updateLogic = `localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value); this.style.width = Math.max(this.value.length, 3) + 'ch'; this.classList.remove('error-flash'); this.style.borderColor=''; this.style.backgroundColor='';`;
+      const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
+      
+      // МАГІЯ: Робимо перевірку та анімацію успіху миттєво прямо в браузері!
+      const updateLogic = `
+          localStorage.setItem('${cacheKey}', this.value); 
+          this.setAttribute('value', this.value); 
+          this.style.width = Math.max(this.value.length, 3) + 'ch'; 
+          this.classList.remove('error-flash'); 
+          this.style.borderColor=''; 
+          this.style.backgroundColor='';
+          
+          if ('${safeCorrect}' !== '') {
+              const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+              const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+              
+              if (studentText !== '' && studentText === correctText) {
+                  this.classList.add('solved', 'success-flash');
+                  this.readOnly = true;
+                  this.style.setProperty('border-color', '#38A169', 'important');
+                  this.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
+                  this.style.setProperty('color', '#22543D', 'important');
+                  this.style.pointerEvents = 'none';
+                  try { new Audio('/success.mp3').play(); } catch(e){}
+              }
+          }
+      `.replace(/\n/g, ' ');
 
       return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
     });
@@ -4500,7 +4524,7 @@ setTimeout(() => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
                 {tasks.map((task, idx) => (
-  <div key={task.id} id={`task-card-${task.id}`} onInput={(e) => handleInlineInput(e, task)} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+  <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     
                     {/* ШАПКА ЗАВДАННЯ */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
