@@ -4138,37 +4138,50 @@ html = html.replace(/\.{4,}/g, () => {
     }
     
     .inline-blank-input.solved {
-      background: transparent !important;
-      border: none !important;
-      color: inherit !important;
-      box-shadow: none !important;
-      padding: 0 !important; /* Повністю прибрали відступи */
-      margin: 0 !important;  /* Повністю прибрали відступи */
-      min-width: 0 !important;
-      font-weight: 600 !important; /* Було 800, тепер акуратний напівжирний */
+      /* МАГІЯ: Прибрали !important, щоб дозволити анімації працювати */
+      background: transparent;
+      border: none;
+      color: inherit;
+      box-shadow: none;
+      padding: 0;
+      margin: 0;
+      min-width: 0;
+      
+      /* Замінили жирний шрифт на КУРСИВ */
+      font-weight: inherit;
+      font-style: italic; 
       cursor: pointer;
     }
-    
-    /* Плавне і повільне мигання при правильній відповіді */
-    @keyframes smoothSuccessPulse {
-      0% { background-color: transparent; color: inherit; }
-      15% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; border-radius: 6px; padding: 2px 6px; }
-      85% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; border-radius: 6px; padding: 2px 6px; }
-      100% { background-color: transparent; color: inherit; padding: 0; }
+
+    /* Блокуємо зміну фону, якщо учень випадково клікне на вже вирішене слово */
+    .inline-blank-input.solved:focus {
+      background: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
     }
     
+    /* Яскраве зелене мигання з розчиненням для звичайних повідомлень */
+    @keyframes smoothSuccessPulse {
+      0% { background-color: #38A169; color: #ffffff; padding: 0 6px; border-radius: 6px; }
+      15% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; padding: 0 6px; border-radius: 6px; }
+      85% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; padding: 0 6px; border-radius: 6px; }
+      100% { background-color: transparent; color: inherit; padding: 0; border-radius: 0; }
+    }
+    
+    /* Яскраве біло-жовте мигання для правих (жовтих) бульбашок */
     @keyframes smoothSuccessPulseRight {
-      0% { background-color: transparent; color: inherit; }
-      15% { background-color: rgba(255, 255, 255, 0.9); color: #22543D; border-radius: 6px; padding: 2px 6px; }
-      85% { background-color: rgba(255, 255, 255, 0.9); color: #22543D; border-radius: 6px; padding: 2px 6px; }
-      100% { background-color: transparent; color: inherit; padding: 0; }
+      0% { background-color: #ffffff; color: #D69E2E; padding: 0 6px; border-radius: 6px; }
+      15% { background-color: rgba(255, 255, 255, 0.4); color: #ffffff; padding: 0 6px; border-radius: 6px; }
+      85% { background-color: rgba(255, 255, 255, 0.4); color: #ffffff; padding: 0 6px; border-radius: 6px; }
+      100% { background-color: transparent; color: inherit; padding: 0; border-radius: 0; }
     }
 
     .inline-blank-input.success-flash {
-      animation: smoothSuccessPulse 2.5s ease-in-out forwards !important;
+      animation: smoothSuccessPulse 2s ease-in-out forwards !important;
     }
+    
     .msg-right .inline-blank-input.success-flash {
-      animation: smoothSuccessPulseRight 2.5s ease-in-out forwards !important;
+      animation: smoothSuccessPulseRight 2s ease-in-out forwards !important;
     }
     `}</style>
   );
