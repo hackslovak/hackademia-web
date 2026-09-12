@@ -3476,28 +3476,29 @@ async function handleAnswerSubmit(task) {
             const studentVal = input.value.trim();
             const correctVal = correctAnswersRaw[index] ? correctAnswersRaw[index].trim() : '';
             
-            if (correctVal) {
-                expectedList.push(correctVal);
-            }
+            if (correctVal) expectedList.push(correctVal);
 
-            // Фіксуємо значення
             input.setAttribute('value', studentVal);
             input.defaultValue = studentVal;
 
-            // ЗАХИСТ 1: Якщо поле вже було розв'язане раніше — пропускаємо його повністю!
-            // Це вбиває всі фантомні звуки та реакції від попередніх слів.
-            if (input.classList.contains('solved')) {
+            // НАЙГОЛОВНІШИЙ ЗАХИСТ: Якщо поле ВЖЕ зелене/заблоковане — повністю ігноруємо його!
+            // Це вбиває будь-які фантомні звуки на попередні правильні слова.
+            if (input.classList.contains('solved') || input.readOnly) {
                 return; 
             }
 
-            const normStudent = normalizeSlovak(studentVal);
-            const normCorrect = normalizeSlovak(correctVal);
+            const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase()) : str.toLowerCase();
+            const normStudent = normalize(studentVal);
+            const normCorrect = normalize(correctVal);
 
-            // ЗАХИСТ 2: Перевіряємо збіг ТІЛЬКИ якщо учень реально щось ввів!
             if (normStudent !== '' && normStudent === normCorrect) {
+                // Слово ЩОЙНО розв'язали правильно (звук спрацює лише 1 раз для цього слова)
                 input.classList.add('solved');
                 input.readOnly = true;
-                // Слово розв'язано правильно (якщо є код звуку для окремого слова, він зіграє тут рівно 1 раз)
+                input.style.setProperty('border-color', '#38A169', 'important');
+                input.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
+                input.style.setProperty('color', '#22543D', 'important');
+                input.style.pointerEvents = 'none';
 
                 if (studentVal !== correctVal) {
                     hadDiacriticMistake = true;
@@ -3505,14 +3506,13 @@ async function handleAnswerSubmit(task) {
             } else {
                 allCorrect = false;
                 
-                // Якщо учень щось ввів, але неправильно — підсвічуємо червоним
+                // Якщо введено неправильно — червоний. Якщо пусто — звичайний.
                 if (studentVal !== '') {
-                    input.style.borderColor = '#E53E3E';
-                    input.style.background = 'rgba(229, 62, 62, 0.1)';
+                    input.style.setProperty('border-color', '#E53E3E', 'important');
+                    input.style.setProperty('background-color', 'rgba(229, 62, 62, 0.1)', 'important');
                 } else {
-                    // Якщо поле пусте — знімаємо червоне підсвічування
                     input.style.borderColor = '';
-                    input.style.background = '';
+                    input.style.backgroundColor = '';
                 }
             }
       });
@@ -3776,20 +3776,17 @@ const parseToElements = (text, prefixKey) => {
                        .replace(/\[c:green\](.*?)\[\/c\]/g, '<span style="color: #38A169; font-weight: bold;">$1</span>')
 let inlineCounter = -1;
     const safeTask = (typeof task !== 'undefined') ? task : ((typeof t !== 'undefined') ? t : { id: 'gen' });
-    
-    // Отримуємо масив правильних відповідей заздалегідь
     const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
     html = html.replace(/\.{4,}/g, () => {
       inlineCounter++;
       const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
       const savedVal = localStorage.getItem(cacheKey) || '';
-      
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
       
-      // ДОДАНО .toLowerCase() — тепер регістр повністю ігнорується при перевірці
-      const cleanSaved = typeof normalizeSlovak === 'function' ? normalizeSlovak(savedVal.toLowerCase()) : savedVal.toLowerCase();
-      const cleanCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal.toLowerCase()) : correctVal.toLowerCase();
+      const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase()) : str.toLowerCase();
+      const cleanSaved = normalize(savedVal);
+      const cleanCorrect = normalize(correctVal);
 
       let extraClasses = '';
       let extraAttrs = '';
@@ -3797,13 +3794,15 @@ let inlineCounter = -1;
       if (cleanSaved !== '') {
           if (cleanSaved === cleanCorrect) {
               extraClasses = 'solved';
-              extraAttrs = 'readonly';
+              // Жорстко фіксуємо зелений колір і блокуємо від змін
+              extraAttrs = 'readonly style="border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;"';
           } else {
-              extraAttrs = 'style="border-color: #E53E3E; background: rgba(229, 62, 62, 0.1);"';
+              // Жорстко фіксуємо червоний колір для помилки
+              extraAttrs = 'style="border-color: #E53E3E !important; background-color: rgba(229, 62, 62, 0.1) !important;"';
           }
       }
 
-      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} oninput="localStorage.setItem('task_${safeTask.id}_${inlineCounter}', this.value); this.setAttribute('value', this.value);" />`;
+      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} oninput="localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value);" />`;
     });
 
             const palettes = [
