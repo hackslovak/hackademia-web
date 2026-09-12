@@ -3481,6 +3481,7 @@ async function handleAnswerSubmit(task) {
             input.setAttribute('value', studentVal);
             input.defaultValue = studentVal;
 
+            // НАДІЙНИЙ БЛОК: якщо слово вже зелене - повністю його ігноруємо, жодних фантомних звуків!
             if (input.classList.contains('solved') || input.readOnly) {
                 return; 
             }
@@ -3501,15 +3502,12 @@ async function handleAnswerSubmit(task) {
                     hadDiacriticMistake = true;
                 }
             } else {
-                allCorrect = false;
+                allCorrect = false; // Є помилка або пусте поле - не пропускаємо!
                 
                 if (studentVal !== '') {
-                    // Червоним стає ТІЛЬКИ після того, як програма перевірила неправильну відповідь
+                    // ЖОРСТКЕ повернення червоного кольору для помилок
                     input.style.setProperty('border-color', '#E53E3E', 'important');
                     input.style.setProperty('background-color', 'rgba(229, 62, 62, 0.1)', 'important');
-                } else {
-                    input.style.borderColor = '';
-                    input.style.backgroundColor = '';
                 }
             }
       });
@@ -3773,7 +3771,6 @@ const parseToElements = (text, prefixKey) => {
       const savedVal = localStorage.getItem(cacheKey) || '';
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
       
-      // Додано .trim() до обох значень, щоб випадкові пробіли більше ніколи не ламали перевірку
       const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
       const cleanSaved = normalize(savedVal);
       const cleanCorrect = normalize(correctVal);
@@ -3781,17 +3778,20 @@ const parseToElements = (text, prefixKey) => {
       let extraClasses = '';
       let extraAttrs = '';
 
+      // АДАПТИВНА ШИРИНА: рахуємо кількість букв (мінімум 3), щоб поле не було завеликим
+      const chWidth = Math.max(savedVal.length, 3);
+      let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+
       if (cleanSaved !== '' && cleanCorrect !== '') {
           if (cleanSaved === cleanCorrect) {
               extraClasses = 'solved';
-              // Жорстко фіксуємо зелений колір і блокуємо
-              extraAttrs = 'readonly style="border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;"';
+              inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;';
+              extraAttrs = 'readonly';
           }
-          // Ми повністю прибрали блок else, який робив поле червоним!
-          // Тепер під час набору тексту воно не буде "сваритися".
       }
 
-      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} oninput="localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value);" />`;
+      // oninput тепер не лише зберігає текст, а й миттєво адаптує ширину поля та знімає червоний колір під час набору!
+      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value); this.style.width = Math.max(this.value.length, 3) + 'ch'; this.style.borderColor=''; this.style.backgroundColor='';" />`;
     });
 
             const palettes = [
