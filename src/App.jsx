@@ -3460,18 +3460,6 @@ async function handleAddTask() {
     setEditingTaskId(null);
   }
 
-    const parsedAnswer = taskToEdit.type === 'quiz' ? finalAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' || finalAnswer ? finalAnswer.trim() : null);
-    
-    let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
-    const contentToSave = { ...baseContent, exercise: editTaskExercise };
-
-    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
-
-    if (error) { alert("Помилка: " + error.message); return; }
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
-    setEditingTaskId(null);
-  }
-
 
   // Обробка звичайного текстового тесту (quiz)
 async function handleAnswerSubmit(task) {
