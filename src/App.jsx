@@ -3472,7 +3472,7 @@ async function handleAnswerSubmit(task) {
       let hadDiacriticMistake = false;
       let expectedList = [];
 
-      blankInputs.forEach((input, index) => {
+blankInputs.forEach((input, index) => {
             const studentVal = input.value.trim();
             const correctVal = correctAnswersRaw[index] ? correctAnswersRaw[index].trim() : '';
             
@@ -3481,7 +3481,6 @@ async function handleAnswerSubmit(task) {
             input.setAttribute('value', studentVal);
             input.defaultValue = studentVal;
 
-            // НАДІЙНИЙ БЛОК: якщо слово вже зелене - повністю його ігноруємо, жодних фантомних звуків!
             if (input.classList.contains('solved') || input.readOnly) {
                 return; 
             }
@@ -3490,8 +3489,12 @@ async function handleAnswerSubmit(task) {
             const normStudent = normalize(studentVal);
             const normCorrect = normalize(correctVal);
 
+            // Скидаємо анімації перед новою перевіркою
+            input.classList.remove('success-flash', 'error-flash');
+
             if (normStudent !== '' && normCorrect !== '' && normStudent === normCorrect) {
-                input.classList.add('solved');
+                // ПРАВИЛЬНО - запускаємо мигання зеленим (success-flash)
+                input.classList.add('solved', 'success-flash');
                 input.readOnly = true;
                 input.style.setProperty('border-color', '#38A169', 'important');
                 input.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
@@ -3502,12 +3505,15 @@ async function handleAnswerSubmit(task) {
                     hadDiacriticMistake = true;
                 }
             } else {
-                allCorrect = false; // Є помилка або пусте поле - не пропускаємо!
+                allCorrect = false;
                 
                 if (studentVal !== '') {
-                    // ЖОРСТКЕ повернення червоного кольору для помилок
-                    input.style.setProperty('border-color', '#E53E3E', 'important');
-                    input.style.setProperty('background-color', 'rgba(229, 62, 62, 0.1)', 'important');
+                    // ПОМИЛКА - запускаємо червоне трусіння (error-flash)
+                    setTimeout(() => {
+                        input.classList.add('error-flash');
+                        input.style.setProperty('border-color', '#E53E3E', 'important');
+                        input.style.setProperty('background-color', 'rgba(229, 62, 62, 0.1)', 'important');
+                    }, 10);
                 }
             }
       });
@@ -3761,7 +3767,7 @@ const parseToElements = (text, prefixKey) => {
             let html = String(part);
 
             // Обробка Markdown-розмітки, кольорів та перетворення 4 крапок на інтерактивний інпут
-            let inlineCounter = -1;
+let inlineCounter = -1;
     const safeTask = (typeof task !== 'undefined') ? task : ((typeof t !== 'undefined') ? t : { id: 'gen' });
     const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
@@ -3777,21 +3783,21 @@ const parseToElements = (text, prefixKey) => {
 
       let extraClasses = '';
       let extraAttrs = '';
-
-      // АДАПТИВНА ШИРИНА: рахуємо кількість букв (мінімум 3), щоб поле не було завеликим
       const chWidth = Math.max(savedVal.length, 3);
       let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
-      if (cleanSaved !== '' && cleanCorrect !== '') {
-          if (cleanSaved === cleanCorrect) {
-              extraClasses = 'solved';
-              inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;';
-              extraAttrs = 'readonly';
-          }
+      if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
+          extraClasses = 'solved';
+          inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;';
+          extraAttrs = 'readonly';
       }
 
-      // oninput тепер не лише зберігає текст, а й миттєво адаптує ширину поля та знімає червоний колір під час набору!
-      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value); this.style.width = Math.max(this.value.length, 3) + 'ch'; this.style.borderColor=''; this.style.backgroundColor='';" />`;
+      // Блокуємо React-події, щоб не збивався фокус і завчасно не запускалася перевірка!
+      const stopReact = "event.stopPropagation();";
+      // Коли користувач виправляє помилку, миттєво знімаємо червоний колір
+      const updateLogic = `localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value); this.style.width = Math.max(this.value.length, 3) + 'ch'; this.classList.remove('error-flash'); this.style.borderColor=''; this.style.backgroundColor='';`;
+
+      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
     });
 
             const palettes = [
