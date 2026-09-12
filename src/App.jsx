@@ -3481,18 +3481,15 @@ async function handleAnswerSubmit(task) {
             input.setAttribute('value', studentVal);
             input.defaultValue = studentVal;
 
-            // НАЙГОЛОВНІШИЙ ЗАХИСТ: Якщо поле ВЖЕ зелене/заблоковане — повністю ігноруємо його!
-            // Це вбиває будь-які фантомні звуки на попередні правильні слова.
             if (input.classList.contains('solved') || input.readOnly) {
                 return; 
             }
 
-            const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase()) : str.toLowerCase();
+            const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
             const normStudent = normalize(studentVal);
             const normCorrect = normalize(correctVal);
 
-            if (normStudent !== '' && normStudent === normCorrect) {
-                // Слово ЩОЙНО розв'язали правильно (звук спрацює лише 1 раз для цього слова)
+            if (normStudent !== '' && normCorrect !== '' && normStudent === normCorrect) {
                 input.classList.add('solved');
                 input.readOnly = true;
                 input.style.setProperty('border-color', '#38A169', 'important');
@@ -3506,8 +3503,8 @@ async function handleAnswerSubmit(task) {
             } else {
                 allCorrect = false;
                 
-                // Якщо введено неправильно — червоний. Якщо пусто — звичайний.
                 if (studentVal !== '') {
+                    // Червоним стає ТІЛЬКИ після того, як програма перевірила неправильну відповідь
                     input.style.setProperty('border-color', '#E53E3E', 'important');
                     input.style.setProperty('background-color', 'rgba(229, 62, 62, 0.1)', 'important');
                 } else {
@@ -3766,15 +3763,7 @@ const parseToElements = (text, prefixKey) => {
             let html = String(part);
 
             // Обробка Markdown-розмітки, кольорів та перетворення 4 крапок на інтерактивний інпут
-            html = html.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
-                       .replace(/__(.*?)__/g, '<i>$1</i>')
-                       .replace(/&lt;u&gt;(.*?)&lt;\/u&gt;/g, '<u>$1</u>')
-                       .replace(/~~(.*?)~~/g, '<s>$1</s>')
-                       .replace(/\|\|(.*?)\|\|/g, '<span class="tg-spoiler" onclick="this.classList.toggle(\'revealed\')">$1</span>')
-                       .replace(/\[c:brand\](.*?)\[\/c\]/g, '<span style="color: #E0A345; font-weight: bold;">$1</span>')
-                       .replace(/\[c:red\](.*?)\[\/c\]/g, '<span style="color: #E53E3E; font-weight: bold;">$1</span>')
-                       .replace(/\[c:green\](.*?)\[\/c\]/g, '<span style="color: #38A169; font-weight: bold;">$1</span>')
-let inlineCounter = -1;
+            let inlineCounter = -1;
     const safeTask = (typeof task !== 'undefined') ? task : ((typeof t !== 'undefined') ? t : { id: 'gen' });
     const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
@@ -3784,22 +3773,22 @@ let inlineCounter = -1;
       const savedVal = localStorage.getItem(cacheKey) || '';
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
       
-      const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase()) : str.toLowerCase();
+      // Додано .trim() до обох значень, щоб випадкові пробіли більше ніколи не ламали перевірку
+      const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
       const cleanSaved = normalize(savedVal);
       const cleanCorrect = normalize(correctVal);
 
       let extraClasses = '';
       let extraAttrs = '';
 
-      if (cleanSaved !== '') {
+      if (cleanSaved !== '' && cleanCorrect !== '') {
           if (cleanSaved === cleanCorrect) {
               extraClasses = 'solved';
-              // Жорстко фіксуємо зелений колір і блокуємо від змін
+              // Жорстко фіксуємо зелений колір і блокуємо
               extraAttrs = 'readonly style="border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;"';
-          } else {
-              // Жорстко фіксуємо червоний колір для помилки
-              extraAttrs = 'style="border-color: #E53E3E !important; background-color: rgba(229, 62, 62, 0.1) !important;"';
           }
+          // Ми повністю прибрали блок else, який робив поле червоним!
+          // Тепер під час набору тексту воно не буде "сваритися".
       }
 
       return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} oninput="localStorage.setItem('${cacheKey}', this.value); this.setAttribute('value', this.value);" />`;
