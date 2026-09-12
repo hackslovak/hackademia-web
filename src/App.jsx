@@ -3689,7 +3689,7 @@ blankInputs.forEach((input, index) => {
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
   }
 
-function renderContent(taskContent) {
+function renderContent(taskContent, currentTask = null) {
     let descText = "";
     let exerciseText = "";
 
@@ -3768,7 +3768,7 @@ const parseToElements = (text, prefixKey) => {
 
             // Обробка Markdown-розмітки, кольорів та перетворення 4 крапок на інтерактивний інпут
 let inlineCounter = -1;
-    const safeTask = (typeof task !== 'undefined') ? task : ((typeof t !== 'undefined') ? t : { id: 'gen' });
+    const safeTask = currentTask || { id: 'gen', correct_answer: '' };
     const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
     html = html.replace(/\.{4,}/g, () => {
@@ -4757,7 +4757,7 @@ setTimeout(() => {
                        <div>
                          {/* САМ КОНТЕНТ ЗАВДАННЯ */}
                          <div style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}>
-                           {renderContent(task.content)}
+                           {renderContent(task.content, task)}
                          </div>
 
 {/* ПАНЕЛЬ ДІЙ УЧНЯ */}
