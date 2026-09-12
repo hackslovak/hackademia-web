@@ -2167,45 +2167,47 @@ const [newTaskType, setNewTaskType] = useState('text');
     const correctAnswersRaw = (task.correct_answer || '').split(/[,;]/).map(s => s.trim());
     
     let allCorrect = true;
-    let studentAnswersMap = {};
+    const input = e.target;
+    const index = parseInt(input.getAttribute('data-index'));
+    if (isNaN(index)) return;
+
+    const studentVal = input.value.trim();
+    const correctVal = correctAnswersRaw[index] || '';
     
-    inputs.forEach((input, index) => {
-      const studentVal = input.value.trim();
-      studentAnswersMap[index] = studentVal;
-      
-      const correctVal = correctAnswersRaw[index] || '';
-      
-      const normStudent = typeof normalizeSlovak === 'function' ? normalizeSlovak(studentVal.toLowerCase()) : studentVal.toLowerCase();
-	  const normCorrect = typeof normalizeSlovak === 'function' ? normalizeSlovak(correctVal.toLowerCase()) : correctVal.toLowerCase();
-      
-      if (studentVal !== '' && normStudent === normCorrect) {
-        if (!input.classList.contains('solved')) {
-          input.classList.add('solved');
-          playUiSound('ding', isSoundEnabled); // Звук успіху!
-          if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        }
-      } else {
-        if (input.classList.contains('solved')) {
-          input.classList.remove('solved');
-        }
-        allCorrect = false;
+    const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+    const normStudent = normalize(studentVal);
+    const normCorrect = normalize(correctVal);
+    
+    // Скидаємо стилі перед перевіркою
+    input.classList.remove('error-flash', 'success-flash', 'solved');
+    void input.offsetWidth; // Перезапускаємо кадр
+    input.style.removeProperty('border-color');
+    input.style.removeProperty('background-color');
+    input.style.removeProperty('color');
+
+    // Перевіряємо саме це слово
+    if (studentVal !== '' && normStudent === normCorrect) {
+        input.classList.add('solved', 'success-flash'); // Запускає зелене мигання та розчинення!
+        playUiSound('ding', isSoundEnabled); // Повертаємо звук!
+        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    }
+
+    // Перевіряємо, чи розв'язано ВСЕ завдання для збереження в базу
+    inputs.forEach((inp, i) => {
+      const sVal = inp.value.trim();
+      const cVal = correctAnswersRaw[i] || '';
+      if (normalize(sVal) === '' || normalize(cVal) === '' || normalize(sVal) !== normalize(cVal)) {
+          allCorrect = false;
       }
     });
 
-    // Зберігаємо в Supabase для конкретного учня (dbUserId)
-    if (dbUserId) {
+    if (dbUserId && allCorrect) {
       await supabase.from('progress').upsert({
-        user_id: dbUserId,
-        task_id: task.id,
-        status: allCorrect ? 'completed' : 'in_progress',
-        points: allCorrect ? difficultyConfig[task.difficulty || 'medium'].points : 0,
-        // Зберігаємо детальні відповіді учня в JSON-потоці, якщо є така колонка, або просто оновлюємо статус
+        user_id: dbUserId, task_id: task.id, status: 'completed',
+        points: difficultyConfig[task.difficulty || 'medium'].points,
         updated_at: new Date().toISOString()
       }, { onConflict: 'user_id, task_id' });
-      
-      if (allCorrect) {
-        setCompletedTasks(prev => [...new Set([...prev, task.id])]);
-      }
+      setCompletedTasks(prev => [...new Set([...prev, task.id])]);
     }
   };
   
@@ -3790,84 +3792,55 @@ let inlineCounter = -1;
     html = html.replace(/\.{4,}/g, () => {
       inlineCounter++;
       const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
-      const savedVal = localStorage.getItem(cacheKey) || '';
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
       
       const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
-      const cleanSaved = normalize(savedVal);
       const cleanCorrect = normalize(correctVal);
 
-      let extraClasses = '';
-      let extraAttrs = '';
-      // Зробили мінімальну ширину 1 букву, щоб слово щільно прилягало
-      const chWidth = Math.max(savedVal.length, 1);
-      let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+      let inlineStyle = `width: 3ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
-      if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
-          extraClasses = 'solved';
-      }
-
-      const stopReact = "event.stopPropagation();";
-      const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
-      
       const updateLogic = `
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
           this.style.width = Math.max(this.value.length, 1) + 'ch'; 
-          
-          this.classList.remove('error-flash', 'success-flash', 'solved'); 
-          void this.offsetWidth; // МАГІЯ: Примусово перезапускаємо кадр для анімації!
-          
-          this.style.removeProperty('border-color'); 
-          this.style.removeProperty('background-color');
-          this.style.removeProperty('color');
-          
-          if ('${safeCorrect}' !== '') {
-              const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
-              const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
-              
-              if (studentText !== '' && studentText === correctText) {
-                  this.classList.add('solved', 'success-flash');
-                  try { new Audio('/success.mp3').play(); } catch(e){}
-              }
-          }
       `.replace(/\n/g, ' ');
 
-      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
+      return `<input type="text" class="inline-blank-input" data-task-id="${safeTask.id}" data-index="${inlineCounter}" data-correct="${cleanCorrect}" placeholder="..." value="" style="${inlineStyle}" oninput="${updateLogic}" />`;
     });
 
-            const palettes = [
-              'linear-gradient(135deg, #E0A345 0%, #D69E2E 100%)', 
-              'linear-gradient(135deg, #48BB78 0%, #38A169 100%)', 
-              'linear-gradient(135deg, #4299E1 0%, #3182ce 100%)', 
-              'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)'  
-            ];
+    const palettes = [
+      'linear-gradient(135deg, #E0A345 0%, #D69E2E 100%)', 
+      'linear-gradient(135deg, #48BB78 0%, #38A169 100%)', 
+      'linear-gradient(135deg, #4299E1 0%, #3182ce 100%)', 
+      'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)'  
+    ];
+    let speakers = [];
+    let currentPaletteIndex = 0;
+    let normalizedText = html.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<p[^>]*>/gi, '').replace(/<div[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
+    let lines = normalizedText.split('\n');
+    
+    // Відновлюємо збережені інпути з пам'яті (Новий надійний алгоритм)
+    setTimeout(() => {
+        document.querySelectorAll('.inline-blank-input').forEach(input => {
+            const tId = input.getAttribute('data-task-id');
+            const idx = input.getAttribute('data-index');
+            const cleanCorrect = input.getAttribute('data-correct');
+            if (tId && idx !== null) {
+                const val = localStorage.getItem(`task_${tId}_${idx}`) || '';
+                if (val && input.value !== val) {
+                    input.value = val;
+                    input.setAttribute('value', val);
+                    input.style.width = Math.max(val.length, 1) + 'ch';
+                    
+                    const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+                    if (normalize(val) !== '' && cleanCorrect !== '' && normalize(val) === cleanCorrect) {
+                        input.classList.add('solved');
+                    }
+                }
+            }
+        });
+    }, 50);
 
-            let speakers = [];
-            let currentPaletteIndex = 0;
-
-            let normalizedText = html
-              .replace(/<br\s*[\/]?>/gi, '\n')
-              .replace(/<\/p>/gi, '\n')
-              .replace(/<\/div>/gi, '\n')
-              .replace(/<p[^>]*>/gi, '')
-              .replace(/<div[^>]*>/gi, '')
-              .replace(/&nbsp;/g, ' ');
-
-            let lines = normalizedText.split('\n');
-			
-			// Відновлюємо збережені інпути з пам'яті
-setTimeout(() => {
-  if (window.savedInlineInputs) {
-    document.querySelectorAll('.inline-blank-input').forEach((input, idx) => {
-      const key = 'input_' + idx;
-      if (!input.value && window.savedInlineInputs[key]) {
-        input.value = window.savedInlineInputs[key];
-        input.setAttribute('value', window.savedInlineInputs[key]);
-      }
-    });
-  }
-}, 30);
 			
             let resultHtml = '';
             let inBubble = false;
@@ -4536,7 +4509,7 @@ setTimeout(() => {
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
                 {tasks.map((task, idx) => (
-  <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+  <div key={task.id} id={`task-card-${task.id}`} onInput={(e) => handleInlineInput(e, task)} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     
                     {/* ШАПКА ЗАВДАННЯ */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
