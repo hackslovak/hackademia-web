@@ -3788,16 +3788,30 @@ let inlineCounter = -1;
     const safeTask = currentTask || { id: 'gen', correct_answer: '' };
     const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
-    html = html.replace(/\.{4,}/g, () => {
+html = html.replace(/\.{4,}/g, () => {
       inlineCounter++;
       const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
+      const savedVal = localStorage.getItem(cacheKey) || '';
       const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
       
       const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+      const cleanSaved = normalize(savedVal);
       const cleanCorrect = normalize(correctVal);
 
-      let inlineStyle = `width: 3ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+      let extraClasses = '';
+      let extraAttrs = '';
+      const chWidth = Math.max(savedVal.length, 1);
+      let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
+      if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
+          extraClasses = 'solved';
+      }
+
+      const stopReact = "event.stopPropagation();";
+      
+      // ОСЬ ЦЕЙ РЯДОК БУВ ВТРАЧЕНИЙ:
+      const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
+      
       const updateLogic = `
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
@@ -3816,7 +3830,7 @@ let inlineCounter = -1;
           }
       `.replace(/\n/g, ' ');
 
-      return `<input type="text" class="inline-blank-input" data-task-id="${safeTask.id}" data-index="${inlineCounter}" data-correct="${cleanCorrect}" placeholder="..." value="" style="${inlineStyle}" oninput="${updateLogic}" />`;
+      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
     });
 
     const palettes = [
