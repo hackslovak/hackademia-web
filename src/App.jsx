@@ -3506,15 +3506,16 @@ blankInputs.forEach((input, index) => {
             const normStudent = normalize(studentVal);
             const normCorrect = normalize(correctVal);
 
-            // Скидаємо анімації перед новою перевіркою
-            input.classList.remove('success-flash', 'error-flash');
+            // Скидаємо анімації та стилі перед новою перевіркою
+            input.classList.remove('success-flash', 'error-flash', 'solved');
+            void input.offsetWidth; // МАГІЯ: Примусово перезапускаємо кадр!
+            input.style.removeProperty('border-color');
+            input.style.removeProperty('background-color');
+            input.style.removeProperty('color');
 
             if (normStudent !== '' && normCorrect !== '' && normStudent === normCorrect) {
-                // ПРАВИЛЬНО - запускаємо мигання
+                // ПРАВИЛЬНО - запускаємо мигання зеленим
                 input.classList.add('solved', 'success-flash');
-                input.style.borderColor = '';
-                input.style.backgroundColor = '';
-                input.style.color = '';
 
                 if (studentVal !== correctVal) {
                     hadDiacriticMistake = true;
@@ -3813,10 +3814,13 @@ let inlineCounter = -1;
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
           this.style.width = Math.max(this.value.length, 1) + 'ch'; 
+          
           this.classList.remove('error-flash', 'success-flash', 'solved'); 
-          this.style.borderColor=''; 
-          this.style.backgroundColor='';
-          this.style.color='';
+          void this.offsetWidth; // МАГІЯ: Примусово перезапускаємо кадр для анімації!
+          
+          this.style.removeProperty('border-color'); 
+          this.style.removeProperty('background-color');
+          this.style.removeProperty('color');
           
           if ('${safeCorrect}' !== '') {
               const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');

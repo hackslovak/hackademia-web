@@ -43,13 +43,17 @@
 }
 
 @keyframes successFlash {
-    0%, 60% { color: #22543D; background-color: rgba(56, 161, 105, 0.4); border-color: #38A169; }
-    30%, 100% { color: inherit; background-color: transparent; border-color: transparent; box-shadow: none; }
+    0% { color: #22543D; background-color: rgba(56, 161, 105, 0.4); border-color: #38A169; }
+    40% { color: inherit; background-color: transparent; border-color: transparent; }
+    70% { color: #22543D; background-color: rgba(56, 161, 105, 0.4); border-color: #38A169; }
+    100% { color: inherit; background-color: transparent; border-color: transparent; }
 }
 
 @keyframes successFlashRight {
-    0%, 60% { color: #ffffff; background-color: rgba(56, 161, 105, 0.8); border-color: #ffffff; }
-    30%, 100% { color: inherit; background-color: transparent; border-color: transparent; box-shadow: none; }
+    0% { color: #ffffff; background-color: rgba(56, 161, 105, 0.8); border-color: #ffffff; }
+    40% { color: inherit; background-color: transparent; border-color: transparent; }
+    70% { color: #ffffff; background-color: rgba(56, 161, 105, 0.8); border-color: #ffffff; }
+    100% { color: inherit; background-color: transparent; border-color: transparent; }
 }
 
 @keyframes errorFlash {
