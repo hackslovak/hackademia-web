@@ -4100,9 +4100,9 @@ html = html.replace(/\.{4,}/g, () => {
       background: rgba(0, 0, 0, 0.06);
       border: 1.5px dashed rgba(0, 0, 0, 0.15);
       border-radius: 8px;
-      padding: 4px 10px;
+      padding: 2px 6px;
       color: inherit;
-      min-width: 30px; /* БУЛО 110px, саме це створювало величезні діри! */
+      min-width: 30px;
       max-width: 280px;
       font-size: inherit;
       font-family: inherit;
@@ -4112,6 +4112,15 @@ html = html.replace(/\.{4,}/g, () => {
       vertical-align: baseline;
       margin: 0 4px;
     }
+    
+    /* Відновлено стилі для крапок-плейсхолдерів */
+    .inline-blank-input::placeholder {
+      color: rgba(0, 0, 0, 0.4);
+    }
+    .msg-right .inline-blank-input::placeholder {
+      color: rgba(255, 255, 255, 0.7);
+    }
+    
     .msg-right .inline-blank-input {
       background: rgba(255, 255, 255, 0.2);
       border: 1.5px dashed rgba(255, 255, 255, 0.4);
@@ -4123,6 +4132,7 @@ html = html.replace(/\.{4,}/g, () => {
       border: 2px solid #E0A345 !important;
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
+    
     .inline-blank-input.solved {
       background: transparent !important;
       border: none !important;
@@ -4131,7 +4141,7 @@ html = html.replace(/\.{4,}/g, () => {
       padding: 0 !important;
       margin: 0 4px !important;
       min-width: 0 !important;
-      width: auto !important;
+      /* Видалено width: auto, тепер працює ідеальне облягання через JS (ch) */
       font-weight: 800;
       cursor: pointer;
     }
