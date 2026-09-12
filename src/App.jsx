@@ -3189,23 +3189,6 @@ async function handleAddTask() {
     }
   }
 
-    let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
-    const contentToSave = { ...baseContent, exercise: newTaskExercise };
-
-    const { data, error } = await supabase.from('tasks').insert({ 
-      module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer
-    }).select();
-      
-    if (error) { alert("Помилка: " + error.message); return; }
-    if (data) {
-      setTasks([...tasks, data[0]]);
-      setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' });
-      setNewTaskExercise('');
-      setNewTaskCorrectAnswer('');
-      setIsSingleLang(false);
-    }
-  }
-
   async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
