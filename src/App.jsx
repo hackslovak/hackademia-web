@@ -2177,21 +2177,19 @@ const [newTaskType, setNewTaskType] = useState('text');
     const normStudent = normalize(studentVal);
     const normCorrect = normalize(correctVal);
     
-    // Скидаємо стилі перед перевіркою
     input.classList.remove('error-flash', 'success-flash', 'solved');
-    void input.offsetWidth; // Перезапускаємо кадр
+    void input.offsetWidth; 
     input.style.removeProperty('border-color');
     input.style.removeProperty('background-color');
     input.style.removeProperty('color');
 
-    // Перевіряємо саме це слово
     if (studentVal !== '' && normStudent === normCorrect) {
-        input.classList.add('solved', 'success-flash'); // Запускає зелене мигання та розчинення!
-        playUiSound('ding', isSoundEnabled); // Повертаємо звук!
+        input.classList.add('solved', 'success-flash'); 
+        input.style.width = 'auto'; // Скидаємо ширину для ідеального злиття!
+        playUiSound('ding', isSoundEnabled); 
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     }
 
-    // Перевіряємо, чи розв'язано ВСЕ завдання для збереження в базу
     inputs.forEach((inp, i) => {
       const sVal = inp.value.trim();
       const cVal = correctAnswersRaw[i] || '';
@@ -2200,13 +2198,18 @@ const [newTaskType, setNewTaskType] = useState('text');
       }
     });
 
-    if (dbUserId && allCorrect) {
-      await supabase.from('progress').upsert({
-        user_id: dbUserId, task_id: task.id, status: 'completed',
-        points: difficultyConfig[task.difficulty || 'medium'].points,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'user_id, task_id' });
+    // ПЛАШКА ТЕПЕР З'ЯВЛЯЄТЬСЯ ЗАВЖДИ, НАВІТЬ В АДМІНА
+    if (allCorrect) {
       setCompletedTasks(prev => [...new Set([...prev, task.id])]);
+      if (dbUserId) {
+        supabase.from('progress').upsert({
+          user_id: dbUserId, task_id: task.id, status: 'completed',
+          points: difficultyConfig[task.difficulty || 'medium'].points,
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'user_id, task_id' }).then();
+      }
+    } else {
+      setCompletedTasks(prev => prev.filter(id => id !== task.id)); // Ховаємо плашку, якщо стерли слово
     }
   };
   
@@ -3824,6 +3827,7 @@ html = html.replace(/\.{4,}/g, () => {
               
               if (studentText !== '' && studentText === correctText) {
                   this.classList.add('solved', 'success-flash');
+                  this.style.width = 'auto'; /* Скидаємо ширину для злиття */
                   if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
               }
           }
@@ -3843,7 +3847,6 @@ html = html.replace(/\.{4,}/g, () => {
     let normalizedText = html.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<p[^>]*>/gi, '').replace(/<div[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
     let lines = normalizedText.split('\n');
     
-    // Відновлюємо збережені інпути з пам'яті (Новий надійний алгоритм)
     setTimeout(() => {
         document.querySelectorAll('.inline-blank-input').forEach(input => {
             const tId = input.getAttribute('data-task-id');
@@ -3854,11 +3857,12 @@ html = html.replace(/\.{4,}/g, () => {
                 if (val && input.value !== val) {
                     input.value = val;
                     input.setAttribute('value', val);
-                    input.style.width = Math.max(val.length, 1) + 'ch';
+                    input.style.width = ((Math.max(val.length, 1) * 0.6) + 0.5) + 'em';
                     
                     const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
                     if (normalize(val) !== '' && cleanCorrect !== '' && normalize(val) === cleanCorrect) {
                         input.classList.add('solved');
+                        input.style.width = 'auto'; /* Скидаємо ширину для злиття */
                     }
                 }
             }
@@ -4138,11 +4142,10 @@ html = html.replace(/\.{4,}/g, () => {
       border: none !important;
       color: inherit !important;
       box-shadow: none !important;
-      /* Робимо внутрішні і зовнішні відступи мінімальними, щоб слово злилося з реченням */
-      padding: 0 2px !important;
-      margin: 0 3px !important;
+      padding: 0 !important; /* Повністю прибрали відступи */
+      margin: 0 !important;  /* Повністю прибрали відступи */
       min-width: 0 !important;
-      font-weight: 800;
+      font-weight: 600 !important; /* Було 800, тепер акуратний напівжирний */
       cursor: pointer;
     }
     
