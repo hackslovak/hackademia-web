@@ -3444,6 +3444,39 @@ async function handleAddTask() {
   }
 
 
+const handleResetTaskAnswers = (task) => {
+    if (!window.confirm("Очистити всі введені відповіді в цьому завданні?")) return;
+    
+    const cardEl = document.getElementById(`task-card-${task.id}`);
+    if (!cardEl) return;
+    
+    // 1. Очищаємо всі інлайн-пропуски
+    const inputs = cardEl.querySelectorAll('.inline-blank-input');
+    inputs.forEach((input, index) => {
+      input.value = '';
+      input.setAttribute('value', '');
+      input.style.width = '3ch';
+      input.classList.remove('solved', 'success-flash', 'error-flash');
+      input.style.borderColor = '';
+      input.style.backgroundColor = '';
+      input.style.color = '';
+      
+      const cacheKey = `task_${task.id}_${index}`;
+      localStorage.removeItem(cacheKey);
+    });
+    
+    // 2. Очищаємо класичне поле квізу (якщо є)
+    if (userAnswers[task.id]) {
+      const newAnswers = { ...userAnswers };
+      delete newAnswers[task.id];
+      setUserAnswers(newAnswers);
+    }
+    
+    // 3. Знімаємо статус "виконано"
+    setCompletedTasks(prev => prev.filter(id => id !== task.id));
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  };
+  
   // Обробка звичайного текстового тесту (quiz)
 async function handleAnswerSubmit(task) {
     const cardEl = document.getElementById(`task-card-${task.id}`);
@@ -3479,11 +3512,9 @@ blankInputs.forEach((input, index) => {
             if (normStudent !== '' && normCorrect !== '' && normStudent === normCorrect) {
                 // ПРАВИЛЬНО - запускаємо мигання зеленим (success-flash)
                 input.classList.add('solved', 'success-flash');
-                input.readOnly = true;
                 input.style.setProperty('border-color', '#38A169', 'important');
                 input.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
-                input.style.setProperty('color', '#22543D', 'important');
-                input.style.pointerEvents = 'none';
+                input.style.setProperty('color', '#22543D', 'important')
 
                 if (studentVal !== correctVal) {
                     hadDiacriticMistake = true;
@@ -3772,22 +3803,21 @@ let inlineCounter = -1;
 
       if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
           extraClasses = 'solved';
-          inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important; pointer-events: none;';
-          extraAttrs = 'readonly';
+          // Видалили readonly та pointer-events: none!
+          inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important;';
       }
 
-      // Блокуємо перехоплення подій, щоб фокус ніколи не збивався
       const stopReact = "event.stopPropagation();";
       const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
       
-      // МАГІЯ: Робимо перевірку та анімацію успіху миттєво прямо в браузері!
       const updateLogic = `
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
           this.style.width = Math.max(this.value.length, 3) + 'ch'; 
-          this.classList.remove('error-flash'); 
+          this.classList.remove('error-flash', 'success-flash', 'solved'); 
           this.style.borderColor=''; 
           this.style.backgroundColor='';
+          this.style.color='';
           
           if ('${safeCorrect}' !== '') {
               const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
@@ -3795,11 +3825,9 @@ let inlineCounter = -1;
               
               if (studentText !== '' && studentText === correctText) {
                   this.classList.add('solved', 'success-flash');
-                  this.readOnly = true;
                   this.style.setProperty('border-color', '#38A169', 'important');
                   this.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
                   this.style.setProperty('color', '#22543D', 'important');
-                  this.style.pointerEvents = 'none';
                   try { new Audio('/success.mp3').play(); } catch(e){}
               }
           }
@@ -4521,9 +4549,11 @@ setTimeout(() => {
                         </span>
                       </div>
                       
-                      {/* КНОПКИ АДМІНА (РЕДАГУВАТИ / ВИДАЛИТИ) */}
+                      {/* КНОПКИ АДМІНА (СКИНУТИ / РЕДАГУВАТИ / ВИДАЛИТИ) */}
                       {effectiveIsAdmin && (
                         <div style={{ display: 'flex', gap: '10px' }}>
+                          <button onClick={() => handleResetTaskAnswers(task)} className="hover-card" title="Скинути введені тестові відповіді" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', padding: '10px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>🔄 Скинути</button>
+                          
                           <button onClick={() => { 
                             setEditingTaskId(task.id); 
                             if (typeof task.content === 'object' && task.content !== null) {
@@ -4539,8 +4569,9 @@ setTimeout(() => {
                             setEditAnswer(task.correct_answer || ''); 
                             setEditDifficulty(task.difficulty || 'medium'); 
                             setEditLang('uk');
-                          }} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
-                          <button onClick={() => handleDeleteTask(task.id)} className="hover-card" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
+                          }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
+                          
+                          <button onClick={() => handleDeleteTask(task.id)} className="hover-card" title="Видалити завдання" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
                         </div>
                       )}
                     </div>
@@ -4764,7 +4795,7 @@ setTimeout(() => {
                                </div>
                              )}
 
-                             {/* Кнопка запису голосу (Доступна для всіх завдань, щоб тренувати вимову) */}
+                             {/* Кнопка запису голосу */}
                              <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                <button 
                                  onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}

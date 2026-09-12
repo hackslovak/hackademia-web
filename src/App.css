@@ -23,7 +23,7 @@
     border-color: #38A169 !important;
     background-color: rgba(56, 161, 105, 0.1) !important;
     color: #22543D !important;
-    pointer-events: none; /* Блокує кліки після розв'язання */
+    /* pointer-events: none; - ВИДАЛЕНО, щоб можна було клікати і стирати текст */
 }
 
 @keyframes successFlash {
