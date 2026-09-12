@@ -86,6 +86,8 @@ function playUiSound(type, isEnabled) {
   }
 }
 
+window.hackPlaySound = (type) => { const isSoundEnabled = localStorage.getItem('hack_sound') !== 'false'; playUiSound(type, isSoundEnabled); };
+
 // --- ПАЛІТРА ДЛЯ КАРТОК (Генератор унікальних кольорів) ---
 function getCardStyle(index, isDark, isBack = false) {
   const gradientsLight = [
@@ -1775,9 +1777,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
       e.preventDefault();
       document.execCommand('insertHTML', false, '<br>\u200B'); 
       handleInput();
-    }
-    if (e.key === 'Backspace') {
-      setTimeout(handleInput, 10);
     }
   };
 
@@ -3803,6 +3802,18 @@ let inlineCounter = -1;
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
           this.style.width = Math.max(this.value.length, 1) + 'ch'; 
+          this.classList.remove('error-flash', 'success-flash', 'solved'); 
+          void this.offsetWidth;
+          
+          if ('${safeCorrect}' !== '') {
+              const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+              const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+              
+              if (studentText !== '' && studentText === correctText) {
+                  this.classList.add('solved', 'success-flash');
+                  if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+              }
+          }
       `.replace(/\n/g, ' ');
 
       return `<input type="text" class="inline-blank-input" data-task-id="${safeTask.id}" data-index="${inlineCounter}" data-correct="${cleanCorrect}" placeholder="..." value="" style="${inlineStyle}" oninput="${updateLogic}" />`;
@@ -4077,27 +4088,20 @@ let inlineCounter = -1;
       border-radius: 8px;
       padding: 4px 10px;
       color: inherit;
-      min-width: 110px;
+      min-width: 30px; /* БУЛО 110px, саме це створювало величезні діри! */
       max-width: 280px;
       font-size: inherit;
       font-family: inherit;
       outline: none;
       transition: all 0.25s ease;
       display: inline-block;
-      vertical-align: middle;
+      vertical-align: baseline;
       margin: 0 4px;
     }
-    .inline-blank-input::placeholder {
-      color: rgba(0, 0, 0, 0.4);
-    }
-    /* Стилізація інпутів у правих бульбашках з білим текстом */
     .msg-right .inline-blank-input {
       background: rgba(255, 255, 255, 0.2);
       border: 1.5px dashed rgba(255, 255, 255, 0.4);
       color: #ffffff;
-    }
-    .msg-right .inline-blank-input::placeholder {
-      color: rgba(255, 255, 255, 0.7);
     }
     .inline-blank-input:focus {
       background: #ffffff !important;
@@ -4105,24 +4109,39 @@ let inlineCounter = -1;
       border: 2px solid #E0A345 !important;
       box-shadow: 0 4px 15px rgba(0,0,0,0.15);
     }
-    .inline-blank-input:focus::placeholder {
-      color: #a0aec0 !important;
-    }
     .inline-blank-input.solved {
       background: transparent !important;
       border: none !important;
       color: inherit !important;
       box-shadow: none !important;
-      padding: 2px 2px !important;
-      font-weight: 600;
+      padding: 0 !important;
+      margin: 0 4px !important;
+      min-width: 0 !important;
+      width: auto !important;
+      font-weight: 800;
       cursor: pointer;
     }
-	
-	.inline-blank-input.teacher-mode {
-      background: rgba(56, 161, 105, 0.12) !important;
-      border: 1.5px solid #38A169 !important;
-      color: #276749 !important;
-      font-weight: 600;
+    
+    /* Плавне і повільне мигання при правильній відповіді */
+    @keyframes smoothSuccessPulse {
+      0% { background-color: transparent; color: inherit; }
+      15% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; border-radius: 6px; padding: 2px 6px; }
+      85% { background-color: rgba(56, 161, 105, 0.4); color: #22543D; border-radius: 6px; padding: 2px 6px; }
+      100% { background-color: transparent; color: inherit; padding: 0; }
+    }
+    
+    @keyframes smoothSuccessPulseRight {
+      0% { background-color: transparent; color: inherit; }
+      15% { background-color: rgba(255, 255, 255, 0.9); color: #22543D; border-radius: 6px; padding: 2px 6px; }
+      85% { background-color: rgba(255, 255, 255, 0.9); color: #22543D; border-radius: 6px; padding: 2px 6px; }
+      100% { background-color: transparent; color: inherit; padding: 0; }
+    }
+
+    .inline-blank-input.success-flash {
+      animation: smoothSuccessPulse 2.5s ease-in-out forwards !important;
+    }
+    .msg-right .inline-blank-input.success-flash {
+      animation: smoothSuccessPulseRight 2.5s ease-in-out forwards !important;
     }
     `}</style>
   );
@@ -4509,7 +4528,7 @@ let inlineCounter = -1;
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
                 {tasks.map((task, idx) => (
-  <div key={task.id} id={`task-card-${task.id}`} onInput={(e) => handleInlineInput(e, task)} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+  <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     
                     {/* ШАПКА ЗАВДАННЯ */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
