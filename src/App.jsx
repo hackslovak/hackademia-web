@@ -3800,22 +3800,21 @@ html = html.replace(/\.{4,}/g, () => {
 
       let extraClasses = '';
       let extraAttrs = '';
-      const chWidth = Math.max(savedVal.length, 1);
-      let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+      // МАГІЯ 1: Використовуємо 'em' із коефіцієнтом, щоб широкі букви (як 'm') містилися, а вузькі не створювали дір
+      const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
+      let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
       if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
           extraClasses = 'solved';
       }
 
       const stopReact = "event.stopPropagation();";
-      
-      // ОСЬ ЦЕЙ РЯДОК БУВ ВТРАЧЕНИЙ:
       const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
       
       const updateLogic = `
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
-          this.style.width = Math.max(this.value.length, 1) + 'ch'; 
+          this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
           this.classList.remove('error-flash', 'success-flash', 'solved'); 
           void this.offsetWidth;
           
@@ -4111,9 +4110,10 @@ html = html.replace(/\.{4,}/g, () => {
       display: inline-block;
       vertical-align: baseline;
       margin: 0 4px;
+      /* МАГІЯ 2: Сучасні браузери автоматично ідеально облягатимуть текст! */
+      field-sizing: content; 
     }
     
-    /* Відновлено стилі для крапок-плейсхолдерів */
     .inline-blank-input::placeholder {
       color: rgba(0, 0, 0, 0.4);
     }
@@ -4138,10 +4138,10 @@ html = html.replace(/\.{4,}/g, () => {
       border: none !important;
       color: inherit !important;
       box-shadow: none !important;
-      padding: 0 !important;
-      margin: 0 4px !important;
+      /* Робимо внутрішні і зовнішні відступи мінімальними, щоб слово злилося з реченням */
+      padding: 0 2px !important;
+      margin: 0 3px !important;
       min-width: 0 !important;
-      /* Видалено width: auto, тепер працює ідеальне облягання через JS (ch) */
       font-weight: 800;
       cursor: pointer;
     }
