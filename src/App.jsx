@@ -3510,11 +3510,11 @@ blankInputs.forEach((input, index) => {
             input.classList.remove('success-flash', 'error-flash');
 
             if (normStudent !== '' && normCorrect !== '' && normStudent === normCorrect) {
-                // ПРАВИЛЬНО - запускаємо мигання зеленим (success-flash)
+                // ПРАВИЛЬНО - запускаємо мигання
                 input.classList.add('solved', 'success-flash');
-                input.style.setProperty('border-color', '#38A169', 'important');
-                input.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
-                input.style.setProperty('color', '#22543D', 'important')
+                input.style.borderColor = '';
+                input.style.backgroundColor = '';
+                input.style.color = '';
 
                 if (studentVal !== correctVal) {
                     hadDiacriticMistake = true;
@@ -3798,13 +3798,12 @@ let inlineCounter = -1;
 
       let extraClasses = '';
       let extraAttrs = '';
-      const chWidth = Math.max(savedVal.length, 3);
+      // Зробили мінімальну ширину 1 букву, щоб слово щільно прилягало
+      const chWidth = Math.max(savedVal.length, 1);
       let inlineStyle = `width: ${chWidth}ch; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
       if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
           extraClasses = 'solved';
-          // Видалили readonly та pointer-events: none!
-          inlineStyle += 'border-color: #38A169 !important; background-color: rgba(56, 161, 105, 0.1) !important; color: #22543D !important;';
       }
 
       const stopReact = "event.stopPropagation();";
@@ -3813,7 +3812,7 @@ let inlineCounter = -1;
       const updateLogic = `
           localStorage.setItem('${cacheKey}', this.value); 
           this.setAttribute('value', this.value); 
-          this.style.width = Math.max(this.value.length, 3) + 'ch'; 
+          this.style.width = Math.max(this.value.length, 1) + 'ch'; 
           this.classList.remove('error-flash', 'success-flash', 'solved'); 
           this.style.borderColor=''; 
           this.style.backgroundColor='';
@@ -3825,9 +3824,6 @@ let inlineCounter = -1;
               
               if (studentText !== '' && studentText === correctText) {
                   this.classList.add('solved', 'success-flash');
-                  this.style.setProperty('border-color', '#38A169', 'important');
-                  this.style.setProperty('background-color', 'rgba(56, 161, 105, 0.1)', 'important');
-                  this.style.setProperty('color', '#22543D', 'important');
                   try { new Audio('/success.mp3').play(); } catch(e){}
               }
           }

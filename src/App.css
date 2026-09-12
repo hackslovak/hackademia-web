@@ -26,10 +26,30 @@
     /* pointer-events: none; - ВИДАЛЕНО, щоб можна було клікати і стирати текст */
 }
 
+.inline-blank-input.solved {
+    padding: 0 1px !important;
+    margin: 0 4px !important;
+    font-weight: 800 !important;
+    cursor: pointer;
+}
+
+/* Коли анімація закінчується, поле стає повністю прозорим */
+.inline-blank-input.solved:not(.success-flash),
+.msg-right .inline-blank-input.solved:not(.success-flash) {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: inherit !important;
+    box-shadow: none !important;
+}
+
 @keyframes successFlash {
-    0% { transform: scale(1); background-color: rgba(255,255,255,1); }
-    50% { transform: scale(1.1); background-color: rgba(56, 161, 105, 0.4); border-color: #38A169; }
-    100% { transform: scale(1); background-color: rgba(56, 161, 105, 0.1); border-color: #38A169; }
+    0%, 60% { color: #22543D; background-color: rgba(56, 161, 105, 0.4); border-color: #38A169; }
+    30%, 100% { color: inherit; background-color: transparent; border-color: transparent; box-shadow: none; }
+}
+
+@keyframes successFlashRight {
+    0%, 60% { color: #ffffff; background-color: rgba(56, 161, 105, 0.8); border-color: #ffffff; }
+    30%, 100% { color: inherit; background-color: transparent; border-color: transparent; box-shadow: none; }
 }
 
 @keyframes errorFlash {
@@ -42,7 +62,11 @@
 }
 
 .inline-blank-input.success-flash {
-    animation: successFlash 0.6s ease-out forwards;
+    animation: successFlash 1.2s ease-out forwards !important;
+}
+
+.msg-right .inline-blank-input.success-flash {
+    animation: successFlashRight 1.2s ease-out forwards !important;
 }
 
 .inline-blank-input.error-flash {
