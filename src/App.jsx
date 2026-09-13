@@ -3224,6 +3224,36 @@ async function handleAddTask() {
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
   }
+  
+  async function handleEditImageUpload(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const { error: uploadError } = await supabase.storage.from('images').upload(fileName, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('images').getPublicUrl(fileName);
+      const publicUrl = data.publicUrl;
+      
+      // Додаємо нове фото в режим редагування
+      setEditContentMulti(prev => {
+        const next = { ...prev };
+        if (isEditSingleLang) {
+          next[editLang] = (next[editLang] || '') + ((next[editLang] || '') ? '\n\n' : '') + publicUrl;
+        } else {
+          ['uk', 'ru', 'en', 'sk'].forEach(l => {
+            next[l] = (next[l] || '') + ((next[l] || '') ? '\n\n' : '') + publicUrl;
+          });
+        }
+        return next;
+      });
+      
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
+  }
 
   async function handleAudioUpload(e) {
     const file = e.target.files[0];
@@ -4820,13 +4850,22 @@ html = html.replace(/\.{4,}/g, () => {
                                            {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
                                          </button>
                                        </div>
-                                     </div>
-                                   );
-                                 })}
-                               </div>
-                             </div>
-                           );
-                         })()}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      
+                      {/* НОВА КНОПКА ДОДАВАННЯ ЩЕ ОДНОГО ФОТО (РЕДАГУВАННЯ) */}
+                      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                        <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                          ➕ Завантажити ще фото (для іншої мови)
+                          <input type="file" accept="image/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+
+                    </div>
+                  );
+                })()}
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                          <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
@@ -5057,6 +5096,15 @@ html = html.replace(/\.{4,}/g, () => {
                           );
                         })}
                       </div>
+                      
+                      {/* НОВА КНОПКА ДОДАВАННЯ ЩЕ ОДНОГО ФОТО */}
+                      <div style={{ marginTop: '20px', textAlign: 'center' }}>
+                        <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                          ➕ Завантажити ще фото (для іншої мови)
+                          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                        </label>
+                      </div>
+
                     </div>
                   );
                 })()}
