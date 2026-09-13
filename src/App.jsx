@@ -4920,10 +4920,10 @@ html = html.replace(/\.{4,}/g, () => {
                          })()}
                          
                          <div style={{ marginTop: '20px', textAlign: 'center', marginBottom: '15px' }}>
-                           <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                             ➕ Завантажити ще файл (для іншої мови)
-                             <input type="file" accept="image/*,video/*,audio/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
-                           </label>
+                           <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', color: theme.textSecondary }}>
+  📎 Завантажити ще медіа (для іншої мови)
+  <input type="file" accept="image/*,video/*,audio/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
+</label>
                          </div>
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
@@ -5212,10 +5212,10 @@ html = html.replace(/\.{4,}/g, () => {
                       <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
                     </label>
 
-                    <label className="hover-card" style={{ background: theme.inputBg, padding: '14px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', color: theme.text, display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                      📷 Завантажити фото
-                      <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
-                    </label>
+                    <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', color: theme.textSecondary }}>
+  📎 Завантажити медіа
+  <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+</label>
                     
                     <button className="hover-card" onClick={isRecording ? stopRecording : startRecording} style={{ background: isRecording ? '#E53E3E' : theme.inputBg, color: isRecording ? '#fff' : theme.text, border: 'none', padding: '14px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
                       {isRecording ? '⏹ Зупинити запис' : '🎤 Записати голос'}
