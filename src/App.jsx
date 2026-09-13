@@ -993,6 +993,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [activeChatUserId, setActiveChatUserId] = React.useState(showUserList ? null : dbUserId);
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
+  const [isMediaUploading, setIsMediaUploading] = React.useState(false);
   
   // --- СТАНИ ДЛЯ ГОЛОСОВИХ ПОВІДОМЛЕНЬ В ЧАТІ ---
   const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
@@ -3212,10 +3213,17 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+    // ЗАПОБІЖНИК: Перевіряємо розмір (200 МБ = 200 * 1024 * 1024 байт)
+    if (file.size > 200 * 1024 * 1024) {
+      alert("❌ Файл занадто великий! Обмеження Catbox — 200 МБ. Будь ласка, стисніть відео і спробуйте знову.");
+      e.target.value = '';
+      return;
+    }
+
+    setIsMediaUploading(true); // Вмикаємо анімацію завантаження
     try {
       let publicUrl = '';
       
-      // МАРШРУТИЗАЦІЯ: Відео йдуть на безкоштовний Catbox, інше - на Supabase
       if (file.type.startsWith('video/')) {
         publicUrl = await uploadToCatbox(file);
       } else {
@@ -3243,17 +3251,28 @@ async function handleImageUpload(e) {
       });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } catch (err) { alert(`❌ Помилка завантаження файлу: ` + err.message); }
+    } catch (err) { 
+      alert(`❌ Помилка завантаження файлу: ` + err.message); 
+    } finally {
+      setIsMediaUploading(false); // Вимикаємо анімацію завантаження
+      e.target.value = '';
+    }
   }
 
   async function handleEditImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
+    if (file.size > 200 * 1024 * 1024) {
+      alert("❌ Файл занадто великий! Обмеження Catbox — 200 МБ. Будь ласка, стисніть відео і спробуйте знову.");
+      e.target.value = '';
+      return;
+    }
+
+    setIsMediaUploading(true);
     try {
       let publicUrl = '';
       
-      // МАРШРУТИЗАЦІЯ ДЛЯ РЕДАГУВАННЯ
       if (file.type.startsWith('video/')) {
         publicUrl = await uploadToCatbox(file);
       } else {
@@ -3281,7 +3300,12 @@ async function handleImageUpload(e) {
       });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } catch (err) { alert(`❌ Помилка завантаження файлу: ` + err.message); }
+    } catch (err) { 
+      alert(`❌ Помилка завантаження файлу: ` + err.message); 
+    } finally {
+      setIsMediaUploading(false);
+      e.target.value = '';
+    }
   }
 
   async function handleAudioUpload(e) {
@@ -4920,9 +4944,9 @@ html = html.replace(/\.{4,}/g, () => {
                          })()}
                          
                          <div style={{ marginTop: '20px', textAlign: 'center', marginBottom: '15px' }}>
-                           <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', color: theme.textSecondary }}>
-  📎 Завантажити ще медіа (для іншої мови)
-  <input type="file" accept="image/*,video/*,audio/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
+                           <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: isMediaUploading ? 'wait' : 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', opacity: isMediaUploading ? 0.7 : 1, pointerEvents: isMediaUploading ? 'none' : 'auto' }}>
+  {isMediaUploading ? '⏳ Завантажується...' : '➕ Завантажити ще файл (для іншої мови)'}
+  <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
 </label>
                          </div>
                          
@@ -5212,9 +5236,9 @@ html = html.replace(/\.{4,}/g, () => {
                       <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
                     </label>
 
-                    <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', color: theme.textSecondary }}>
-  📎 Завантажити медіа
-  <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                    <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: isMediaUploading ? 'wait' : 'pointer', fontWeight: 'bold', color: theme.textSecondary, opacity: isMediaUploading ? 0.7 : 1, pointerEvents: isMediaUploading ? 'none' : 'auto' }}>
+  {isMediaUploading ? '⏳ Завантажується...' : '📎 Завантажити медіа'}
+  <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
 </label>
                     
                     <button className="hover-card" onClick={isRecording ? stopRecording : startRecording} style={{ background: isRecording ? '#E53E3E' : theme.inputBg, color: isRecording ? '#fff' : theme.text, border: 'none', padding: '14px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
