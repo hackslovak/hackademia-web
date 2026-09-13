@@ -3193,22 +3193,43 @@ async function handleAddTask() {
     }
   }
 
- async function handleImageUpload(e) {
+ // 🚀 Завантаження важких медіа на Catbox (до 200 МБ)
+  async function uploadToCatbox(file) {
+    const formData = new FormData();
+    formData.append('reqtype', 'fileupload');
+    formData.append('fileToUpload', file);
+
+    const response = await fetch('https://catbox.moe/user/api.php', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) throw new Error(`Catbox API Error: ${response.statusText}`);
+    return await response.text(); // Catbox віддає прямий лінк звичайним текстом
+  }
+ 
+async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${fileName}`;
-
-      const { error: uploadError } = await supabase.storage.from('images').upload(filePath, file);
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('images').getPublicUrl(filePath);
-      const publicUrl = data.publicUrl;
+      let publicUrl = '';
       
-      // ЗМІНЕНО: Додаємо у всі мови автоматично (якщо не стоїть галочка "Тільки одна мова")
+      // МАРШРУТИЗАЦІЯ: Відео йдуть на безкоштовний Catbox, інше - на Supabase
+      if (file.type.startsWith('video/')) {
+        publicUrl = await uploadToCatbox(file);
+      } else {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        let bucketName = file.type.startsWith('audio/') ? 'audio' : 'images';
+
+        const { error: uploadError } = await supabase.storage.from(bucketName).upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+        publicUrl = data.publicUrl;
+      }
+      
       setNewTaskContentMulti(prev => {
         const next = { ...prev };
         if (isSingleLang) {
@@ -3222,23 +3243,31 @@ async function handleAddTask() {
       });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
+    } catch (err) { alert(`❌ Помилка завантаження файлу: ` + err.message); }
   }
-  
+
   async function handleEditImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
     try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Date.now()}.${fileExt}`;
-      const { error: uploadError } = await supabase.storage.from('images').upload(fileName, file);
-      if (uploadError) throw uploadError;
-
-      const { data } = supabase.storage.from('images').getPublicUrl(fileName);
-      const publicUrl = data.publicUrl;
+      let publicUrl = '';
       
-      // Додаємо нове фото в режим редагування
+      // МАРШРУТИЗАЦІЯ ДЛЯ РЕДАГУВАННЯ
+      if (file.type.startsWith('video/')) {
+        publicUrl = await uploadToCatbox(file);
+      } else {
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        let bucketName = file.type.startsWith('audio/') ? 'audio' : 'images';
+
+        const { error: uploadError } = await supabase.storage.from(bucketName).upload(fileName, file);
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage.from(bucketName).getPublicUrl(fileName);
+        publicUrl = data.publicUrl;
+      }
+      
       setEditContentMulti(prev => {
         const next = { ...prev };
         if (isEditSingleLang) {
@@ -3252,7 +3281,7 @@ async function handleAddTask() {
       });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
+    } catch (err) { alert(`❌ Помилка завантаження файлу: ` + err.message); }
   }
 
   async function handleAudioUpload(e) {
