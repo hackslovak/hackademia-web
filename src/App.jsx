@@ -1958,6 +1958,7 @@ function Platform() {
   const [tasks, setTasks] = useState([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [isMediaUploading, setIsMediaUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
 
   const [newModuleTitleMulti, setNewModuleTitleMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
   const [moduleSourceLang, setModuleSourceLang] = useState('uk');
@@ -3194,19 +3195,38 @@ async function handleAddTask() {
     }
   }
 
- // 🚀 Завантаження важких медіа на Catbox (до 200 МБ)
-  async function uploadToCatbox(file) {
-    const formData = new FormData();
-    formData.append('reqtype', 'fileupload');
-    formData.append('fileToUpload', file);
+  // 🚀 Завантаження важких медіа на Catbox із ВІДСОТКАМИ PROGRESS BAR
+  function uploadToCatbox(file, onProgress) {
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'https://catbox.moe/user/api.php', true);
 
-    const response = await fetch('https://catbox.moe/user/api.php', {
-      method: 'POST',
-      body: formData,
+      // Трекаємо прогрес відправки
+      xhr.upload.onprogress = (event) => {
+        if (event.lengthComputable) {
+          const percentComplete = Math.round((event.loaded / event.total) * 100);
+          onProgress(percentComplete);
+        }
+      };
+
+      xhr.onload = () => {
+        if (xhr.status === 200) {
+          resolve(xhr.responseText);
+        } else {
+          reject(new Error(`Помилка сервера: ${xhr.statusText}`));
+        }
+      };
+
+      xhr.onerror = () => {
+        reject(new Error('Розрив з\'єднання. Браузер перервав передачу великого файлу.'));
+      };
+
+      const formData = new FormData();
+      formData.append('reqtype', 'fileupload');
+      formData.append('fileToUpload', file);
+
+      xhr.send(formData);
     });
-
-    if (!response.ok) throw new Error(`Catbox API Error: ${response.statusText}`);
-    return await response.text(); // Catbox віддає прямий лінк звичайним текстом
   }
  
 async function handleImageUpload(e) {
@@ -3221,11 +3241,12 @@ async function handleImageUpload(e) {
     }
 
     setIsMediaUploading(true); // Вмикаємо анімацію завантаження
+	setUploadProgress(0);
     try {
       let publicUrl = '';
       
       if (file.type.startsWith('video/')) {
-        publicUrl = await uploadToCatbox(file);
+        publicUrl = await uploadToCatbox(file, setUploadProgress);
       } else {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -3270,11 +3291,12 @@ async function handleImageUpload(e) {
     }
 
     setIsMediaUploading(true);
+	setUploadProgress(0);
     try {
       let publicUrl = '';
       
       if (file.type.startsWith('video/')) {
-        publicUrl = await uploadToCatbox(file);
+        publicUrl = await uploadToCatbox(file, setUploadProgress);
       } else {
         const fileExt = file.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
@@ -4945,7 +4967,7 @@ html = html.replace(/\.{4,}/g, () => {
                          
                          <div style={{ marginTop: '20px', textAlign: 'center', marginBottom: '15px' }}>
                            <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: isMediaUploading ? 'wait' : 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold', opacity: isMediaUploading ? 0.7 : 1, pointerEvents: isMediaUploading ? 'none' : 'auto' }}>
-  {isMediaUploading ? '⏳ Завантажується...' : '➕ Завантажити ще файл (для іншої мови)'}
+  {isMediaUploading ? (uploadProgress > 0 ? `⏳ Завантажено: ${uploadProgress}%` : '⏳ Підготовка...') : '➕ Завантажити ще файл (для іншої мови)'}
   <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
 </label>
                          </div>
@@ -5237,7 +5259,7 @@ html = html.replace(/\.{4,}/g, () => {
                     </label>
 
                     <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', cursor: isMediaUploading ? 'wait' : 'pointer', fontWeight: 'bold', color: theme.textSecondary, opacity: isMediaUploading ? 0.7 : 1, pointerEvents: isMediaUploading ? 'none' : 'auto' }}>
-  {isMediaUploading ? '⏳ Завантажується...' : '📎 Завантажити медіа'}
+  {isMediaUploading ? (uploadProgress > 0 ? `⏳ Завантажено: ${uploadProgress}%` : '⏳ Підготовка...') : '📎 Завантажити медіа'}
   <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
 </label>
                     
