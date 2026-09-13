@@ -3846,8 +3846,7 @@ const parseToElements = (text, prefixKey) => {
                 </a>
             );
         }
-    }
-          } else if (part) {
+    } else if (part) {
             let html = String(part);
 
             // Обробка Markdown-розмітки, кольорів та перетворення 4 крапок на інтерактивний інпут
