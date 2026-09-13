@@ -993,7 +993,6 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [activeChatUserId, setActiveChatUserId] = React.useState(showUserList ? null : dbUserId);
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
-  const [isMediaUploading, setIsMediaUploading] = React.useState(false);
   
   // --- СТАНИ ДЛЯ ГОЛОСОВИХ ПОВІДОМЛЕНЬ В ЧАТІ ---
   const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
@@ -1958,6 +1957,7 @@ function Platform() {
   
   const [tasks, setTasks] = useState([]);
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+  const [isMediaUploading, setIsMediaUploading] = useState(false);
 
   const [newModuleTitleMulti, setNewModuleTitleMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
   const [moduleSourceLang, setModuleSourceLang] = useState('uk');
