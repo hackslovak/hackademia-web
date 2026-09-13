@@ -3193,7 +3193,7 @@ async function handleAddTask() {
     }
   }
 
-  async function handleImageUpload(e) {
+ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -3208,11 +3208,18 @@ async function handleAddTask() {
       const { data } = supabase.storage.from('images').getPublicUrl(filePath);
       const publicUrl = data.publicUrl;
       
-      // ОНОВЛЕНО: додаємо лінк картинки у поточну обрану мову
-      setNewTaskContentMulti(prev => ({
-        ...prev,
-        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
-      }));
+      // ЗМІНЕНО: Додаємо у всі мови автоматично (якщо не стоїть галочка "Тільки одна мова")
+      setNewTaskContentMulti(prev => {
+        const next = { ...prev };
+        if (isSingleLang) {
+          next[sourceLang] = (next[sourceLang] || '') + ((next[sourceLang] || '') ? '\n\n' : '') + publicUrl;
+        } else {
+          ['uk', 'ru', 'en', 'sk'].forEach(l => {
+            next[l] = (next[l] || '') + ((next[l] || '') ? '\n\n' : '') + publicUrl;
+          });
+        }
+        return next;
+      });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } catch (err) { alert("❌ Помилка завантаження фото: " + err.message); }
@@ -3232,11 +3239,17 @@ async function handleAddTask() {
       const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
       
-      // ОНОВЛЕНО: додаємо лінк аудіо у поточну обрану мову
-      setNewTaskContentMulti(prev => ({
-        ...prev,
-        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
-      }));
+      setNewTaskContentMulti(prev => {
+        const next = { ...prev };
+        if (isSingleLang) {
+          next[sourceLang] = (next[sourceLang] || '') + ((next[sourceLang] || '') ? '\n\n' : '') + publicUrl;
+        } else {
+          ['uk', 'ru', 'en', 'sk'].forEach(l => {
+            next[l] = (next[l] || '') + ((next[l] || '') ? '\n\n' : '') + publicUrl;
+          });
+        }
+        return next;
+      });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } catch (err) { alert("❌ Помилка завантаження аудіо: " + err.message); }
@@ -3275,11 +3288,17 @@ async function handleAddTask() {
       const { data } = supabase.storage.from('audio').getPublicUrl(fileName);
       const publicUrl = data.publicUrl;
       
-      // ОНОВЛЕНО: додаємо лінк голосу у поточну обрану мову
-      setNewTaskContentMulti(prev => ({
-        ...prev,
-        [sourceLang]: prev[sourceLang] + (prev[sourceLang] ? '\n' : '') + publicUrl
-      }));
+      setNewTaskContentMulti(prev => {
+        const next = { ...prev };
+        if (isSingleLang) {
+          next[sourceLang] = (next[sourceLang] || '') + ((next[sourceLang] || '') ? '\n\n' : '') + publicUrl;
+        } else {
+          ['uk', 'ru', 'en', 'sk'].forEach(l => {
+            next[l] = (next[l] || '') + ((next[l] || '') ? '\n\n' : '') + publicUrl;
+          });
+        }
+        return next;
+      });
       
       if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
     } catch (err) { alert("❌ Помилка збереження голосового запису: " + err.message); }
@@ -4735,9 +4754,10 @@ html = html.replace(/\.{4,}/g, () => {
 
                         {/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (РЕДАГУВАННЯ) */}
                          {(() => {
-                           const currentTextEdit = editContentMulti[editLang] || '';
-                           const urls = currentTextEdit.match(/(https?:\/\/[^\s]+)/g) || [];
-                           const detectedImagesEdit = urls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
+                           // Шукаємо фото одразу в усіх мовах
+                           const allUrlsEdit = ['uk', 'ru', 'en', 'sk'].flatMap(l => (editContentMulti[l] || '').match(/(https?:\/\/[^\s]+)/g) || []);
+                           const uniqueUrlsEdit = [...new Set(allUrlsEdit)];
+                           const detectedImagesEdit = uniqueUrlsEdit.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
                            
                            if (detectedImagesEdit.length === 0) return null;
                            return (
@@ -4749,14 +4769,47 @@ html = html.replace(/\.{4,}/g, () => {
                                    return (
                                      <div key={i} style={{ position: 'relative', background: theme.cardBg, padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                        
+                                       {/* НОВА ПАНЕЛЬ МОВ ДЛЯ РЕДАГУВАННЯ ФОТО */}
+                                       <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: theme.inputBg, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, flexWrap: 'wrap' }}>
+                                         <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>Показувати учням з інтерфейсом:</span>
+                                         {['uk', 'sk', 'en', 'ru'].map(langKey => {
+                                           const hasImg = (editContentMulti[langKey] || '').includes(imgUrl);
+                                           return (
+                                             <button
+                                               key={langKey}
+                                               onClick={(e) => {
+                                                 e.preventDefault();
+                                                 const text = editContentMulti[langKey] || '';
+                                                 if (hasImg) {
+                                                   setEditContentMulti({...editContentMulti, [langKey]: text.replace(imgUrl, '').trim()});
+                                                 } else {
+                                                   setEditContentMulti({...editContentMulti, [langKey]: text + (text ? '\n\n' : '') + imgUrl});
+                                                 }
+                                               }}
+                                               style={{
+                                                 background: hasImg ? '#38A169' : 'transparent',
+                                                 color: hasImg ? '#fff' : theme.textSecondary,
+                                                 border: `1.5px solid ${hasImg ? '#38A169' : theme.inputBorder}`,
+                                                 padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
+                                               }}
+                                             >
+                                               {hasImg ? '✅ ' : ''}{langKey.toUpperCase()}
+                                             </button>
+                                           );
+                                         })}
+                                       </div>
+
                                        <button 
                                          onClick={(e) => { 
                                            e.preventDefault(); 
-                                           const newText = currentTextEdit.replace(imgUrl, '').trim();
-                                           setEditContentMulti({ ...editContentMulti, [editLang]: newText }); 
+                                           const nextContent = { ...editContentMulti };
+                                           ['uk', 'ru', 'en', 'sk'].forEach(l => {
+                                             nextContent[l] = (nextContent[l] || '').replace(imgUrl, '').trim();
+                                           });
+                                           setEditContentMulti(nextContent); 
                                          }} 
                                          style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}
-                                         title="Видалити фото"
+                                         title="Видалити фото з усіх мов"
                                        >✕</button>
 
                                        <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '700px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />
@@ -4934,9 +4987,10 @@ html = html.replace(/\.{4,}/g, () => {
 
                 {/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (СТВОРЕННЯ) */}
                 {(() => {
-                  const currentTextAdd = newTaskContentMulti[sourceLang] || '';
-                  const urls = currentTextAdd.match(/(https?:\/\/[^\s]+)/g) || [];
-                  const detectedImagesAdd = urls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
+                  // Збираємо ВСІ унікальні фотографії з усіх мов одночасно
+                  const allUrls = ['uk', 'ru', 'en', 'sk'].flatMap(l => (newTaskContentMulti[l] || '').match(/(https?:\/\/[^\s]+)/g) || []);
+                  const uniqueUrls = [...new Set(allUrls)];
+                  const detectedImagesAdd = uniqueUrls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
                   
                   if (detectedImagesAdd.length === 0) return null;
                   return (
@@ -4948,14 +5002,47 @@ html = html.replace(/\.{4,}/g, () => {
                           return (
                             <div key={i} style={{ position: 'relative', background: theme.cardBg, padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                               
+                              {/* НОВА ПАНЕЛЬ МОВ ДЛЯ КОЖНОГО ФОТО */}
+                              <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: theme.inputBg, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>Показувати учням з інтерфейсом:</span>
+                                {['uk', 'sk', 'en', 'ru'].map(langKey => {
+                                  const hasImg = (newTaskContentMulti[langKey] || '').includes(imgUrl);
+                                  return (
+                                    <button
+                                      key={langKey}
+                                      onClick={(e) => {
+                                        e.preventDefault();
+                                        const text = newTaskContentMulti[langKey] || '';
+                                        if (hasImg) {
+                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text.replace(imgUrl, '').trim()});
+                                        } else {
+                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text + (text ? '\n\n' : '') + imgUrl});
+                                        }
+                                      }}
+                                      style={{
+                                        background: hasImg ? '#38A169' : 'transparent',
+                                        color: hasImg ? '#fff' : theme.textSecondary,
+                                        border: `1.5px solid ${hasImg ? '#38A169' : theme.inputBorder}`,
+                                        padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
+                                      }}
+                                    >
+                                      {hasImg ? '✅ ' : ''}{langKey.toUpperCase()}
+                                    </button>
+                                  );
+                                })}
+                              </div>
+
                               <button 
                                 onClick={(e) => { 
                                   e.preventDefault(); 
-                                  const newText = currentTextAdd.replace(imgUrl, '').trim();
-                                  setNewTaskContentMulti({ ...newTaskContentMulti, [sourceLang]: newText }); 
+                                  const nextContent = { ...newTaskContentMulti };
+                                  ['uk', 'ru', 'en', 'sk'].forEach(l => {
+                                    nextContent[l] = (nextContent[l] || '').replace(imgUrl, '').trim();
+                                  });
+                                  setNewTaskContentMulti(nextContent); 
                                 }} 
                                 style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}
-                                title="Видалити фото"
+                                title="Видалити фото з усіх мов"
                               >✕</button>
 
                               <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '700px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />
