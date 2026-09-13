@@ -3815,13 +3815,12 @@ const parseToElements = (text, prefixKey) => {
                   <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen />
                 </div>
               );
-            } else if (part.match(/\.(mp3|wav|ogg|m4a)$/i) || part.includes("/audio/") || part.includes("voice_")) {
-              media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', background: theme.inputBg, padding: '15px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 2px 5px rgba(0,0,0,0.02)' }}>
-                  <p style={{ margin: '0 0 8px 0', fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>🎧 Аудіозапис:</p>
-                  <audio controls style={{ width: '100%' }}><source src={part} type="audio/mpeg" /></audio>
-                </div>
-              );
+            } else if (part.match(/\.(mp4|webm|mov)$/i)) {
+                media.push(
+                  <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
+                    <video controls style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }}><source src={part} /></video>
+                  </div>
+                );
             } else if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
               const cleanUrl = part.replace(/#split\d/g, '');
               media.push(
@@ -4784,46 +4783,57 @@ html = html.replace(/\.{4,}/g, () => {
 
                         {/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (РЕДАГУВАННЯ) */}
                          {(() => {
-                           // Шукаємо фото одразу в усіх мовах
+                           // Шукаємо медіа одразу в усіх мовах
                            const allUrlsEdit = ['uk', 'ru', 'en', 'sk'].flatMap(l => (editContentMulti[l] || '').match(/(https?:\/\/[^\s]+)/g) || []);
                            const uniqueUrlsEdit = [...new Set(allUrlsEdit)];
-                           const detectedImagesEdit = uniqueUrlsEdit.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
+                           const detectedMediaEdit = uniqueUrlsEdit.filter(u => 
+                             u.match(/\.(jpeg|jpg|gif|png|webp|mp4|webm|mov|mp3|wav|ogg|m4a)/i) || 
+                             u.includes("/images/") || u.includes("chat-images") || 
+                             u.includes("/audio/") || u.includes("voice_") ||
+                             u.includes("youtube.com") || u.includes("youtu.be")
+                           );
                            
-                           if (detectedImagesEdit.length === 0) return null;
+                           if (detectedMediaEdit.length === 0) return null;
                            return (
                              <div style={{ marginTop: '10px', padding: '20px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '16px', border: '1px dashed #E0A345', marginBottom: '15px' }}>
-                               <span style={{ display: 'block', fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '15px' }}>🖼 Прикріплені фото:</span>
+                               <span style={{ display: 'block', fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '15px' }}>📎 Прикріплені медіа (фото, відео, аудіо):</span>
                                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                                 {detectedImagesEdit.map((imgUrl, i) => {
-                                   const cleanUrl = imgUrl.replace(/#split\d|#slice/g, '');
+                                 {detectedMediaEdit.map((mediaUrl, i) => {
+                                   const cleanUrl = mediaUrl.replace(/#split\d|#slice/g, '');
+                                   
+                                   const isImage = cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)/i) || cleanUrl.includes("/images/") || cleanUrl.includes("chat-images");
+                                   const isAudio = cleanUrl.match(/\.(mp3|wav|ogg|m4a)/i) || cleanUrl.includes("/audio/") || cleanUrl.includes("voice_");
+                                   const isVideoFile = cleanUrl.match(/\.(mp4|webm|mov)/i);
+                                   const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+
                                    return (
                                      <div key={i} style={{ position: 'relative', background: theme.cardBg, padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                                        
-                                       {/* НОВА ПАНЕЛЬ МОВ ДЛЯ РЕДАГУВАННЯ ФОТО */}
+                                       {/* ПАНЕЛЬ МОВ ДЛЯ РЕДАГУВАННЯ МЕДІА */}
                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: theme.inputBg, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, flexWrap: 'wrap' }}>
                                          <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>Показувати учням з інтерфейсом:</span>
                                          {['uk', 'sk', 'en', 'ru'].map(langKey => {
-                                           const hasImg = (editContentMulti[langKey] || '').includes(imgUrl);
+                                           const hasMedia = (editContentMulti[langKey] || '').includes(mediaUrl);
                                            return (
                                              <button
                                                key={langKey}
                                                onClick={(e) => {
                                                  e.preventDefault();
                                                  const text = editContentMulti[langKey] || '';
-                                                 if (hasImg) {
-                                                   setEditContentMulti({...editContentMulti, [langKey]: text.replace(imgUrl, '').trim()});
+                                                 if (hasMedia) {
+                                                   setEditContentMulti({...editContentMulti, [langKey]: text.replace(mediaUrl, '').trim()});
                                                  } else {
-                                                   setEditContentMulti({...editContentMulti, [langKey]: text + (text ? '\n\n' : '') + imgUrl});
+                                                   setEditContentMulti({...editContentMulti, [langKey]: text + (text ? '\n\n' : '') + mediaUrl});
                                                  }
                                                }}
                                                style={{
-                                                 background: hasImg ? '#38A169' : 'transparent',
-                                                 color: hasImg ? '#fff' : theme.textSecondary,
-                                                 border: `1.5px solid ${hasImg ? '#38A169' : theme.inputBorder}`,
+                                                 background: hasMedia ? '#38A169' : 'transparent',
+                                                 color: hasMedia ? '#fff' : theme.textSecondary,
+                                                 border: `1.5px solid ${hasMedia ? '#38A169' : theme.inputBorder}`,
                                                  padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
                                                }}
                                              >
-                                               {hasImg ? '✅ ' : ''}{langKey.toUpperCase()}
+                                               {hasMedia ? '✅ ' : ''}{langKey.toUpperCase()}
                                              </button>
                                            );
                                          })}
@@ -4834,38 +4844,43 @@ html = html.replace(/\.{4,}/g, () => {
                                            e.preventDefault(); 
                                            const nextContent = { ...editContentMulti };
                                            ['uk', 'ru', 'en', 'sk'].forEach(l => {
-                                             nextContent[l] = (nextContent[l] || '').replace(imgUrl, '').trim();
+                                             nextContent[l] = (nextContent[l] || '').replace(mediaUrl, '').trim();
                                            });
                                            setEditContentMulti(nextContent); 
                                          }} 
                                          style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}
-                                         title="Видалити фото з усіх мов"
+                                         title="Видалити медіа з усіх мов"
                                        >✕</button>
 
-                                       <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '700px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />
+                                       {/* ПРЕВ'Ю МЕДІА */}
+                                       {isImage && <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />}
+                                       {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
+                                       {isAudio && <audio controls src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
+                                       {isVideoFile && <video controls src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
                                        
-                                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
-                                         <button onClick={(e) => { e.preventDefault(); startCrop(imgUrl, editLang, true); }} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати фото</button>
-                                         <button onClick={(e) => { e.preventDefault(); handleOcrFromUrl(cleanUrl, true); }} disabled={isOcrRunning} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #E0A345`, background: 'rgba(224,163,69,0.1)', color: '#E0A345', fontSize: '15px', fontWeight: 'bold', cursor: isOcrRunning ? 'wait' : 'pointer', transition: '0.2s' }}>
-                                           {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
-                                         </button>
-                                       </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      
-                      {/* НОВА КНОПКА ДОДАВАННЯ ЩЕ ОДНОГО ФОТО (РЕДАГУВАННЯ) */}
-                      <div style={{ marginTop: '20px', textAlign: 'center' }}>
-                        <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                          ➕ Завантажити ще фото (для іншої мови)
-                          <input type="file" accept="image/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
-                        </label>
-                      </div>
-
-                    </div>
-                  );
-                })()}
+                                       {/* ІНСТРУМЕНТИ (Тільки для фото) */}
+                                       {isImage && (
+                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
+                                           <button onClick={(e) => { e.preventDefault(); startCrop(mediaUrl, editLang, true); }} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати фото</button>
+                                           <button onClick={(e) => { e.preventDefault(); handleOcrFromUrl(cleanUrl, true); }} disabled={isOcrRunning} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #E0A345`, background: 'rgba(224,163,69,0.1)', color: '#E0A345', fontSize: '15px', fontWeight: 'bold', cursor: isOcrRunning ? 'wait' : 'pointer', transition: '0.2s' }}>
+                                             {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
+                                           </button>
+                                         </div>
+                                       )}
+                                     </div>
+                                   );
+                                 })}
+                               </div>
+                             </div>
+                           );
+                         })()}
+                         
+                         <div style={{ marginTop: '20px', textAlign: 'center', marginBottom: '15px' }}>
+                           <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
+                             ➕ Завантажити ще файл (для іншої мови)
+                             <input type="file" accept="image/*,video/*,audio/*" onChange={handleEditImageUpload} style={{ display: 'none' }} />
+                           </label>
+                         </div>
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                          <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
@@ -5026,46 +5041,57 @@ html = html.replace(/\.{4,}/g, () => {
 
                 {/* ПАНЕЛЬ УПРАВЛІННЯ ФОТО (СТВОРЕННЯ) */}
                 {(() => {
-                  // Збираємо ВСІ унікальні фотографії з усіх мов одночасно
+                  // Збираємо ВСІ унікальні медіа (фото, відео, аудіо, YouTube) з усіх мов
                   const allUrls = ['uk', 'ru', 'en', 'sk'].flatMap(l => (newTaskContentMulti[l] || '').match(/(https?:\/\/[^\s]+)/g) || []);
                   const uniqueUrls = [...new Set(allUrls)];
-                  const detectedImagesAdd = uniqueUrls.filter(u => u.match(/\.(jpeg|jpg|gif|png|webp)/i) || u.includes("/images/") || u.includes("chat-images"));
+                  const detectedMediaAdd = uniqueUrls.filter(u => 
+                    u.match(/\.(jpeg|jpg|gif|png|webp|mp4|webm|mov|mp3|wav|ogg|m4a)/i) || 
+                    u.includes("/images/") || u.includes("chat-images") || 
+                    u.includes("/audio/") || u.includes("voice_") ||
+                    u.includes("youtube.com") || u.includes("youtu.be")
+                  );
                   
-                  if (detectedImagesAdd.length === 0) return null;
+                  if (detectedMediaAdd.length === 0) return null;
                   return (
                     <div style={{ marginTop: '-5px', padding: '20px', background: 'rgba(224, 163, 69, 0.05)', borderRadius: '16px', border: '1px dashed #E0A345', marginBottom: '20px' }}>
-                      <span style={{ display: 'block', fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '15px' }}>🖼 Прикріплені фото:</span>
+                      <span style={{ display: 'block', fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', marginBottom: '15px' }}>📎 Прикріплені медіа (фото, відео, аудіо):</span>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
-                        {detectedImagesAdd.map((imgUrl, i) => {
-                          const cleanUrl = imgUrl.replace(/#split\d|#slice/g, '');
+                        {detectedMediaAdd.map((mediaUrl, i) => {
+                          const cleanUrl = mediaUrl.replace(/#split\d|#slice/g, '');
+                          
+                          const isImage = cleanUrl.match(/\.(jpeg|jpg|gif|png|webp)/i) || cleanUrl.includes("/images/") || cleanUrl.includes("chat-images");
+                          const isAudio = cleanUrl.match(/\.(mp3|wav|ogg|m4a)/i) || cleanUrl.includes("/audio/") || cleanUrl.includes("voice_");
+                          const isVideoFile = cleanUrl.match(/\.(mp4|webm|mov)/i);
+                          const ytMatch = cleanUrl.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+                          
                           return (
                             <div key={i} style={{ position: 'relative', background: theme.cardBg, padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                               
-                              {/* НОВА ПАНЕЛЬ МОВ ДЛЯ КОЖНОГО ФОТО */}
+                              {/* ПАНЕЛЬ МОВ ДЛЯ КОЖНОГО МЕДІА */}
                               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: theme.inputBg, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>Показувати учням з інтерфейсом:</span>
                                 {['uk', 'sk', 'en', 'ru'].map(langKey => {
-                                  const hasImg = (newTaskContentMulti[langKey] || '').includes(imgUrl);
+                                  const hasMedia = (newTaskContentMulti[langKey] || '').includes(mediaUrl);
                                   return (
                                     <button
                                       key={langKey}
                                       onClick={(e) => {
                                         e.preventDefault();
                                         const text = newTaskContentMulti[langKey] || '';
-                                        if (hasImg) {
-                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text.replace(imgUrl, '').trim()});
+                                        if (hasMedia) {
+                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text.replace(mediaUrl, '').trim()});
                                         } else {
-                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text + (text ? '\n\n' : '') + imgUrl});
+                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text + (text ? '\n\n' : '') + mediaUrl});
                                         }
                                       }}
                                       style={{
-                                        background: hasImg ? '#38A169' : 'transparent',
-                                        color: hasImg ? '#fff' : theme.textSecondary,
-                                        border: `1.5px solid ${hasImg ? '#38A169' : theme.inputBorder}`,
+                                        background: hasMedia ? '#38A169' : 'transparent',
+                                        color: hasMedia ? '#fff' : theme.textSecondary,
+                                        border: `1.5px solid ${hasMedia ? '#38A169' : theme.inputBorder}`,
                                         padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s'
                                       }}
                                     >
-                                      {hasImg ? '✅ ' : ''}{langKey.toUpperCase()}
+                                      {hasMedia ? '✅ ' : ''}{langKey.toUpperCase()}
                                     </button>
                                   );
                                 })}
@@ -5076,35 +5102,40 @@ html = html.replace(/\.{4,}/g, () => {
                                   e.preventDefault(); 
                                   const nextContent = { ...newTaskContentMulti };
                                   ['uk', 'ru', 'en', 'sk'].forEach(l => {
-                                    nextContent[l] = (nextContent[l] || '').replace(imgUrl, '').trim();
+                                    nextContent[l] = (nextContent[l] || '').replace(mediaUrl, '').trim();
                                   });
                                   setNewTaskContentMulti(nextContent); 
                                 }} 
                                 style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}
-                                title="Видалити фото з усіх мов"
+                                title="Видалити медіа з усіх мов"
                               >✕</button>
 
-                              <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '700px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />
+                              {/* ПРЕВ'Ю МЕДІА В АДМІНЦІ */}
+                              {isImage && <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />}
+                              {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
+                              {isAudio && <audio controls src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
+                              {isVideoFile && <video controls src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
                               
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
-                                <button onClick={(e) => { e.preventDefault(); startCrop(imgUrl, sourceLang, false); }} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати фото</button>
-                                <button onClick={(e) => { e.preventDefault(); handleOcrFromUrl(cleanUrl, false); }} disabled={isOcrRunning} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #E0A345`, background: 'rgba(224,163,69,0.1)', color: '#E0A345', fontSize: '15px', fontWeight: 'bold', cursor: isOcrRunning ? 'wait' : 'pointer', transition: '0.2s' }}>
-                                  {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
-                                </button>
-                              </div>
+                              {/* ІНСТРУМЕНТИ (Тільки для фото) */}
+                              {isImage && (
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
+                                  <button onClick={(e) => { e.preventDefault(); startCrop(mediaUrl, sourceLang, false); }} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '15px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати фото</button>
+                                  <button onClick={(e) => { e.preventDefault(); handleOcrFromUrl(cleanUrl, false); }} disabled={isOcrRunning} className="hover-card" style={{ flex: 1, padding: '14px', borderRadius: '12px', border: `2px solid #E0A345`, background: 'rgba(224,163,69,0.1)', color: '#E0A345', fontSize: '15px', fontWeight: 'bold', cursor: isOcrRunning ? 'wait' : 'pointer', transition: '0.2s' }}>
+                                    {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           );
                         })}
                       </div>
                       
-                      {/* НОВА КНОПКА ДОДАВАННЯ ЩЕ ОДНОГО ФОТО */}
                       <div style={{ marginTop: '20px', textAlign: 'center' }}>
                         <label className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `2px dashed ${theme.inputBorder}`, padding: '14px 24px', borderRadius: '12px', cursor: 'pointer', fontSize: '14px', display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 'bold' }}>
-                          ➕ Завантажити ще фото (для іншої мови)
-                          <input type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
+                          ➕ Завантажити ще файл (для іншої мови)
+                          <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} />
                         </label>
                       </div>
-
                     </div>
                   );
                 })()}
