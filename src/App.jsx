@@ -3808,29 +3808,45 @@ const parseToElements = (text, prefixKey) => {
         } else {
           flushSlices();
           if (part.match(urlRegex)) {
-            const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-            if (ytMatch && ytMatch[1]) {
-              media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: '12px', background: '#000' }}>
-                  <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', border: 0 }} allowFullScreen />
-                </div>
-              );
-            } else if (part.match(/\.(mp4|webm|mov)$/i)) {
-                media.push(
-                  <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                    <video controls style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }}><source src={part} /></video>
-                  </div>
-                );
-            } else if (part.match(/\.(jpeg|jpg|gif|png|webp)/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
-              const cleanUrl = part.replace(/#split\d/g, '');
-              media.push(
+        const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+        
+        if (ytMatch && ytMatch[1]) {
+            media.push(
                 <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                  <img src={cleanUrl} alt="attachment" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ width: '100%', height: 'auto', borderRadius: '16px', display: 'block', cursor: 'zoom-in', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} onError={(e)=>{e.target.style.display='none'}} />
+                    <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />
                 </div>
-              );
-            } else {
-              texts.push(<a key={`${prefixKey}-${i}`} href={part} target="_blank" rel="noreferrer" style={{ color: '#FF007F' }}>{part}</a>);
-            }
+            );
+        } else if (part.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i) || part.includes("/audio/") || part.includes("voice_")) {
+            // ВІДНОВЛЕНО: Перевірка на аудіо
+            media.push(
+                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', width: '100%' }}>
+                    <audio controls src={part} style={{ width: '100%', outline: 'none' }} />
+                </div>
+            );
+        } else if (part.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
+            // Перевірка на відео
+            media.push(
+                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
+                    <video controls src={part} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />
+                </div>
+            );
+        } else if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
+            // Перевірка на картинки
+            const cleanUrl = part.replace(/#split\d|#slice/g, '');
+            media.push(
+                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', textAlign: 'center' }}>
+                    <img src={cleanUrl} alt="task-img" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '12px', cursor: 'zoom-in', border: '1px solid rgba(0,0,0,0.1)' }} />
+                </div>
+            );
+        } else {
+            // Інші посилання
+            texts.push(
+                <a key={`${prefixKey}-${i}`} href={part} target="_blank" rel="noreferrer" style={{ color: '#E0A345', textDecoration: 'underline' }}>
+                    {part}
+                </a>
+            );
+        }
+    }
           } else if (part) {
             let html = String(part);
 
