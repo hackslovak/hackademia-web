@@ -8,7 +8,6 @@ import SupportChat from './SupportChat';
 export default function Landing() {
     const navigate = useNavigate();
     
-    // --- ЛОГІКА МОВИ ---
     const [lang, setLang] = useState(() => localStorage.getItem('hack_lang') || 'uk');
     const changeLang = (newLang) => {
         setLang(newLang);
@@ -16,7 +15,6 @@ export default function Landing() {
     };
     const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
-    // --- ЛОГІКА ТЕМИ ---
     const [themeMode, setThemeMode] = useState(() => {
         const saved = localStorage.getItem('hack_theme_mode');
         if (saved) return saved;
@@ -32,45 +30,32 @@ export default function Landing() {
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     };
 
-    // ІДЕАЛЬНО ЗБАЛАНСОВАНІ ПАЛІТРИ
+    // ОНОВЛЕНІ ПАЛІТРИ З КОНТРАСТНИМИ ВЕРХНІМИ БЛОКАМИ (HERO)
     const themes = {
         light: {
-            bg: '#F8FAFC',          // М'який білий фон сторінки
-            cardBg: '#FFFFFF',      // Чисто білі картки
-            text: '#0F172A',        // Глибокий синьо-чорний текст
-            textSecondary: '#475569',// Сірий для описів
-            inputBorder: '#E2E8F0', // Світлі рамки карток
-            inactiveText: 'rgba(15, 23, 42, 0.4)',
-            highlightBg: '#0F172A', // Темна кнопка тарифу
-            highlightText: '#FFFFFF',
-            accent: '#FF7B54'       // Фірмовий помаранчевий
+            bg: '#F8FAFC', cardBg: '#FFFFFF', text: '#0F172A', textSecondary: '#475569',
+            inputBorder: '#E2E8F0', inactiveText: 'rgba(15, 23, 42, 0.4)',
+            highlightBg: '#0F172A', highlightText: '#FFFFFF', accent: '#FF7B54',
+            // Контрастний верх
+            heroBg: '#062440', heroText: '#FFFFFF', heroInactive: 'rgba(255,255,255,0.5)'
         },
         dark: {
-            bg: '#0F172A',          // Глибокий темний фон сторінки
-            cardBg: '#1E293B',      // Трохи світліші темні картки
-            text: '#F8FAFC',        // Майже білий текст
-            textSecondary: '#94A3B8',// Світло-сірий для описів
-            inputBorder: '#334155', // Темні рамки
-            inactiveText: 'rgba(248, 250, 252, 0.4)',
-            highlightBg: '#E0A345', // Золота кнопка тарифу
-            highlightText: '#0F172A',
-            accent: '#FF7B54'
+            bg: '#0F172A', cardBg: '#1E293B', text: '#F8FAFC', textSecondary: '#94A3B8',
+            inputBorder: '#334155', inactiveText: 'rgba(248, 250, 252, 0.4)',
+            highlightBg: '#E0A345', highlightText: '#0F172A', accent: '#FF7B54',
+            // Контрастний верх
+            heroBg: '#080C16', heroText: '#F8FAFC', heroInactive: 'rgba(248, 250, 252, 0.4)'
         },
         warm: {
-            bg: '#FDF6E3',          // Колір вершків
-            cardBg: '#FFFBF5',      // Світліші теплі картки
-            text: '#4A3B32',        // Темно-коричневий текст (кава)
-            textSecondary: '#857163',// М'який коричневий для описів
-            inputBorder: '#E6D5C3', // Теплі рамки
-            inactiveText: 'rgba(74, 59, 50, 0.4)',
-            highlightBg: '#D4A373', // Колір капучино для кнопки
-            highlightText: '#FFFFFF',
-            accent: '#D4A373'
+            bg: '#FDF6E3', cardBg: '#FFFBF5', text: '#4A3B32', textSecondary: '#857163',
+            inputBorder: '#E6D5C3', inactiveText: 'rgba(74, 59, 50, 0.4)',
+            highlightBg: '#D4A373', highlightText: '#FFFFFF', accent: '#D4A373',
+            // Контрастний верх (колір кави)
+            heroBg: '#3E2A1E', heroText: '#FFFBF5', heroInactive: 'rgba(255, 251, 245, 0.5)'
         }
     };
     const theme = themes[themeMode];
 
-    // --- ЛОГІКА АВТОРИЗАЦІЇ ---
     const isAuth = localStorage.getItem('hack_auth_cache') === 'approved';
     
     const handleLogout = async () => {
@@ -85,25 +70,40 @@ export default function Landing() {
 
     return (
         <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, transition: 'background-color 0.3s ease, color 0.3s ease' }}>
-            {/* МАГІЯ CSS: Жорстко прив'язуємо кольори теми до всіх елементів */}
             <style>{`
+                .landing-body { overflow-x: hidden; }
+                
+                /* ========================================= */
+                /* ШАПКА ТА ГОЛОВНИЙ ЕКРАН (ТЕМНИЙ ФОН)      */
+                /* ========================================= */
                 .landing-body header { 
-                    background-color: ${theme.cardBg}; 
-                    border-bottom: 1px solid ${theme.inputBorder}; 
-                    box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+                    background-color: ${theme.heroBg} !important; 
+                    border-bottom: 1px solid rgba(255,255,255,0.05); 
+                    box-shadow: 0 4px 30px rgba(0,0,0,0.15);
                     position: sticky; 
                     top: 0; 
                     z-index: 1000;
                     padding: 15px 40px !important;
+                    transition: background-color 0.3s ease;
                 }
-                .landing-body .hero { background-color: ${theme.bg}; }
+                .landing-body .hero { background-color: ${theme.heroBg} !important; transition: background-color 0.3s ease; }
+                
+                header .logo, header .logo span { color: ${theme.heroText} !important; text-decoration: none; }
+                header .logo span span { color: ${theme.accent} !important; }
+                
+                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.heroText} !important; }
+                .hero p { color: ${theme.heroInactive} !important; }
+                .hero__label { color: ${theme.accent} !important; }
+                
+                /* ========================================= */
+                /* ВСЕ ІНШЕ (СВІТЛЕ/ТЕМНЕ/ЗАТИШНЕ)           */
+                /* ========================================= */
                 .landing-body footer { background-color: ${theme.cardBg}; border-top: 1px solid ${theme.inputBorder}; }
                 
-                header .logo span, .hero h1, .section-title, .about-card h3, .price-card h3, .extra-box h4, .price, footer h3 { color: ${theme.text} !important; }
-                .hero p, .hero__label, .about-card p, .price-card ul li, .extra-box li, .extra-box p, .price span, footer p { color: ${theme.textSecondary} !important; }
+                .section-title, .about-card h3, .price-card h3, .extra-box h4, .price, footer h3 { color: ${theme.text} !important; }
+                .about-card p, .price-card ul li, .extra-box li, .extra-box p, .price span, footer p { color: ${theme.textSecondary} !important; }
                 
                 .section-title span { color: ${theme.accent} !important; }
-                header .logo span span { color: ${theme.accent} !important; }
                 
                 .about-card, .price-card, .extra-box { 
                     background-color: ${theme.cardBg} !important; 
@@ -122,7 +122,7 @@ export default function Landing() {
 
                 @media (max-width: 768px) {
                     .landing-body { padding: 0 10px; }
-                    header { padding: 15px 20px !important; flex-wrap: wrap; gap: 15px;}
+                    .landing-body header { padding: 15px 20px !important; flex-wrap: wrap; gap: 15px;}
                     .hero { padding: 40px 15px !important; }
                     .container { padding: 30px 15px !important; }
                     .about-grid, .pricing-grid { grid-template-columns: 1fr !important; }
@@ -130,8 +130,8 @@ export default function Landing() {
                 }
             `}</style>
 
-            <header>
-                <a href="#" className="logo">
+            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <a href="#" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '20px' }}>
                     <img src="/logo-main.svg" alt="Hackademia Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
@@ -153,7 +153,7 @@ export default function Landing() {
                                 onClick={() => changeLang(l)} 
                                 style={{ 
                                     cursor: 'pointer', 
-                                    color: lang === l ? theme.accent : theme.inactiveText, 
+                                    color: lang === l ? theme.accent : theme.heroInactive, 
                                     fontSize: '13px', 
                                     fontWeight: lang === l ? '900' : 'bold',
                                     transition: 'color 0.2s'
@@ -165,11 +165,11 @@ export default function Landing() {
                     </div>
 
                     {isAuth && (
-                        <div style={{ fontSize: '12px', color: theme.inactiveText, display: 'flex', gap: '5px', fontWeight: 'bold' }}>
+                        <div style={{ fontSize: '12px', color: theme.heroInactive, display: 'flex', gap: '5px', fontWeight: 'bold' }}>
                             <span>{t('loggedIn')}</span>
                             <span 
                                 onClick={handleLogout} 
-                                style={{ color: theme.text, cursor: 'pointer', borderBottom: `1px solid ${theme.inactiveText}`, paddingBottom: '1px' }}
+                                style={{ color: theme.heroText, cursor: 'pointer', borderBottom: `1px solid ${theme.heroInactive}`, paddingBottom: '1px' }}
                             >
                                 {t('logout')}
                             </span>
@@ -324,7 +324,6 @@ export default function Landing() {
                 <p style={{ marginTop: '40px', fontSize: '0.85rem', opacity: 0.6 }}>{t('footerRights')}</p>
             </footer>
             
-        {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
       <SupportChat />
     </div>
   );
