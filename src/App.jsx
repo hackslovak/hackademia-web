@@ -3246,16 +3246,6 @@ useEffect(() => {
   }
 
 
-  // Функції перемикання теми та звуку
-  const toggleTheme = () => {
-    const newTheme = !isDarkMode;
-    setIsDarkMode(newTheme);
-    localStorage.setItem('hack_theme', newTheme ? 'dark' : 'light');
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
-    }
-  };
-
   const toggleSound = () => {
     const newSound = !isSoundEnabled;
     setIsSoundEnabled(newSound);
