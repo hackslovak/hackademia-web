@@ -5632,6 +5632,7 @@ html = html.replace(/\.{4,}/g, () => {
     );
   }
 
+
   // ЕКРАН 2: Список Модулів вибраного курсу (Дизайн Visual 360)
   if (selectedCourse && !activeModule) {
     return (
