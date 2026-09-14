@@ -2124,6 +2124,7 @@ function Platform() {
     }
   };
   const theme = themes[themeMode];
+  const isDarkMode = themeMode === 'dark'; // <--- ДОДАЙ ЦЕЙ РЯДОК
 
   // --- ФУНКЦІЯ ВИХОДУ ---
   const handleLogout = async () => {
@@ -2847,7 +2848,7 @@ useEffect(() => {
       if (tg) {
         tg.ready();
         tg.expand();
-        if (tg.colorScheme === 'dark') setIsDarkMode(true);
+        if (tg.colorScheme === 'dark') setThemeMode('dark');
       }
 
       // =========================================================
