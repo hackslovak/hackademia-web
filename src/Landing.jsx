@@ -91,10 +91,10 @@ export default function Landing() {
                 header .logo span span { color: ${theme.accent} !important; }
                 header .logo .collab-text { 
                     display: block;
-                    font-size: 11px !important; 
-                    color: ${theme.heroInactive} !important; 
+                    font-size: 13px !important; /* Зробили трохи більшим (було 11px) */
+                    color: ${theme.heroText} !important; /* Тепер колір ідентичний до слова HACK */
                     letter-spacing: 1.5px !important; 
-                    margin-top: 3px !important; 
+                    margin-top: 2px !important; 
                     font-weight: 800 !important;
                 }
 				
