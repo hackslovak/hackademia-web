@@ -87,7 +87,15 @@ export default function Landing() {
         <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, transition: 'background-color 0.3s ease, color 0.3s ease' }}>
             {/* МАГІЯ CSS: Жорстко прив'язуємо кольори теми до всіх елементів */}
             <style>{`
-                .landing-body header { background-color: ${theme.bg}; border-bottom: 1px solid ${theme.inputBorder}; }
+                .landing-body header { 
+                    background-color: ${theme.cardBg}; 
+                    border-bottom: 1px solid ${theme.inputBorder}; 
+                    box-shadow: 0 4px 30px rgba(0,0,0,0.08);
+                    position: sticky; 
+                    top: 0; 
+                    z-index: 1000;
+                    padding: 15px 40px !important;
+                }
                 .landing-body .hero { background-color: ${theme.bg}; }
                 .landing-body footer { background-color: ${theme.cardBg}; border-top: 1px solid ${theme.inputBorder}; }
                 
