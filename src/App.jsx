@@ -1002,6 +1002,9 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
   const [recordedVoiceUrl, setRecordedVoiceUrl] = React.useState(null);
 
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
+  const [editingUser, setEditingUser] = React.useState(null);
+  const [editFormData, setEditFormData] = React.useState({});
+  
   const [editUserCourses, setEditUserCourses] = React.useState([]);
 
   // Функція швидкої видачі доступу до курсу
