@@ -982,7 +982,7 @@ function speakSlovak(text) {
 }
 
 // --- КОМПОНЕНТ ВНУТРІШНЬОГО ЧАТУ (СПРИНТ 3: МАЛЮВАННЯ НА ФОТО + CANVAS) ---
-function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
+function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack }) {
   const isTeacher = userProfile?.role === 'teacher';
   const showUserList = isAdmin || isTeacher;
 
@@ -1002,7 +1002,25 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   const [recordedVoiceUrl, setRecordedVoiceUrl] = React.useState(null);
 
   const [fullscreenImg, setFullscreenImg] = React.useState(null);
-  const [editingUser, setEditingUser] = React.useState(null);
+  const [editUserCourses, setEditUserCourses] = React.useState([]);
+
+  // Функція швидкої видачі доступу до курсу
+  const handleToggleCourse = async (courseId) => {
+    const tgId = editingUser.telegram_id;
+    if (!tgId) return alert("❌ У цього користувача немає Telegram ID");
+
+    const hasAccess = editUserCourses.includes(courseId);
+    try {
+      if (hasAccess) {
+        await supabase.from('user_courses').delete().match({ user_telegram_id: tgId, course_id: courseId });
+        setEditUserCourses(editUserCourses.filter(id => id !== courseId));
+      } else {
+        await supabase.from('user_courses').upsert({ user_telegram_id: tgId, course_id: courseId }, { onConflict: 'user_telegram_id, course_id' });
+        setEditUserCourses([...editUserCourses, courseId]);
+      }
+    } catch (err) { alert("Помилка: " + err.message); }
+  };
+  
   const [editFormData, setEditFormData] = React.useState({});
   
   const [replyingTo, setReplyingTo] = React.useState(null);
@@ -1047,7 +1065,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
 
   const fetchUsers = async () => {
     if (!showUserList) return;
-    let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id');
+    let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id, created_at, last_message_at');
     if (isTeacher && !isAdmin) {
       const safeGroup = userProfile?.group_id || 'no-group';
       query = query.or(`group_id.eq.${safeGroup},role.eq.admin`);
@@ -1087,6 +1105,10 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
     const newMsg = { user_id: activeChatUserId, sender_id: dbUserId, text: textToSend.trim(), is_read: false, reply_to_id: replyingTo ? replyingTo.id : null };
     setReplyingTo(null);
     await supabase.from('messages').insert([newMsg]);
+    
+    // ОНОВЛЮЄМО ЧАС ДЛЯ СОРТУВАННЯ
+    await supabase.from('users').update({ last_message_at: new Date().toISOString() }).eq('id', activeChatUserId);
+    
     fetchMessages(); setTimeout(scrollToBottom, 100);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
   };
@@ -1355,11 +1377,11 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
   };
 
   const handleSelectUser = (userId) => { setActiveChatUserId(userId); setUnreadPerUser(prev => ({ ...prev, [userId]: 0 })); };
-  const sortedUsers = [...chatUsers].sort((a, b) => (unreadPerUser[b.id] ? 1 : 0) - (unreadPerUser[a.id] ? 1 : 0));
-  const filteredUsers = sortedUsers.filter(u => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase().includes(q);
+  // Сортуємо як у месенджерах: найновіші повідомлення або нові реєстрації завжди зверху
+  const sortedUsers = [...chatUsers].sort((a, b) => {
+    const timeA = new Date(a.last_message_at || a.created_at || 0).getTime();
+    const timeB = new Date(b.last_message_at || b.created_at || 0).getTime();
+    return timeB - timeA;
   });
 
   return (
@@ -1508,7 +1530,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, onBack }) {
                         </div>
                         <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || `TG: ${u.telegram_id}`}</div>
                       </div>
-                      {isAdmin && ( <button onClick={(e) => { e.stopPropagation(); setEditFormData(u); setEditingUser(u); }} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px' }}>⋮</button> )}
+                      {isAdmin && ( <button onClick={async (e) => { 
+    e.stopPropagation(); 
+    setEditFormData(u); 
+    setEditingUser(u); 
+    // Підвантажуємо курси юзера при відкритті вікна
+    if (u.telegram_id) {
+       const { data } = await supabase.from('user_courses').select('course_id').eq('user_telegram_id', u.telegram_id);
+       if (data) setEditUserCourses(data.map(d => d.course_id));
+    }
+}} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '18px', cursor: 'pointer', padding: '0 5px', fontWeight: 'bold' }}>⋮</button> )}
                       {unreadPerUser[u.id] > 0 && <div style={{ position: 'absolute', top: '15px', right: '15px', background: '#E0A345', color: 'white', fontSize: '11px', fontWeight: 'bold', padding: '2px 6px', borderRadius: '12px', boxShadow: '0 2px 4px rgba(224,163,69,0.3)' }}>{unreadPerUser[u.id]}</div>}
                     </div>
                   );
@@ -5629,7 +5660,8 @@ html = html.replace(/\.{4,}/g, () => {
           isAdmin={effectiveIsAdmin} 
 		  userProfile={userProfile} // ДОДАЛИ ЦЕЙ РЯДОК
           theme={theme} 
-          t={t} 
+          t={t}
+          courses={courses} /* <--- ДОДАЙ ЦЕЙ РЯДОК */		  
           onBack={() => setGlobalView(null)} 
         />
       </div>
