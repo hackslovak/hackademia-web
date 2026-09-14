@@ -1067,6 +1067,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
 
   const fetchUsers = async () => {
     if (!showUserList) return;
+    // ДОДАНО created_at ТА last_message_at
     let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id, created_at, last_message_at');
     if (isTeacher && !isAdmin) {
       const safeGroup = userProfile?.group_id || 'no-group';
@@ -1379,18 +1380,18 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
   };
 
   const handleSelectUser = (userId) => { setActiveChatUserId(userId); setUnreadPerUser(prev => ({ ...prev, [userId]: 0 })); };
-  // Сортуємо як у месенджерах: найновіші повідомлення або нові реєстрації завжди зверху
+  // Сортуємо: спочатку НЕПРОЧИТАНІ, потім НАЙНОВІШІ дії
   const sortedUsers = [...chatUsers].sort((a, b) => {
+    const unreadA = unreadPerUser[a.id] ? 1 : 0;
+    const unreadB = unreadPerUser[b.id] ? 1 : 0;
+    
+    // Якщо в одного є непрочитані, а в іншого ні - непрочитаний йде вгору
+    if (unreadB !== unreadA) return unreadB - unreadA;
+
+    // Якщо статус прочитаності однаковий - сортуємо за часом
     const timeA = new Date(a.last_message_at || a.created_at || 0).getTime();
     const timeB = new Date(b.last_message_at || b.created_at || 0).getTime();
     return timeB - timeA;
-  });
-
-  // Фільтруємо список для пошуку
-  const filteredUsers = sortedUsers.filter(u => {
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase().includes(q);
   });
 
   return (
@@ -1491,7 +1492,28 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
               </div>
               <input type="email" placeholder="Email" value={editFormData.email || ''} onChange={e => setEditFormData({...editFormData, email: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
               <input type="number" placeholder="Telegram ID" value={editFormData.telegram_id || ''} onChange={e => setEditFormData({...editFormData, telegram_id: e.target.value})} style={{ padding: '12px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text }} />
-              <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+              {/* БЛОК ШВИДКОЇ ВИДАЧІ ДОСТУПІВ ДО КУРСІВ */}
+              <div style={{ marginTop: '15px', background: 'rgba(0,0,0,0.02)', padding: '15px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
+                <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: theme.textSecondary }}>📚 Доступи до курсів:</h4>
+                {courses && courses.length > 0 ? courses.map(course => {
+                  const isChecked = editUserCourses.includes(course.id);
+                  return (
+                    <label key={course.id} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '14px', color: theme.text, cursor: 'pointer', marginBottom: '10px', lineHeight: '1.3' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={isChecked} 
+                        onChange={() => handleToggleCourse(course.id)} 
+                        style={{ cursor: 'pointer', accentColor: '#38A169', width: '18px', height: '18px', flexShrink: 0 }} 
+                      />
+                      <span style={{ fontWeight: isChecked ? 'bold' : 'normal', color: isChecked ? '#2E7D32' : 'inherit' }}>
+                        {course.title}
+                      </span>
+                    </label>
+                  );
+                }) : <span style={{ fontSize: '13px', color: theme.textSecondary }}>Немає створених курсів.</span>}
+              </div>
+			  
+			  <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                 <button type="submit" style={{ flex: 1, background: '#38A169', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Зберегти</button>
                 <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
               </div>
