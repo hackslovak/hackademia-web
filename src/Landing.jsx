@@ -16,11 +16,10 @@ export default function Landing() {
     };
     const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
-    // --- ЛОГІКА ТЕМИ (Синхронізована з App.jsx) ---
+    // --- ЛОГІКА ТЕМИ ---
     const [themeMode, setThemeMode] = useState(() => {
         const saved = localStorage.getItem('hack_theme_mode');
         if (saved) return saved;
-        // Автоматичний нічний режим з 18:00 до 06:00
         const hour = new Date().getHours();
         return (hour < 6 || hour >= 18) ? 'dark' : 'light';
     });
@@ -33,21 +32,40 @@ export default function Landing() {
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     };
 
+    // ІДЕАЛЬНО ЗБАЛАНСОВАНІ ПАЛІТРИ
     const themes = {
         light: {
-            bg: '#f0f4f8', cardBg: 'white', text: '#1a202c', textSecondary: '#4a5568',
-            inputBorder: '#e2e8f0', inactiveText: 'rgba(0,0,0,0.4)',
-            highlightBg: '#062440', highlightText: '#fff'
+            bg: '#F8FAFC',          // М'який білий фон сторінки
+            cardBg: '#FFFFFF',      // Чисто білі картки
+            text: '#0F172A',        // Глибокий синьо-чорний текст
+            textSecondary: '#475569',// Сірий для описів
+            inputBorder: '#E2E8F0', // Світлі рамки карток
+            inactiveText: 'rgba(15, 23, 42, 0.4)',
+            highlightBg: '#0F172A', // Темна кнопка тарифу
+            highlightText: '#FFFFFF',
+            accent: '#FF7B54'       // Фірмовий помаранчевий
         },
         dark: {
-            bg: '#1a202c', cardBg: '#2d3748', text: '#f7fafc', textSecondary: '#a0aec0',
-            inputBorder: '#4a5568', inactiveText: 'rgba(255,255,255,0.4)',
-            highlightBg: '#E0A345', highlightText: '#1a202c'
+            bg: '#0F172A',          // Глибокий темний фон сторінки
+            cardBg: '#1E293B',      // Трохи світліші темні картки
+            text: '#F8FAFC',        // Майже білий текст
+            textSecondary: '#94A3B8',// Світло-сірий для описів
+            inputBorder: '#334155', // Темні рамки
+            inactiveText: 'rgba(248, 250, 252, 0.4)',
+            highlightBg: '#E0A345', // Золота кнопка тарифу
+            highlightText: '#0F172A',
+            accent: '#FF7B54'
         },
         warm: {
-            bg: '#FFF8F0', cardBg: '#FFE8D6', text: '#5C4033', textSecondary: '#8B7D6B',
-            inputBorder: '#E0A345', inactiveText: 'rgba(92, 64, 51, 0.4)',
-            highlightBg: '#E29578', highlightText: '#fff'
+            bg: '#FDF6E3',          // Колір вершків
+            cardBg: '#FFFBF5',      // Світліші теплі картки
+            text: '#4A3B32',        // Темно-коричневий текст (кава)
+            textSecondary: '#857163',// М'який коричневий для описів
+            inputBorder: '#E6D5C3', // Теплі рамки
+            inactiveText: 'rgba(74, 59, 50, 0.4)',
+            highlightBg: '#D4A373', // Колір капучино для кнопки
+            highlightText: '#FFFFFF',
+            accent: '#D4A373'
         }
     };
     const theme = themes[themeMode];
@@ -63,39 +81,31 @@ export default function Landing() {
         }
     };
 
-    // Виклик глобальної події для відкриття нового чату підтримки
     const openSupportWidget = () => window.dispatchEvent(new CustomEvent('openSupportChat'));
 
     return (
-        <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', transition: 'all 0.3s ease' }}>
+        <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, transition: 'background-color 0.3s ease, color 0.3s ease' }}>
+            {/* МАГІЯ CSS: Жорстко прив'язуємо кольори теми до всіх елементів */}
             <style>{`
-                .landing-body { overflow-x: hidden; }
+                .landing-body header { background-color: ${theme.bg}; border-bottom: 1px solid ${theme.inputBorder}; }
+                .landing-body .hero { background-color: ${theme.bg}; }
+                .landing-body footer { background-color: ${theme.cardBg}; border-top: 1px solid ${theme.inputBorder}; }
                 
-                /* ЖОРСТКЕ ПЕРЕВИЗНАЧЕННЯ КОЛЬОРІВ ТЕКСТУ */
-                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.text} !important; }
-                .hero p, .hero__label { color: ${theme.textSecondary} !important; }
-                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; color: ${theme.text} !important; }
-                .section-title span { color: #E0A345 !important; }
+                header .logo span, .hero h1, .section-title, .about-card h3, .price-card h3, .extra-box h4, .price, footer h3 { color: ${theme.text} !important; }
+                .hero p, .hero__label, .about-card p, .price-card ul li, .extra-box li, .extra-box p, .price span, footer p { color: ${theme.textSecondary} !important; }
                 
-                /* Адаптація карток до теми */
-                .about-card, .price-card { background: ${theme.cardBg} !important; border: 1px solid ${theme.inputBorder} !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s; }
-                .about-card h3, .price-card h3 { color: ${theme.text} !important; }
-                .about-card p, .price-card p { color: ${theme.textSecondary} !important; }
-                .price-card ul li { color: ${theme.text} !important; }
-                .price-card .price { color: ${theme.text} !important; }
-                .price-card .price span { color: ${theme.textSecondary} !important; }
+                .section-title span { color: ${theme.accent} !important; }
+                header .logo span span { color: ${theme.accent} !important; }
                 
-                .extra-box { background: ${theme.cardBg} !important; border: 1px solid ${theme.inputBorder} !important; }
-                .extra-box h4 { color: ${theme.text} !important; }
-                .extra-box li, .extra-box p { color: ${theme.textSecondary} !important; }
+                .about-card, .price-card, .extra-box { 
+                    background-color: ${theme.cardBg} !important; 
+                    border: 1px solid ${theme.inputBorder} !important; 
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.03); 
+                }
                 
-                header .logo { color: ${theme.text} !important; text-decoration: none; }
-                header .logo span { color: ${theme.text} !important; }
-                header .logo span span { color: #E0A345 !important; }
-                
-                footer h3, footer p { color: ${theme.textSecondary} !important; }
+                .price-card ul li b { color: ${theme.text} !important; font-weight: 900; }
+                .price-card.highlight { border-color: ${theme.accent} !important; box-shadow: 0 15px 35px ${theme.accent}33; }
 
-                /* НОВА АНІМАЦІЯ ДЛЯ КНОПКИ */
                 @keyframes pulseCTA {
                     0% { transform: scale(1); box-shadow: 0 15px 35px rgba(255,123,84,0.4); }
                     50% { transform: scale(1.03); box-shadow: 0 20px 45px rgba(255,123,84,0.7); }
@@ -112,15 +122,14 @@ export default function Landing() {
                 }
             `}</style>
 
-            <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <a href="#" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '20px' }}>
+            <header>
+                <a href="#" className="logo">
                     <img src="/logo-main.svg" alt="Hackademia Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginLeft: 'auto' }}>
                     
-                    {/* Перемикач тем */}
                     <button 
                         onClick={toggleTheme} 
                         style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', transition: '0.2s', padding: 0 }} 
@@ -129,7 +138,6 @@ export default function Landing() {
                         {themeMode === 'light' ? '☀️' : themeMode === 'dark' ? '🌙' : '☕'}
                     </button>
 
-                    {/* Перемикач мов */}
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {['uk', 'sk', 'en', 'ru'].map(l => (
                             <span 
@@ -137,9 +145,9 @@ export default function Landing() {
                                 onClick={() => changeLang(l)} 
                                 style={{ 
                                     cursor: 'pointer', 
-                                    color: lang === l ? '#E0A345' : theme.inactiveText, 
+                                    color: lang === l ? theme.accent : theme.inactiveText, 
                                     fontSize: '13px', 
-                                    fontWeight: lang === l ? 'bold' : 'normal',
+                                    fontWeight: lang === l ? '900' : 'bold',
                                     transition: 'color 0.2s'
                                 }}
                             >
@@ -148,9 +156,8 @@ export default function Landing() {
                         ))}
                     </div>
 
-                    {/* Кнопка виходу (мінімалістична) */}
                     {isAuth && (
-                        <div style={{ fontSize: '12px', color: theme.inactiveText, display: 'flex', gap: '5px' }}>
+                        <div style={{ fontSize: '12px', color: theme.inactiveText, display: 'flex', gap: '5px', fontWeight: 'bold' }}>
                             <span>{t('loggedIn')}</span>
                             <span 
                                 onClick={handleLogout} 
@@ -235,7 +242,7 @@ export default function Landing() {
                     {/* 2 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge">{t('price2Badge')}</span>
+                            <span className="badge" style={{ background: `${theme.accent}22`, color: theme.accent }}>{t('price2Badge')}</span>
                             <h3>{t('price2Title')}</h3>
                             <p style={{ fontSize: '0.95rem' }}>{t('price2Sub')}</p>
                             <ul>
@@ -271,7 +278,7 @@ export default function Landing() {
                     {/* 4 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge">{t('price4Badge')}</span>
+                            <span className="badge" style={{ background: `${theme.accent}22`, color: theme.accent }}>{t('price4Badge')}</span>
                             <h3>{t('price4Title')}</h3>
                             <p style={{ fontSize: '0.95rem' }}>{t('price4Sub')}</p>
                             <ul>
@@ -289,7 +296,7 @@ export default function Landing() {
 
                 <div className="extra-box">
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800 }}>{t('extraTitle1')}</h4>
+                        <h4>{t('extraTitle1')}</h4>
                         <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi1')}</li>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi2')}</li>
@@ -297,7 +304,7 @@ export default function Landing() {
                         </ul>
                     </div>
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800 }}>{t('extraTitle2')}</h4>
+                        <h4>{t('extraTitle2')}</h4>
                         <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>{t('extraText')}</p>
                     </div>
                 </div>
@@ -306,7 +313,7 @@ export default function Landing() {
             <footer>
                 <h3>HACKADEMIA</h3>
                 <p>{t('footerDesc')}</p>
-                <p style={{ marginTop: '40px', fontSize: '0.85rem' }}>{t('footerRights')}</p>
+                <p style={{ marginTop: '40px', fontSize: '0.85rem', opacity: 0.6 }}>{t('footerRights')}</p>
             </footer>
             
         {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
