@@ -16,33 +16,41 @@ export default function Landing() {
     };
     const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
-    // --- ЛОГІКА ТЕМИ (Автоматична за часом + Ручна) ---
-    const [isDarkMode, setIsDarkMode] = useState(() => {
-        const savedTheme = localStorage.getItem('hack_theme');
-        if (savedTheme) return savedTheme === 'dark'; // Пріоритет збереженому вибору
-        
-        // Якщо вибору немає – автоматичний нічний режим з 18:00 до 06:00
+    // --- ЛОГІКА ТЕМИ (Синхронізована з App.jsx) ---
+    const [themeMode, setThemeMode] = useState(() => {
+        const saved = localStorage.getItem('hack_theme_mode');
+        if (saved) return saved;
+        // Автоматичний нічний режим з 18:00 до 06:00
         const hour = new Date().getHours();
-        return hour < 6 || hour >= 18;
+        return (hour < 6 || hour >= 18) ? 'dark' : 'light';
     });
 
     const toggleTheme = () => {
-        const newTheme = !isDarkMode;
-        setIsDarkMode(newTheme);
-        localStorage.setItem('hack_theme', newTheme ? 'dark' : 'light');
+        const modes = ['light', 'dark', 'warm'];
+        const nextMode = modes[(modes.indexOf(themeMode) + 1) % 3];
+        setThemeMode(nextMode);
+        localStorage.setItem('hack_theme_mode', nextMode);
+        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     };
 
-    // Палітра кольорів підтримує загальний стиль платформи
-    const theme = {
-        bg: isDarkMode ? '#1a202c' : '#f0f4f8',
-        cardBg: isDarkMode ? '#2d3748' : '#ffffff',
-        text: isDarkMode ? '#f7fafc' : '#2D3748',
-        textSecondary: isDarkMode ? '#a0aec0' : '#718096',
-        inputBorder: isDarkMode ? '#718096' : '#e2e8f0',
-        inactiveText: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
-        highlightBg: isDarkMode ? '#062440' : '#EBF3FF',
-        highlightText: isDarkMode ? '#fff' : '#062440'
+    const themes = {
+        light: {
+            bg: '#f0f4f8', cardBg: 'white', text: '#1a202c', textSecondary: '#4a5568',
+            inputBorder: '#e2e8f0', inactiveText: 'rgba(0,0,0,0.4)',
+            highlightBg: '#062440', highlightText: '#fff'
+        },
+        dark: {
+            bg: '#1a202c', cardBg: '#2d3748', text: '#f7fafc', textSecondary: '#a0aec0',
+            inputBorder: '#4a5568', inactiveText: 'rgba(255,255,255,0.4)',
+            highlightBg: '#E0A345', highlightText: '#1a202c'
+        },
+        warm: {
+            bg: '#FFF8F0', cardBg: '#FFE8D6', text: '#5C4033', textSecondary: '#8B7D6B',
+            inputBorder: '#E0A345', inactiveText: 'rgba(92, 64, 51, 0.4)',
+            highlightBg: '#E29578', highlightText: '#fff'
+        }
     };
+    const theme = themes[themeMode];
 
     // --- ЛОГІКА АВТОРИЗАЦІЇ ---
     const isAuth = localStorage.getItem('hack_auth_cache') === 'approved';
@@ -62,9 +70,12 @@ export default function Landing() {
         <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', transition: 'all 0.3s ease' }}>
             <style>{`
                 .landing-body { overflow-x: hidden; }
-                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.text}; }
-                .hero p, .hero__label { color: ${theme.textSecondary}; }
-                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; color: ${theme.text}; }
+                
+                /* ЖОРСТКЕ ПЕРЕВИЗНАЧЕННЯ КОЛЬОРІВ ТЕКСТУ */
+                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.text} !important; }
+                .hero p, .hero__label { color: ${theme.textSecondary} !important; }
+                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; color: ${theme.text} !important; }
+                .section-title span { color: #E0A345 !important; }
                 
                 /* Адаптація карток до теми */
                 .about-card, .price-card { background: ${theme.cardBg} !important; border: 1px solid ${theme.inputBorder} !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s; }
@@ -74,14 +85,15 @@ export default function Landing() {
                 .price-card .price { color: ${theme.text} !important; }
                 .price-card .price span { color: ${theme.textSecondary} !important; }
                 
-                .extra-box h4 { color: ${isDarkMode ? '#E0A345' : '#062440'} !important; }
-                .extra-box li, .extra-box p { color: ${theme.text} !important; }
+                .extra-box { background: ${theme.cardBg} !important; border: 1px solid ${theme.inputBorder} !important; }
+                .extra-box h4 { color: ${theme.text} !important; }
+                .extra-box li, .extra-box p { color: ${theme.textSecondary} !important; }
                 
                 header .logo { color: ${theme.text} !important; text-decoration: none; }
-                header .logo span { color: ${theme.text}; }
-                header .logo span span { color: #E0A345; }
+                header .logo span { color: ${theme.text} !important; }
+                header .logo span span { color: #E0A345 !important; }
                 
-                footer h3, footer p { color: ${theme.textSecondary}; }
+                footer h3, footer p { color: ${theme.textSecondary} !important; }
 
                 /* НОВА АНІМАЦІЯ ДЛЯ КНОПКИ */
                 @keyframes pulseCTA {
@@ -114,7 +126,7 @@ export default function Landing() {
                         style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', transition: '0.2s', padding: 0 }} 
                         className="hover-card"
                     >
-                        {isDarkMode ? '☀️' : '🌙'}
+                        {themeMode === 'light' ? '☀️' : themeMode === 'dark' ? '🌙' : '☕'}
                     </button>
 
                     {/* Перемикач мов */}
@@ -214,7 +226,7 @@ export default function Landing() {
                         </div>
                         <div>
                             <div className="price">35€ <span>{t('priceMonth')}</span></div>
-                            <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: '#062440' }} onClick={() => navigate(isAuth ? '/app' : '/login')}>
+                            <button className="btn" style={{ width: '100%', textAlign: 'center', backgroundColor: theme.highlightBg, color: theme.highlightText, border: 'none' }} onClick={() => navigate(isAuth ? '/app' : '/login')}>
                                 {isAuth ? t('priceBtn1Auth') : t('priceBtn1NoAuth')}
                             </button>
                         </div>
@@ -241,7 +253,7 @@ export default function Landing() {
                     {/* 3 */}
                     <div className="price-card highlight">
                         <div>
-                            <span className="badge" style={{ background: '#062440', color: '#fff' }}>{t('price3Badge')}</span>
+                            <span className="badge" style={{ background: theme.highlightBg, color: theme.highlightText }}>{t('price3Badge')}</span>
                             <h3>{t('price3Title')}</h3>
                             <p style={{ fontSize: '0.95rem' }}>{t('price3Sub')}</p>
                             <ul>
@@ -275,7 +287,7 @@ export default function Landing() {
                     </div>
                 </div>
 
-                <div className="extra-box" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}` }}>
+                <div className="extra-box">
                     <div>
                         <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800 }}>{t('extraTitle1')}</h4>
                         <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
