@@ -1633,7 +1633,9 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
                           {u.role === 'teacher' && <span style={{ background: '#4A90E2', color: '#fff', padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: 'bold' }}>👩‍🏫 Викладач</span>}
                           {badge.show && <span style={{ background: badge.bg, color: badge.text, padding: '2px 6px', borderRadius: '4px', fontSize: '10px', fontWeight: '900', whiteSpace: 'nowrap' }}>{u.group_id}</span>}
                         </div>
-                        <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email || `TG: ${u.telegram_id}`}</div>
+                        <div style={{ color: theme.textSecondary, fontSize: '11px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+  {[u.email, u.telegram_id ? `TG: ${u.telegram_id}` : null].filter(Boolean).join(' | ')}
+</div>
                       </div>
                       {isAdmin && ( <button onClick={async (e) => { 
     e.stopPropagation(); 
@@ -2827,11 +2829,13 @@ useEffect(() => {
         setUserName(emailUser.email.split('@')[0]);
         localStorage.setItem('hack_auth_cache', 'approved');
 
-        let { data: userData } = await supabase
+        let { data: userRecords } = await supabase
           .from('users')
           .select('*')
           .eq('email', emailUser.email)
-          .maybeSingle();
+          .limit(1);
+          
+        let userData = userRecords && userRecords.length > 0 ? userRecords[0] : null;
 
         if (!userData) {
           const fakeTelegramId = Math.floor(Math.random() * 1000000000) + 1000000000;
