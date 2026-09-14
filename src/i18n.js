@@ -33,9 +33,9 @@ export const translations = {
     price3Li1: "24 заняття", price3Li1_2: "(~2.5 місяці)", price3Li2: "2 рази на тиждень по 1.5 год", price3Li3: "Чат із вашим ментором",
     price4Badge: "1 особа або пара", price4Title: "Індивідуально", price4Sub: "Повна персональна адаптація під ваші особисті цілі та графік.",
     price4Li1: "Власний гнучкий графік", price4Li2: "100% уваги викладача", price4Li3: "Записи занять за бажанням",
-    extraTitle1: "✨ Всі формати включають:", extraLi1: "💬 Постоянний чат з особистим ментором", extraLi2: "🎥 Відеозаписи всіх занять", extraLi3: "📚 Авторські капсули та ілюстровані воркбуки",
+    extraTitle1: "✨ Всі формати включають:", extraLi1: "💬 Постійний чат з особистим ментором", extraLi2: "🎥 Відеозаписи всіх занять", extraLi3: "📚 Авторські капсули та ілюстровані воркбуки",
     extraTitle2: "🕊️ Як почати навчання?", extraText: "Ви можете записатися на безкоштовне пробне заняття або отримати доступ до платформи матеріалів. Оплату здійснюєте лише тоді, коли переконаєтеся, що вам усе подобається!",
-    footerDesc: "Сучасна онлайн-школа словацької мови", footerRights: "© 2026 Hackademia. Всі права захищено.",
+    footerDesc: "Сучасна онлайн-школа словацької мови", footerRights: "© 2021-2026 Hackademia.",
     chatAssistant: "Асистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше повідомлення...", chatAlert: "Введіть текст повідомлення!",
     chatGreeting: "Вітаю! 👋 Я ваш віртуальний асистент Hackademia. Напишіть своє питання нижче, і воно миттєво полетить до нашого менеджера в Telegram!",
 
@@ -82,7 +82,7 @@ export const translations = {
     price4Li1: "Vlastný flexibilný rozvrh", price4Li2: "100% pozornosti učiteľa", price4Li3: "Záznamy lekcií na požiadanie",
     extraTitle1: "✨ Všetky formáty zahŕňajú:", extraLi1: "💬 Neustály chat s osobným mentorom", extraLi2: "🎥 Videozáznamy všetkých lekcií", extraLi3: "📚 Autorské kapsuly a ilustrované pracovné zošity",
     extraTitle2: "🕊️ Ako začať študovať?", extraText: "Môžete sa prihlásiť na bezplatnú skúšobnú lekciu alebo získať prístup k platforme materiálov. Platíte len vtedy, keď sa presvedčíte, že sa vám všetko páči!",
-    footerDesc: "Moderná online škola slovenského jazyka", footerRights: "© 2026 Hackademia. Všetky práva vyhradené.",
+    footerDesc: "Moderná online škola slovenského jazyka", footerRights: "© 2021-2026 Hackademia.",
     chatAssistant: "Asistent Hackademia", chatOnline: "Online", chatPlaceholder: "Vaša správa...", chatAlert: "Zadajte text správy!",
     chatGreeting: "Dobrý deň! 👋 Som váš virtuálny asistent Hackademia. Napíšte svoju otázku nižšie a okamžite poletí k nášmu manažérovi na Telegram!",
     
@@ -125,11 +125,11 @@ export const translations = {
     priceTryBtn: "Try for free",
     price3Badge: "Popular", price3Title: "Level B1", price3Sub: "In-depth study for those who already have basic knowledge.",
     price3Li1: "24 lessons", price3Li1_2: "(~2.5 months)", price3Li2: "Twice a week for 1.5 hours", price3Li3: "Chat with your mentor",
-    price4Badge: "1 person or pair", price4Title: "Individually", price4Sub: "Full personal adaptation to your specific goals and schedule.",
+    price4Badge: "1 person or pair", price4Title: "Individuálne", price4Sub: "Full personal adaptation to your specific goals and schedule.",
     price4Li1: "Own flexible schedule", price4Li2: "100% teacher attention", price4Li3: "Lesson recordings on request",
     extraTitle1: "✨ All formats include:", extraLi1: "💬 Constant chat with a personal mentor", extraLi2: "🎥 Video recordings of all lessons", extraLi3: "📚 Author's capsules and illustrated workbooks",
     extraTitle2: "🕊️ How to start studying?", extraText: "You can sign up for a free trial lesson or get access to the materials platform. You only pay when you are sure you like everything!",
-    footerDesc: "Modern online school of the Slovak language", footerRights: "© 2026 Hackademia. All rights reserved.",
+    footerDesc: "Modern online school of the Slovak language", footerRights: "© 2021-2026 Hackademia.",
     chatAssistant: "Hackademia Assistant", chatOnline: "Online", chatPlaceholder: "Your message...", chatAlert: "Please enter a message!",
     chatGreeting: "Hello! 👋 I am your virtual Hackademia assistant. Type your question below and it will instantly fly to our Telegram manager!",
     
@@ -176,7 +176,7 @@ export const translations = {
     price4Li1: "Свой гибкий график", price4Li2: "100% внимания преподавателя", price4Li3: "Записи занятий по желанию",
     extraTitle1: "✨ Все форматы включают:", extraLi1: "💬 Постоянный чат с личным ментором", extraLi2: "🎥 Видеозаписи всех занятий", extraLi3: "📚 Авторские капсулы и иллюстрированные воркбуки",
     extraTitle2: "🕊️ Как начать обучение?", extraText: "Вы можете записаться на бесплатное пробное занятие или получить доступ к платформе материалов. Оплату производите только тогда, когда убедитесь, что вам всё нравится!",
-    footerDesc: "Современная онлайн-школа словацкого языка", footerRights: "© 2026 Hackademia. Все права защищены.",
+    footerDesc: "Современная онлайн-школа словацкого языка", footerRights: "© 2021-2026 Hackademia.",
     chatAssistant: "Ассистент Hackademia", chatOnline: "Онлайн", chatPlaceholder: "Ваше сообщение...", chatAlert: "Введите текст сообщения!",
     chatGreeting: "Привет! 👋 Я ваш виртуальный ассистент Hackademia. Напишите свой вопрос ниже, и он мгновенно полетит к нашему менеджеру в Telegram!",
 
