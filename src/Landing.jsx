@@ -89,7 +89,15 @@ export default function Landing() {
                 
                 header .logo, header .logo span { color: ${theme.heroText} !important; text-decoration: none; }
                 header .logo span span { color: ${theme.accent} !important; }
-                
+                header .logo .collab-text { 
+                    display: block;
+                    font-size: 11px !important; 
+                    color: ${theme.heroInactive} !important; 
+                    letter-spacing: 1.5px !important; 
+                    margin-top: 3px !important; 
+                    font-weight: 800 !important;
+                }
+				
                 .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.heroText} !important; }
                 .hero p { color: ${theme.heroInactive} !important; }
                 .hero__label { color: ${theme.accent} !important; }
@@ -130,9 +138,12 @@ export default function Landing() {
             `}</style>
 
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <a href="#" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '20px' }}>
+                <a href="#" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '12px', fontWeight: 'bold', fontSize: '20px' }}>
                     <img src="/logo-main.svg" alt="Hackademia Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
-                    <span>HACK<span>ADEMIA</span></span>
+                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                        <span style={{ lineHeight: '1' }}>HACK<span>ADEMIA</span></span>
+                        <span className="collab-text">+ slovo.sk</span>
+                    </div>
                 </a>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginLeft: 'auto' }}>
