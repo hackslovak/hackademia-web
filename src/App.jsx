@@ -1394,6 +1394,13 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
     return timeB - timeA;
   });
 
+  // Фільтруємо список для пошуку (щоб не було білого екрану!)
+  const filteredUsers = sortedUsers.filter(u => {
+    if (!searchQuery) return true;
+    const q = searchQuery.toLowerCase();
+    return `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase().includes(q);
+  });
+
   return (
     <div style={{ flex: 1, padding: '40px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', height: '100vh', overflow: 'hidden', position: 'relative' }}>
       
