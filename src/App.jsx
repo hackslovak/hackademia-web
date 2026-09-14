@@ -1024,6 +1024,21 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
     } catch (err) { alert("Помилка: " + err.message); }
   };
   
+  // Функція перенесення користувача в архів / з архіву
+  const handleArchiveUser = async (newStatus) => {
+    if (newStatus === 'archived' && !window.confirm("📦 Точно перенести цього користувача в архів? Він зникне з активних чатів та втратить доступ до платформи.")) return;
+    
+    try {
+      await supabase.from('users').update({ access_status: newStatus }).eq('id', editingUser.id);
+      fetchUsers();
+      setEditingUser(null);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) {
+      alert("Помилка: " + err.message);
+    }
+  };
+  
+  const [showArchive, setShowArchive] = React.useState(false);
   
   const [replyingTo, setReplyingTo] = React.useState(null);
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
@@ -1068,8 +1083,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
   const fetchUsers = async () => {
     if (!showUserList) return;
     // ДОДАНО created_at ТА last_message_at
-    let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id, created_at, last_message_at');
-    if (isTeacher && !isAdmin) {
+    let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id, created_at, last_message_at, access_status');
       const safeGroup = userProfile?.group_id || 'no-group';
       query = query.or(`group_id.eq.${safeGroup},role.eq.admin`);
     }
@@ -1461,8 +1475,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
     return timeB - timeA;
   });
 
-  // Фільтруємо список для пошуку (щоб не було білого екрану!)
+ // Фільтруємо список для пошуку ТА архіву
   const filteredUsers = sortedUsers.filter(u => {
+    // Якщо увімкнено архів - показуємо ТІЛЬКИ архівованих
+    if (showArchive) {
+      if (u.access_status !== 'archived') return false;
+    } else {
+      // Якщо архів вимкнено - ховаємо архівованих з основної стрічки
+      if (u.access_status === 'archived') return false;
+    }
+
     if (!searchQuery) return true;
     const q = searchQuery.toLowerCase();
     return `${u.first_name} ${u.last_name} ${u.email} ${u.telegram_id} ${u.group_id} ${u.role}`.toLowerCase().includes(q);
@@ -1591,6 +1613,21 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
                 <button type="submit" style={{ flex: 1, background: '#38A169', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Зберегти</button>
                 <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
               </div>
+
+              {/* === КНОПКА АРХІВУВАННЯ (ВСТАВЛЯЙ СЮДИ) === */}
+              <div style={{ marginTop: '10px' }}>
+                {editingUser.access_status === 'archived' ? (
+                  <button type="button" onClick={() => handleArchiveUser('approved')} className="hover-card" style={{ width: '100%', background: '#3182ce', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                    🔄 Відновити доступи з архіву
+                  </button>
+                ) : (
+                  <button type="button" onClick={() => handleArchiveUser('archived')} className="hover-card" style={{ width: '100%', background: '#ffebee', color: '#c62828', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
+                    📦 Перенести в архів (Забрати доступ)
+                  </button>
+                )}
+              </div>
+              {/* ========================================= */}
+
             </form>
           </div>
         </div>
@@ -1611,9 +1648,16 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
         {/* БОКОВА ПАНЕЛЬ */}
         {showUserList && (
           <div style={{ width: '320px', borderRight: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', background: theme.inputBg, flexShrink: 0 }}>
-            <div style={{ padding: '20px', fontWeight: '900', color: theme.textSecondary, borderBottom: `1px solid ${theme.inputBorder}` }}>
-              Список {isAdmin ? 'користувачів' : 'учнів'}
-              <input type="text" placeholder="🔍 Пошук..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '100%', marginTop: '12px', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text, fontSize: '13px', boxSizing: 'border-box' }} />
+            <div style={{ padding: '20px', borderBottom: `1px solid ${theme.inputBorder}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontWeight: '900', color: theme.textSecondary, marginBottom: '12px' }}>
+                <span>Список {isAdmin ? 'користувачів' : 'учнів'}</span>
+                {isAdmin && (
+                  <button onClick={() => setShowArchive(!showArchive)} style={{ background: showArchive ? '#E0A345' : theme.inputBg, color: showArchive ? '#fff' : theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '8px', padding: '4px 8px', fontSize: '11px', cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}>
+                    {showArchive ? '🔙 Активні' : '📦 Архів'}
+                  </button>
+                )}
+              </div>
+              <input type="text" placeholder="🔍 Пошук..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} style={{ width: '100%', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}`, background: theme.cardBg, color: theme.text, fontSize: '13px', boxSizing: 'border-box' }} />
             </div>
             <div style={{ overflowY: 'auto', flex: 1 }}>
               {filteredUsers.length === 0 ? (
@@ -1836,6 +1880,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
                      {isUploadingVoice ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>}
                    </button>
                 )}
+				
               </form>
             </>
           )}
