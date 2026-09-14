@@ -1082,8 +1082,8 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
 
   const fetchUsers = async () => {
     if (!showUserList) return;
-    // ДОДАНО created_at ТА last_message_at
     let query = supabase.from('users').select('id, first_name, last_name, avatar_url, email, role, telegram_id, group_id, created_at, last_message_at, access_status');
+    if (isTeacher && !isAdmin) {
       const safeGroup = userProfile?.group_id || 'no-group';
       query = query.or(`group_id.eq.${safeGroup},role.eq.admin`);
     }
