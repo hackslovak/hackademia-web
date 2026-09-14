@@ -30,28 +30,27 @@ export default function Landing() {
         if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
     };
 
-    // ОНОВЛЕНІ ПАЛІТРИ З КОНТРАСТНИМИ ВЕРХНІМИ БЛОКАМИ (HERO)
+    // ОНОВЛЕНІ ПАЛІТРИ З ІДЕАЛЬНИМ КОНТРАСТОМ
     const themes = {
         light: {
             bg: '#F8FAFC', cardBg: '#FFFFFF', text: '#0F172A', textSecondary: '#475569',
             inputBorder: '#E2E8F0', inactiveText: 'rgba(15, 23, 42, 0.4)',
             highlightBg: '#0F172A', highlightText: '#FFFFFF', accent: '#FF7B54',
-            // Контрастний верх
-            heroBg: '#062440', heroText: '#FFFFFF', heroInactive: 'rgba(255,255,255,0.5)'
+            heroBg: '#062440', heroText: '#FFFFFF', heroInactive: 'rgba(255,255,255,0.7)'
         },
         dark: {
             bg: '#0F172A', cardBg: '#1E293B', text: '#F8FAFC', textSecondary: '#94A3B8',
             inputBorder: '#334155', inactiveText: 'rgba(248, 250, 252, 0.4)',
             highlightBg: '#E0A345', highlightText: '#0F172A', accent: '#FF7B54',
-            // Контрастний верх
-            heroBg: '#080C16', heroText: '#F8FAFC', heroInactive: 'rgba(248, 250, 252, 0.4)'
+            heroBg: '#080C16', heroText: '#F8FAFC', heroInactive: 'rgba(248, 250, 252, 0.7)'
         },
         warm: {
             bg: '#FDF6E3', cardBg: '#FFFBF5', text: '#4A3B32', textSecondary: '#857163',
             inputBorder: '#E6D5C3', inactiveText: 'rgba(74, 59, 50, 0.4)',
-            highlightBg: '#D4A373', highlightText: '#FFFFFF', accent: '#D4A373',
-            // Контрастний верх (колір кави)
-            heroBg: '#3E2A1E', heroText: '#FFFBF5', heroInactive: 'rgba(255, 251, 245, 0.5)'
+            highlightBg: '#D4A373', highlightText: '#FFFFFF', 
+            accent: '#FF7B54', // Яскравий помаранчевий, щоб гармоніював з кнопкою
+            // Контрастний верх: колір "гіркого шоколаду / еспресо"
+            heroBg: '#23150E', heroText: '#FFFBF5', heroInactive: 'rgba(255, 251, 245, 0.75)'
         }
     };
     const theme = themes[themeMode];
