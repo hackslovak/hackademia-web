@@ -1024,7 +1024,6 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
     } catch (err) { alert("Помилка: " + err.message); }
   };
   
-  const [editFormData, setEditFormData] = React.useState({});
   
   const [replyingTo, setReplyingTo] = React.useState(null);
   const [hoveredMsgId, setHoveredMsgId] = React.useState(null);
