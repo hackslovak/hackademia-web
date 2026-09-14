@@ -1613,8 +1613,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
                 <button type="submit" style={{ flex: 1, background: '#38A169', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Зберегти</button>
                 <button type="button" onClick={() => setEditingUser(null)} style={{ flex: 1, background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
               </div>
-
-              {/* === КНОПКА АРХІВУВАННЯ (ВСТАВЛЯЙ СЮДИ) === */}
+            {/* КНОПКА АРХІВУВАННЯ */}
               <div style={{ marginTop: '10px' }}>
                 {editingUser.access_status === 'archived' ? (
                   <button type="button" onClick={() => handleArchiveUser('approved')} className="hover-card" style={{ width: '100%', background: '#3182ce', color: '#fff', border: 'none', padding: '12px', borderRadius: '10px', fontWeight: 'bold', cursor: 'pointer' }}>
@@ -1626,9 +1625,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
                   </button>
                 )}
               </div>
-              {/* ========================================= */}
-
-            </form>
+			</form>
           </div>
         </div>
       )}
