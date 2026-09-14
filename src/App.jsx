@@ -40,15 +40,38 @@ const BgIconGlobe = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="ht
 const BgIconChat = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" d="M4.804 21.644A6.707 6.707 0 006 21.75a6.721 6.721 0 003.583-1.029c.774.182 1.584.279 2.417.279 5.322 0 9.75-3.97 9.75-9 0-5.03-4.428-9-9.75-9s-9.75 3.97-9.75 9c0 2.409 1.025 4.587 2.674 6.192.232.226.277.428.254.543a3.73 3.73 0 01-.814 1.686.75.75 0 00.44 1.223zM8.25 10.875a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25zM10.875 12a1.125 1.125 0 112.25 0 1.125 1.125 0 01-2.25 0zm4.875-1.125a1.125 1.125 0 100 2.25 1.125 1.125 0 000-2.25z" clipRule="evenodd" /></svg>;
 const BgIconTranslate = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12.87 15.07l-2.54-2.51.03-.03c1.74-1.94 2.98-4.17 3.71-6.53H17V4h-7V2H8v2H1v1.99h11.17C11.5 7.92 10.44 9.75 9 11.35 8.07 10.32 7.3 9.19 6.69 8h-2c.73 1.63 1.73 3.17 2.98 4.56l-5.09 5.02L4 19l5-5 3.11 3.11.76-2.04zM18.5 10h-2L12 22h2l1.12-3h4.75L21 22h2l-4.5-12zm-2.62 7l1.62-4.33L19.12 17h-3.24z"/></svg>;
 
-const FloatingBackgrounds = ({ theme }) => (
+// --- НОВІ ІКОНКИ ДЛЯ ЗАТИШНОЇ ТЕМИ ---
+const WarmIconCoffee = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M2,21V19H20V21H2M20,8V5H18V8H20M20,3A2,2 0 0,1 22,5V8A2,2 0 0,1 20,10H18V13A4,4 0 0,1 14,17H8A4,4 0 0,1 4,13V3H20M16,5H6V13A2,2 0 0,0 8,15H14A2,2 0 0,0 16,13V5Z" /></svg>;
+const WarmIconLeaf = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M17,8C8,10 5.9,16.17 3.82,21.34L5.71,22L6.66,19.7C7.14,19.87 7.64,20 8,20C19,20 22,3 22,3C21,5 14,5.25 9,6.25C4,7.25 7,11.5 7,11.5C7,11.5 9,8 17,8Z" /></svg>;
+const WarmIconStar = () => <svg fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12,2L14.8,9.2L22,12L14.8,14.8L12,22L9.2,14.8L2,12L9.2,9.2L12,2Z" /></svg>;
+
+const InteractiveWarmPngs = () => (
   <>
-    <div className="bg-element" style={{ top: '15%', left: '8%', width: '80px', animation: 'floatBg 9s ease-in-out infinite' }}><BgIconBook /></div>
-    <div className="bg-element" style={{ top: '65%', right: '8%', width: '100px', animation: 'floatBg 12s ease-in-out infinite 1s' }}><BgIconAcademic /></div>
-    <div className="bg-element" style={{ top: '30%', right: '12%', width: '70px', animation: 'floatBg 10s ease-in-out infinite 2s' }}><BgIconChat /></div>
-    <div className="bg-element" style={{ bottom: '15%', left: '15%', width: '90px', animation: 'floatBg 11s ease-in-out infinite 0.5s' }}><BgIconGlobe /></div>
-    <div className="bg-element" style={{ top: '12%', right: '28%', width: '110px', animation: 'floatBg 14s ease-in-out infinite 1.5s', opacity: theme.bgIconOpacity * 0.8 }}><BgIconTranslate /></div>
+    <div className="interactive-png" style={{ top: '10%', left: '5%', width: '120px', height: '120px', animationDelay: '0s' }}>
+       <WarmIconCoffee />
+    </div>
+    <div className="interactive-png" style={{ top: '55%', right: '5%', width: '180px', height: '180px', animationDelay: '2s' }}>
+       <WarmIconLeaf />
+    </div>
+    <div className="interactive-png" style={{ bottom: '15%', left: '20%', width: '100px', height: '100px', animationDelay: '4s' }}>
+       <WarmIconStar />
+    </div>
   </>
 );
+
+const FloatingBackgrounds = ({ themeMode, theme }) => {
+  if (themeMode === 'warm') return <InteractiveWarmPngs />;
+  
+  return (
+    <>
+      <div className="bg-element" style={{ top: '15%', left: '8%', width: '80px', animation: 'floatBg 9s ease-in-out infinite' }}><BgIconBook /></div>
+      <div className="bg-element" style={{ top: '65%', right: '8%', width: '100px', animation: 'floatBg 12s ease-in-out infinite 1s' }}><BgIconAcademic /></div>
+      <div className="bg-element" style={{ top: '30%', right: '12%', width: '70px', animation: 'floatBg 10s ease-in-out infinite 2s' }}><BgIconChat /></div>
+      <div className="bg-element" style={{ bottom: '15%', left: '15%', width: '90px', animation: 'floatBg 11s ease-in-out infinite 0.5s' }}><BgIconGlobe /></div>
+      <div className="bg-element" style={{ top: '12%', right: '28%', width: '110px', animation: 'floatBg 14s ease-in-out infinite 1.5s', opacity: theme.bgIconOpacity * 0.8 }}><BgIconTranslate /></div>
+    </>
+  );
+};
 
 function playUiSound(type, isEnabled) {
   if (!isEnabled) return;
@@ -2067,23 +2090,40 @@ function Platform() {
   const [ffShowTranslation, setFfShowTranslation] = useState(false);
 
   // --- ТЕМА ТА ЗВУК ---
-  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [themeMode, setThemeMode] = useState(() => {
+    const saved = localStorage.getItem('hack_theme_mode');
+    if (saved) return saved;
+    // Підтримка старих налаштувань
+    return localStorage.getItem('hack_theme') === 'dark' ? 'dark' : 'light';
+  });
   const [isSoundEnabled, setIsSoundEnabled] = useState(true);
 
-  // ОБ'ЄКТ THEME МАЄ БУТИ ТУТ (ВИЩЕ УСІХ ЕКРАНІВ)
-  const theme = {
-    bg: isDarkMode ? '#1a202c' : '#f0f4f8',
-    cardBg: isDarkMode ? '#2d3748' : 'white',
-    text: isDarkMode ? '#f7fafc' : '#333',
-    textSecondary: isDarkMode ? '#a0aec0' : '#555',
-    inputBg: isDarkMode ? '#4a5568' : 'white',
-    inputBorder: isDarkMode ? '#718096' : '#ccc',
-    adminBg: isDarkMode ? '#4a1c38' : '#ffe6f2',
-    adminBorder: isDarkMode ? '#d53f8c' : '#FF007F',
-    // ДОДАЙ ЦІ ДВА РЯДКИ:
-    bgIconColor: isDarkMode ? '#ffffff' : '#2D3748',
-    bgIconOpacity: isDarkMode ? 0.04 : 0.03
+  const toggleTheme = () => {
+    const modes = ['light', 'dark', 'warm'];
+    const nextMode = modes[(modes.indexOf(themeMode) + 1) % 3];
+    setThemeMode(nextMode);
+    localStorage.setItem('hack_theme_mode', nextMode);
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
   };
+
+  const themes = {
+    light: {
+      bg: '#f0f4f8', cardBg: 'white', text: '#333', textSecondary: '#555',
+      inputBg: 'white', inputBorder: '#ccc', adminBg: '#ffe6f2', adminBorder: '#FF007F',
+      bgIconColor: '#2D3748', bgIconOpacity: 0.03
+    },
+    dark: {
+      bg: '#1a202c', cardBg: '#2d3748', text: '#f7fafc', textSecondary: '#a0aec0',
+      inputBg: '#4a5568', inputBorder: '#718096', adminBg: '#4a1c38', adminBorder: '#d53f8c',
+      bgIconColor: '#ffffff', bgIconOpacity: 0.04
+    },
+    warm: {
+      bg: '#FFF8F0', cardBg: '#FFE8D6', text: '#5C4033', textSecondary: '#8B7D6B',
+      inputBg: '#FFF3E3', inputBorder: '#E0A345', adminBg: '#FFEDD8', adminBorder: '#E29578',
+      bgIconColor: '#E0A345', bgIconOpacity: 0.15
+    }
+  };
+  const theme = themes[themeMode];
 
   // --- ФУНКЦІЯ ВИХОДУ ---
   const handleLogout = async () => {
@@ -4385,6 +4425,28 @@ html = html.replace(/\.{4,}/g, () => {
         50% { opacity: 0.5; color: #FF007F; }
         100% { opacity: 1; }
       }
+	  
+	  .interactive-png {
+          position: fixed;
+          z-index: 1;
+          opacity: 0.4;
+          background-size: contain;
+          background-repeat: no-repeat;
+          background-position: center;
+          /* Резервний свіп, якщо PNG ще не завантажили в public */
+          background-color: rgba(224, 163, 69, 0.15); 
+          border-radius: 50%;
+          filter: blur(8px);
+          transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          animation: floatBg 15s ease-in-out infinite alternate;
+          cursor: pointer;
+      }
+      .interactive-png:hover {
+          transform: scale(1.2) rotate(10deg) !important;
+          opacity: 0.9;
+          filter: blur(0px) drop-shadow(0 20px 40px rgba(224, 163, 69, 0.6));
+          z-index: 100;
+      }
 
       /* --- НОВІ ЕФЕКТИ НАВЕДЕННЯ (ХОВЕР) --- */
       .hover-card {
@@ -4512,7 +4574,7 @@ html = html.replace(/\.{4,}/g, () => {
   if (globalView === 'admin_panel') {
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', background: theme.bg }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -4527,7 +4589,7 @@ html = html.replace(/\.{4,}/g, () => {
   if (globalView === 'dictionary') {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left', display: 'flex', flexDirection: 'column' }}>
           
@@ -4588,7 +4650,7 @@ html = html.replace(/\.{4,}/g, () => {
     const currentCard = spacedCards[spacedIndex];
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         <div style={{ flex: 1, padding: '50px 60px', boxSizing: 'border-box', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
           <div style={{ width: '100%', maxWidth: '800px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
@@ -4646,7 +4708,7 @@ html = html.replace(/\.{4,}/g, () => {
     
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={exitSniper} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -4732,7 +4794,7 @@ html = html.replace(/\.{4,}/g, () => {
     const currentCard = ffCards[ffIndex];
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -4851,7 +4913,7 @@ html = html.replace(/\.{4,}/g, () => {
   if (activeModule) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         
         {/* ПЛАВАЮЧА КНОПКА НАЗАД */}
@@ -5584,7 +5646,7 @@ html = html.replace(/\.{4,}/g, () => {
   if (selectedCourse && !activeModule) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         
         <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
@@ -5614,7 +5676,7 @@ html = html.replace(/\.{4,}/g, () => {
             ))}
           </div>
           <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{themeMode === 'light' ? '☀️' : themeMode === 'dark' ? '🌙' : '☕'}</button>
           
           {/* НОВА КНОПКА ВИХОДУ */}
           <button onClick={handleLogout} className="hover-card" title={t('logout')} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
@@ -5804,7 +5866,7 @@ html = html.replace(/\.{4,}/g, () => {
   if (globalView === 'chat') {
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         <ChatView 
           dbUserId={dbUserId} 
@@ -5913,7 +5975,7 @@ html = html.replace(/\.{4,}/g, () => {
 
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         {renderSidebar()}
         <div style={{ flex: 1, padding: '50px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
@@ -6081,7 +6143,7 @@ html = html.replace(/\.{4,}/g, () => {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
-      {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}"/>
+      {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
       {renderSidebar()}
       
       <div style={{ flex: 1, padding: '20px 40px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
@@ -6094,7 +6156,7 @@ html = html.replace(/\.{4,}/g, () => {
             ))}
           </div>
           <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
-          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isDarkMode ? '☀️' : '🌙'}</button>
+          <button onClick={toggleTheme} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{themeMode === 'light' ? '☀️' : themeMode === 'dark' ? '🌙' : '☕'}</button>
           
           <button onClick={handleLogout} className="hover-card" title={t('logout')} style={{ background: 'transparent', border: 'none', color: theme.textSecondary, fontSize: '14px', fontWeight: 'bold', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '10px' }}>
             {t('logout')}

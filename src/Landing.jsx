@@ -16,6 +16,34 @@ export default function Landing() {
     };
     const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
 
+    // --- ЛОГІКА ТЕМИ (Автоматична за часом + Ручна) ---
+    const [isDarkMode, setIsDarkMode] = useState(() => {
+        const savedTheme = localStorage.getItem('hack_theme');
+        if (savedTheme) return savedTheme === 'dark'; // Пріоритет збереженому вибору
+        
+        // Якщо вибору немає – автоматичний нічний режим з 18:00 до 06:00
+        const hour = new Date().getHours();
+        return hour < 6 || hour >= 18;
+    });
+
+    const toggleTheme = () => {
+        const newTheme = !isDarkMode;
+        setIsDarkMode(newTheme);
+        localStorage.setItem('hack_theme', newTheme ? 'dark' : 'light');
+    };
+
+    // Палітра кольорів підтримує загальний стиль платформи
+    const theme = {
+        bg: isDarkMode ? '#1a202c' : '#f0f4f8',
+        cardBg: isDarkMode ? '#2d3748' : '#ffffff',
+        text: isDarkMode ? '#f7fafc' : '#2D3748',
+        textSecondary: isDarkMode ? '#a0aec0' : '#718096',
+        inputBorder: isDarkMode ? '#718096' : '#e2e8f0',
+        inactiveText: isDarkMode ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)',
+        highlightBg: isDarkMode ? '#062440' : '#EBF3FF',
+        highlightText: isDarkMode ? '#fff' : '#062440'
+    };
+
     // --- ЛОГІКА АВТОРИЗАЦІЇ ---
     const isAuth = localStorage.getItem('hack_auth_cache') === 'approved';
     
@@ -31,12 +59,30 @@ export default function Landing() {
     const openSupportWidget = () => window.dispatchEvent(new CustomEvent('openSupportChat'));
 
     return (
-        <div className="landing-body">
+        <div className="landing-body" style={{ backgroundColor: theme.bg, color: theme.text, minHeight: '100vh', transition: 'all 0.3s ease' }}>
             <style>{`
                 .landing-body { overflow-x: hidden; }
-                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; }
-                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; }
+                .hero h1 { font-size: clamp(32px, 8vw, 64px) !important; line-height: 1.15 !important; color: ${theme.text}; }
+                .hero p, .hero__label { color: ${theme.textSecondary}; }
+                .section-title { font-size: clamp(22px, 5vw, 36px) !important; word-break: break-word; color: ${theme.text}; }
                 
+                /* Адаптація карток до теми */
+                .about-card, .price-card { background: ${theme.cardBg} !important; border: 1px solid ${theme.inputBorder} !important; box-shadow: 0 4px 15px rgba(0,0,0,0.03); transition: all 0.3s; }
+                .about-card h3, .price-card h3 { color: ${theme.text} !important; }
+                .about-card p, .price-card p { color: ${theme.textSecondary} !important; }
+                .price-card ul li { color: ${theme.text} !important; }
+                .price-card .price { color: ${theme.text} !important; }
+                .price-card .price span { color: ${theme.textSecondary} !important; }
+                
+                .extra-box h4 { color: ${isDarkMode ? '#E0A345' : '#062440'} !important; }
+                .extra-box li, .extra-box p { color: ${theme.text} !important; }
+                
+                header .logo { color: ${theme.text} !important; text-decoration: none; }
+                header .logo span { color: ${theme.text}; }
+                header .logo span span { color: #E0A345; }
+                
+                footer h3, footer p { color: ${theme.textSecondary}; }
+
                 /* НОВА АНІМАЦІЯ ДЛЯ КНОПКИ */
                 @keyframes pulseCTA {
                     0% { transform: scale(1); box-shadow: 0 15px 35px rgba(255,123,84,0.4); }
@@ -55,13 +101,22 @@ export default function Landing() {
             `}</style>
 
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <a href="#" className="logo">
+                <a href="#" className="logo" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontWeight: 'bold', fontSize: '20px' }}>
                     <img src="/logo-main.svg" alt="Hackademia Logo" style={{ width: '50px', height: '50px', objectFit: 'contain' }} />
                     <span>HACK<span>ADEMIA</span></span>
                 </a>
 
                 <div style={{ display: 'flex', alignItems: 'center', gap: '25px', marginLeft: 'auto' }}>
                     
+                    {/* Перемикач тем */}
+                    <button 
+                        onClick={toggleTheme} 
+                        style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: 'pointer', transition: '0.2s', padding: 0 }} 
+                        className="hover-card"
+                    >
+                        {isDarkMode ? '☀️' : '🌙'}
+                    </button>
+
                     {/* Перемикач мов */}
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {['uk', 'sk', 'en', 'ru'].map(l => (
@@ -70,7 +125,7 @@ export default function Landing() {
                                 onClick={() => changeLang(l)} 
                                 style={{ 
                                     cursor: 'pointer', 
-                                    color: lang === l ? '#E0A345' : 'rgba(255,255,255,0.4)', 
+                                    color: lang === l ? '#E0A345' : theme.inactiveText, 
                                     fontSize: '13px', 
                                     fontWeight: lang === l ? 'bold' : 'normal',
                                     transition: 'color 0.2s'
@@ -83,11 +138,11 @@ export default function Landing() {
 
                     {/* Кнопка виходу (мінімалістична) */}
                     {isAuth && (
-                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', display: 'flex', gap: '5px' }}>
+                        <div style={{ fontSize: '12px', color: theme.inactiveText, display: 'flex', gap: '5px' }}>
                             <span>{t('loggedIn')}</span>
                             <span 
                                 onClick={handleLogout} 
-                                style={{ color: '#fff', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.3)', paddingBottom: '1px' }}
+                                style={{ color: theme.text, cursor: 'pointer', borderBottom: `1px solid ${theme.inactiveText}`, paddingBottom: '1px' }}
                             >
                                 {t('logout')}
                             </span>
@@ -148,9 +203,9 @@ export default function Landing() {
                     {/* 1 */}
                     <div className="price-card">
                         <div>
-                            <span className="badge" style={{ background: '#EBF3FF', color: '#062440' }}>{t('price1Badge')}</span>
+                            <span className="badge" style={{ background: theme.highlightBg, color: theme.highlightText }}>{t('price1Badge')}</span>
                             <h3>{t('price1Title')}</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price1Sub')}</p>
+                            <p style={{ fontSize: '0.95rem' }}>{t('price1Sub')}</p>
                             <ul>
                                 <li>✔ <b>{t('price1Li1')}</b> {t('price1Li1_2')}</li>
                                 <li>✔ {t('price1Li2')}</li>
@@ -170,7 +225,7 @@ export default function Landing() {
                         <div>
                             <span className="badge">{t('price2Badge')}</span>
                             <h3>{t('price2Title')}</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price2Sub')}</p>
+                            <p style={{ fontSize: '0.95rem' }}>{t('price2Sub')}</p>
                             <ul>
                                 <li>✔ <b>{t('price2Li1')}</b> {t('price2Li1_2')}</li>
                                 <li>✔ {t('price2Li2')}</li>
@@ -188,7 +243,7 @@ export default function Landing() {
                         <div>
                             <span className="badge" style={{ background: '#062440', color: '#fff' }}>{t('price3Badge')}</span>
                             <h3>{t('price3Title')}</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price3Sub')}</p>
+                            <p style={{ fontSize: '0.95rem' }}>{t('price3Sub')}</p>
                             <ul>
                                 <li>✔ <b>{t('price3Li1')}</b> {t('price3Li1_2')}</li>
                                 <li>✔ {t('price3Li2')}</li>
@@ -206,7 +261,7 @@ export default function Landing() {
                         <div>
                             <span className="badge">{t('price4Badge')}</span>
                             <h3>{t('price4Title')}</h3>
-                            <p style={{ color: '#666', fontSize: '0.95rem' }}>{t('price4Sub')}</p>
+                            <p style={{ fontSize: '0.95rem' }}>{t('price4Sub')}</p>
                             <ul>
                                 <li>✔ <b>{t('price4Li1')}</b></li>
                                 <li>✔ {t('price4Li2')}</li>
@@ -220,9 +275,9 @@ export default function Landing() {
                     </div>
                 </div>
 
-                <div className="extra-box">
+                <div className="extra-box" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}` }}>
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>{t('extraTitle1')}</h4>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800 }}>{t('extraTitle1')}</h4>
                         <ul style={{ listStyle: 'none', paddingLeft: 0 }}>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi1')}</li>
                             <li style={{ marginBottom: '10px', fontSize: '0.95rem' }}>{t('extraLi2')}</li>
@@ -230,7 +285,7 @@ export default function Landing() {
                         </ul>
                     </div>
                     <div>
-                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800, color: '#062440' }}>{t('extraTitle2')}</h4>
+                        <h4 style={{ fontSize: '1.3rem', marginBottom: '15px', fontWeight: 800 }}>{t('extraTitle2')}</h4>
                         <p style={{ fontSize: '0.95rem', lineHeight: '1.6' }}>{t('extraText')}</p>
                     </div>
                 </div>
@@ -239,7 +294,7 @@ export default function Landing() {
             <footer>
                 <h3>HACKADEMIA</h3>
                 <p>{t('footerDesc')}</p>
-                <p style={{ marginTop: '40px', fontSize: '0.85rem', color: '#789' }}>{t('footerRights')}</p>
+                <p style={{ marginTop: '40px', fontSize: '0.85rem' }}>{t('footerRights')}</p>
             </footer>
             
         {/* ПЛАВАЮЧИЙ ЧАТ ПІДТРИМКИ */}
