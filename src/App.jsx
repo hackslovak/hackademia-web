@@ -1198,10 +1198,77 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
 
   const handleSaveUserEdit = async (e) => {
     e.preventDefault();
-    const updateData = { first_name: editFormData.first_name, group_id: editFormData.group_id || null, telegram_id: editFormData.telegram_id || null, email: editFormData.email, role: editFormData.role || 'student' };
+    const targetEmail = editFormData.email?.trim() || null;
+    const targetTg = editFormData.telegram_id || null;
+
+    // --- ЛОГІКА ЗЛИТТЯ (MERGE) ДЛЯ АДМІНА ---
+    if (targetEmail && targetEmail !== editingUser.email) {
+      // Шукаємо, чи є вже такий email в іншому акаунті
+      const { data: existingUser } = await supabase.from('users').select('id, telegram_id').eq('email', targetEmail).neq('id', editingUser.id).maybeSingle();
+      
+      if (existingUser) {
+        if (!window.confirm(`⚠️ УВАГА!\nПошта ${targetEmail} вже належить іншому акаунту.\n\nОб'єднати поточний профіль (дублікат) із тим акаунтом?\n(Усі чати, прогрес і курси будуть перенесені в один спільний профіль)`)) {
+          return;
+        }
+        
+        // 1. Переносимо повідомлення в чаті
+        await supabase.from('messages').update({ user_id: existingUser.id }).eq('user_id', editingUser.id);
+        await supabase.from('messages').update({ sender_id: existingUser.id }).eq('sender_id', editingUser.id);
+        
+        // 2. Переносимо прогрес виконаних завдань
+        const { data: progData } = await supabase.from('progress').select('*').eq('user_id', editingUser.id);
+        if (progData && progData.length > 0) {
+          for (const p of progData) {
+            await supabase.from('progress').upsert({ user_id: existingUser.id, task_id: p.task_id, status: p.status, points: p.points }, { onConflict: 'user_id, task_id' });
+          }
+        }
+        
+        // 3. Об'єднуємо доступи до курсів
+        if (editingUser.telegram_id) {
+           const { data: ucData } = await supabase.from('user_courses').select('*').eq('user_telegram_id', editingUser.telegram_id);
+           if (ucData && ucData.length > 0) {
+             const targetTgId = existingUser.telegram_id || editingUser.telegram_id;
+             for (const c of ucData) {
+               await supabase.from('user_courses').upsert({ user_telegram_id: targetTgId, course_id: c.course_id }, { onConflict: 'user_telegram_id, course_id' });
+             }
+           }
+        }
+
+        // 4. Оновлюємо старий (головний) акаунт: додаємо йому Telegram та групу
+        await supabase.from('users').update({ 
+          telegram_id: existingUser.telegram_id || targetTg || editingUser.telegram_id,
+          first_name: editFormData.first_name || editingUser.first_name,
+          group_id: editFormData.group_id || editingUser.group_id || null
+        }).eq('id', existingUser.id);
+
+        // 5. Знищуємо порожній дублікат
+        await supabase.from('users').delete().eq('id', editingUser.id);
+        
+        fetchUsers();
+        setEditingUser(null);
+        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        alert("✅ Акаунти успішно злиті в один!");
+        return;
+      }
+    }
+
+    // --- СТАНДАРТНЕ ЗБЕРЕЖЕННЯ (якщо злиття не потрібне) ---
+    const updateData = { 
+      first_name: editFormData.first_name, 
+      group_id: editFormData.group_id || null, 
+      telegram_id: targetTg, 
+      email: targetEmail, 
+      role: editFormData.role || 'student' 
+    };
+    
     const { error } = await supabase.from('users').update(updateData).eq('id', editingUser.id);
-    if (!error) { fetchUsers(); setEditingUser(null); if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); } 
-    else { alert(error.message); }
+    if (!error) { 
+      fetchUsers(); 
+      setEditingUser(null); 
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success'); 
+    } else { 
+      alert(error.message); 
+    }
   };
 
   const handleReaction = async (msgId, currentReactions, emoji) => {
