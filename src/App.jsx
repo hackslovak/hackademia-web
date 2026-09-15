@@ -4093,7 +4093,8 @@ const parseToElements = (text, prefixKey) => {
                   <img
                     key={`img-${idx}`} src={cleanUrl} alt="slice" onClick={() => setFullscreenTaskImg(cleanUrl)}
                     className="hover-card"
-                    style={{ height: '280px', width: 'auto', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', flexShrink: 0 }}
+                    draggable="false" onContextMenu={(e) => e.preventDefault()}
+                    style={{ height: '280px', width: 'auto', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', boxShadow: '0 4px 10px rgba(0,0,0,0.1)', flexShrink: 0, userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }}
                     onError={(e)=>{e.target.style.display='none'}}
                   />
                 );
@@ -4122,29 +4123,25 @@ const parseToElements = (text, prefixKey) => {
                 </div>
             );
         } else if (part.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i) || part.includes("/audio/") || part.includes("voice_")) {
-            // ВІДНОВЛЕНО: Перевірка на аудіо
             media.push(
                 <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', width: '100%' }}>
-                    <audio controls src={part} style={{ width: '100%', outline: 'none' }} />
+                    <audio controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', outline: 'none' }} />
                 </div>
             );
         } else if (part.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
-            // Перевірка на відео
             media.push(
                 <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                    <video controls src={part} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />
+                    <video controls controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />
                 </div>
             );
         } else if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
-            // Перевірка на картинки
             const cleanUrl = part.replace(/#split\d|#slice/g, '');
             media.push(
                 <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', textAlign: 'center' }}>
-                    <img src={cleanUrl} alt="task-img" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '12px', cursor: 'zoom-in', border: '1px solid rgba(0,0,0,0.1)' }} />
+                    <img src={cleanUrl} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="task-img" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '12px', cursor: 'zoom-in', border: '1px solid rgba(0,0,0,0.1)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
                 </div>
             );
         } else {
-            // Інші посилання
             texts.push(
                 <a key={`${prefixKey}-${i}`} href={part} target="_blank" rel="noreferrer" style={{ color: '#E0A345', textDecoration: 'underline' }}>
                     {part}
@@ -5215,10 +5212,10 @@ html = html.replace(/\.{4,}/g, () => {
                                            title="Видалити медіа з усіх мов"
                                          >✕</button>
 
-                                         {isImage && <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />}
-                                         {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
-                                         {isAudio && <audio controls src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
-                                         {isVideoFile && <video controls src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
+                                         {isImage && <img src={cleanUrl} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}`, userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />}
+										 {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
+										 {isAudio && <audio controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
+										 {isVideoFile && <video controls controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
                                          
                                          {isImage && (
                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', justifyContent: 'center' }}>
@@ -5652,7 +5649,7 @@ html = html.replace(/\.{4,}/g, () => {
         {fullscreenTaskImg && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-            <img src={fullscreenTaskImg} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+            <img src={fullscreenTaskImg} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
           </div>
         )}
 
@@ -6400,7 +6397,7 @@ html = html.replace(/\.{4,}/g, () => {
       {fullscreenTaskImg && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-          <img src={fullscreenTaskImg} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+          <img src={fullscreenTaskImg} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
         </div>
       )}
 	  <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
