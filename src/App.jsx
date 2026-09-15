@@ -3772,7 +3772,6 @@ async function handleImageUpload(e) {
   async function handleSaveEdit(taskId) {
     const taskToEdit = tasks.find(t => t.id === taskId);
     
-    // Більше ніякого сканування екрану! Беремо строго те, що збережено в пам'яті редактора.
     let finalAnswer = editAnswer;
 
     const parsedAnswer = taskToEdit.type === 'quiz' ? finalAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' || finalAnswer ? finalAnswer.trim() : null);
@@ -3780,10 +3779,25 @@ async function handleImageUpload(e) {
     let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
     const contentToSave = { ...baseContent, exercise: editTaskExercise };
 
-    const { error } = await supabase.from('tasks').update({ content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty }).eq('id', taskId);
+    // ДОДАНО ЗБЕРЕЖЕННЯ КАТЕГОРІЇ (category: editCategory) В БАЗУ ДАНИХ
+    const { error } = await supabase.from('tasks').update({ 
+      content: contentToSave, 
+      correct_answer: parsedAnswer, 
+      difficulty: editDifficulty,
+      category: editCategory 
+    }).eq('id', taskId);
 
     if (error) { alert("Помилка: " + error.message); return; }
-    setTasks(tasks.map(t => t.id === taskId ? { ...t, content: contentToSave, correct_answer: parsedAnswer, difficulty: editDifficulty } : t));
+    
+    // ДОДАНО ОНОВЛЕННЯ КАТЕГОРІЇ НА ЕКРАНІ БЕЗ ПЕРЕЗАВАНТАЖЕННЯ
+    setTasks(tasks.map(t => t.id === taskId ? { 
+      ...t, 
+      content: contentToSave, 
+      correct_answer: parsedAnswer, 
+      difficulty: editDifficulty,
+      category: editCategory 
+    } : t));
+    
     setEditingTaskId(null);
   }
 
