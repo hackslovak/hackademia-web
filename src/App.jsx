@@ -4963,7 +4963,9 @@ html = html.replace(/\.{4,}/g, () => {
                   if (typeof cat === 'string') {
                       cat = cat.replace(/['"]/g, '').trim().toLowerCase();
                   }
-                  const validCats = ['grammar', 'vocabulary', 'reading', 'listening'];
+                  
+                  // Допустимі категорії (включно з 'bonus')
+                  const validCats = ['grammar', 'vocabulary', 'reading', 'listening', 'bonus'];
                   if (!validCats.includes(cat)) cat = 'bonus';
                   
                   // Кольори та іконки для бейджів
@@ -4974,7 +4976,7 @@ html = html.replace(/\.{4,}/g, () => {
                     listening: { title: 'Аудіювання', icon: '🎧', color: '#805AD5', bg: 'rgba(128, 90, 213, 0.1)' },
                     bonus: { title: 'Додатково', icon: '🎁', color: theme.textSecondary, bg: theme.inputBg }
                   };
-                  const catData = categoryLabels[cat];
+                  const catData = categoryLabels[cat] || categoryLabels['bonus'];
 
                   return (
                     <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
