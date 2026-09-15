@@ -4945,7 +4945,18 @@ html = html.replace(/\.{4,}/g, () => {
               <div style={{ marginBottom: '50px' }}>
                 {(() => {
                   const groupedTasks = tasks.reduce((acc, task) => {
-                    const cat = task.category || 'bonus';
+                    // Бронебійний фільтр: знімає випадкові лапки, пробіли та великі літери з БД
+                    let cat = task.category;
+                    if (typeof cat === 'string') {
+                        cat = cat.replace(/['"]/g, '').trim().toLowerCase();
+                    }
+                    
+                    // Якщо категорія невідома або порожня — закидаємо в Бонус
+                    const validCats = ['grammar', 'vocabulary', 'reading', 'listening'];
+                    if (!validCats.includes(cat)) {
+                        cat = 'bonus';
+                    }
+                    
                     if (!acc[cat]) acc[cat] = [];
                     acc[cat].push(task);
                     return acc;
