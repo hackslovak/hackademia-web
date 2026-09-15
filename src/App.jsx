@@ -5339,16 +5339,19 @@ html = html.replace(/\.{4,}/g, () => {
                            <div style={{ marginTop: '20px', color: '#38A169', fontWeight: '900', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 161, 105, 0.1)', padding: '12px 20px', borderRadius: '12px', display: 'inline-flex' }}>
                              ✅ Завдання успішно виконано
                            </div>
-                         </div>
-                            );
-                          })}
-                        </div>
-                      </div>
-                    );
-                  });
-                })()}
-              </div>
-            )}
+                         )}
+                       </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        );
+      });
+    })()}
+  </div>
+)}
 
             {/* ПАНЕЛЬ ДОДАВАННЯ НОВОГО ЗАВДАННЯ (ТІЛЬКИ ДЛЯ АДМІНА) */}
             {effectiveIsAdmin && (
