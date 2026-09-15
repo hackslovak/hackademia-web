@@ -5014,7 +5014,9 @@ html = html.replace(/\.{4,}/g, () => {
                               }
                               setEditAnswer(task.correct_answer || ''); 
                               setEditDifficulty(task.difficulty || 'medium');
-                              setEditCategory(task.category || 'bonus'); 
+                              let safeCat = task.category || 'bonus';
+                              if (typeof safeCat === 'string') safeCat = safeCat.replace(/['"]/g, '').trim().toLowerCase();
+                              setEditCategory(safeCat); 
                               setEditLang('uk');
                             }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                             
