@@ -2253,6 +2253,7 @@ function Platform() {
 
 const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
+  const [newTaskCategory, setNewTaskCategory] = useState('grammar'); // <--- ДОДАТИ ЦЕ
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
   
   // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
@@ -2605,6 +2606,7 @@ const [newTaskType, setNewTaskType] = useState('text');
   const [editAnswer, setEditAnswer] = useState('');
   const [activeBlankIndex, setActiveBlankIndex] = useState(null);
   const [editDifficulty, setEditDifficulty] = useState('medium');
+  const [editCategory, setEditCategory] = useState('grammar'); // <--- ДОДАТИ ЦЕ
   
   // Локальні стани для екрану профілю
   const [showPassword, setShowPassword] = useState(false);
@@ -3395,7 +3397,7 @@ async function handleAddTask() {
     const contentToSave = { ...baseContent, exercise: newTaskExercise };
 
     const { data, error } = await supabase.from('tasks').insert({ 
-      module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer
+      module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer, category: newTaskCategory
     }).select();
       
     if (error) { alert("Помилка: " + error.message); return; }
@@ -3405,6 +3407,7 @@ async function handleAddTask() {
       setNewTaskExercise('');
       setNewTaskCorrectAnswer('');
       setIsSingleLang(false);
+      setNewTaskCategory('grammar'); // <--- ДОДАЙ ОСЬ ТУТ
     }
   }
 
@@ -4939,9 +4942,45 @@ html = html.replace(/\.{4,}/g, () => {
                 <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>У цьому занятті ще немає матеріалів.</p>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
-                {tasks.map((task, idx) => (
-  <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
+              <div style={{ marginBottom: '50px' }}>
+                {(() => {
+                  const groupedTasks = tasks.reduce((acc, task) => {
+                    const cat = task.category || 'bonus';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(task);
+                    return acc;
+                  }, {});
+                  
+                  const categoryOrder = ['grammar', 'vocabulary', 'reading', 'listening', 'bonus'];
+                  const categoryLabels = {
+                    grammar: { title: 'Граматика', icon: '📚' },
+                    vocabulary: { title: 'Лексика', icon: '📝' },
+                    reading: { title: 'Читання', icon: '📖' },
+                    listening: { title: 'Аудіювання', icon: '🎧' },
+                    bonus: { title: 'Додаткові матеріали', icon: '🎁' }
+                  };
+                  
+                  let taskCounter = 0;
+                  
+                  return categoryOrder.map(cat => {
+                    const catTasks = groupedTasks[cat];
+                    if (!catTasks || catTasks.length === 0) return null;
+                    
+                    return (
+                      <div key={cat} style={{ marginBottom: '60px' }}>
+                        {/* ЗАГОЛОВОК КАТЕГОРІЇ */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px', paddingBottom: '15px', borderBottom: `2px solid ${theme.inputBorder}` }}>
+                          <span style={{ fontSize: '32px' }}>{categoryLabels[cat].icon}</span>
+                          <h3 style={{ color: theme.text, fontSize: '26px', fontWeight: '900', margin: 0 }}>{categoryLabels[cat].title}</h3>
+                          <span style={{ background: theme.inputBg, color: theme.textSecondary, padding: '4px 10px', borderRadius: '12px', fontSize: '14px', fontWeight: 'bold' }}>{catTasks.length}</span>
+                        </div>
+                        
+                        {/* СПИСОК ЗАВДАНЬ У КАТЕГОРІЇ */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                          {catTasks.map((task) => {
+                            const idx = taskCounter++;
+                            return (
+                              <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     
                     {/* ШАПКА ЗАВДАННЯ */}
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
@@ -4972,7 +5011,8 @@ html = html.replace(/\.{4,}/g, () => {
                               setIsEditSingleLang(true);
                             }
                             setEditAnswer(task.correct_answer || ''); 
-                            setEditDifficulty(task.difficulty || 'medium'); 
+							setEditDifficulty(task.difficulty || 'medium'); 
+							setEditCategory(task.category || 'bonus'); // <--- ДОДАТИ ЦЕ 
                             setEditLang('uk');
                           }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                           
@@ -5209,7 +5249,27 @@ html = html.replace(/\.{4,}/g, () => {
                          
                          <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                          <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
-                         
+                         <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
+                           <div style={{ flex: 1 }}>
+                             <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Складність:</label>
+                             <select value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text }}>
+                                <option value="easy">🟢 Легко (10 балів)</option>
+                                <option value="medium">🟡 Середньо (20 балів)</option>
+                                <option value="hard">🔴 Складно (30 балів)</option>
+                             </select>
+                           </div>
+                           <div style={{ flex: 1 }}>
+                             <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Категорія:</label>
+                             <select value={editCategory} onChange={e => setEditCategory(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text }}>
+                                <option value="grammar">📚 Граматика</option>
+                                <option value="vocabulary">📝 Лексика</option>
+                                <option value="reading">📖 Читання</option>
+                                <option value="listening">🎧 Аудіювання</option>
+                                <option value="bonus">🎁 Бонус / Додатково</option>
+                             </select>
+                           </div>
+                         </div>
+						 
                          {/* === ПАНЕЛЬ OCR (РЕДАГУВАННЯ) === */}
                          <div style={{ background: 'rgba(224, 163, 69, 0.05)', padding: '15px', borderRadius: '14px', border: '1px solid rgba(224, 163, 69, 0.3)', marginBottom: '20px' }}>
                             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '15px', flexWrap: 'wrap' }}>
@@ -5279,11 +5339,14 @@ html = html.replace(/\.{4,}/g, () => {
                            <div style={{ marginTop: '20px', color: '#38A169', fontWeight: '900', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 161, 105, 0.1)', padding: '12px 20px', borderRadius: '12px', display: 'inline-flex' }}>
                              ✅ Завдання успішно виконано
                            </div>
-                         )}
-                       </div>
-                    )}
-                  </div>
-                ))}
+                         </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  });
+                })()}
               </div>
             )}
 
@@ -5307,6 +5370,16 @@ html = html.replace(/\.{4,}/g, () => {
                       <option value="easy">🟢 Легко (10 балів)</option>
                       <option value="medium">🟡 Середньо (20 балів)</option>
                       <option value="hard">🔴 Складно (30 балів)</option>
+                    </select>
+                  </div>
+				  <div style={{ flex: 1, minWidth: '200px' }}>
+                    <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Категорія:</label>
+                    <select value={newTaskCategory} onChange={e => setNewTaskCategory(e.target.value)} style={{ width: '100%', padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '15px' }}>
+                      <option value="grammar">📚 Граматика</option>
+                      <option value="vocabulary">📝 Лексика</option>
+                      <option value="reading">📖 Читання</option>
+                      <option value="listening">🎧 Аудіювання</option>
+                      <option value="bonus">🎁 Бонус / Додатково</option>
                     </select>
                   </div>
                 </div>
