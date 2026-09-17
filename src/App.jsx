@@ -2256,7 +2256,23 @@ function Platform() {
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
   const [newTaskCategory, setNewTaskCategory] = useState('grammar'); 
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
-  const [isComposerExpanded, setIsComposerExpanded] = useState(false); // <--- ДОДАЛИ ЦЕ
+  const [isComposerExpanded, setIsComposerExpanded] = useState(false);
+
+  // РОЗУМНЕ АВТОЗГОРТАННЯ КОМПОЗЕРА
+  const composerRef = React.useRef(null);
+  React.useEffect(() => {
+    const handleClickOutside = (e) => {
+      // Якщо клікнули повз розгорнуту форму
+      if (isComposerExpanded && composerRef.current && !composerRef.current.contains(e.target)) {
+        const isTaskEmpty = !(newTaskContentMulti.uk || newTaskContentMulti.ru || newTaskContentMulti.en || newTaskContentMulti.sk || (newTaskExercise || '').replace(/<[^>]*>|&nbsp;/g, '').trim() || newTaskCorrectAnswer);
+        if (isTaskEmpty) {
+          setIsComposerExpanded(false); // Згортаємо, якщо нічого не введено
+        }
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isComposerExpanded, newTaskContentMulti, newTaskExercise, newTaskCorrectAnswer]);
   
   // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
   const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
@@ -5447,11 +5463,11 @@ html = html.replace(/\.{4,}/g, () => {
               </div>
             )}
 
-            {/* ПАНЕЛЬ ДОДАВАННЯ НОВОГО ЗАВДАННЯ (МІНІМАЛІСТИЧНА - TELEGRAM СТИЛЬ) */}
+            {/* ПАНЕЛЬ ДОДАВАННЯ НОВОГО ЗАВДАННЯ (ТЕЛЕГРАМ-СТИЛЬ З РОЗГОРТАННЯМ ВГОРУ) */}
             {effectiveIsAdmin && (
               <div style={{ marginTop: '30px', position: 'relative' }}>
                 
-                {/* === ПЛАВАЮЧИЙ ВІДЖЕТ CATBOX (ЗАЛИШАЄТЬСЯ НА МІСЦІ) === */}
+                {/* === ПЛАВАЮЧИЙ ВІДЖЕТ CATBOX === */}
                 <div style={{ position: 'fixed', right: '30px', top: '250px', width: '260px', background: theme.cardBg, border: `2px solid #E0A345`, borderRadius: '16px', padding: '20px', boxShadow: '0 15px 40px rgba(0,0,0,0.15)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '15px' }}>
                   <h4 style={{ margin: 0, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>📦 Завантаження Відео</h4>
                   <ol style={{ margin: 0, paddingLeft: '20px', color: theme.textSecondary, fontSize: '13px', lineHeight: '1.6' }}>
@@ -5462,7 +5478,7 @@ html = html.replace(/\.{4,}/g, () => {
                 </div>
                 {/* ================================= */}
 
-                {/* РОЗГОРНУТЕ ПРЕВ'Ю МЕДІА (З УСІМА ФУНКЦІЯМИ КРОПУ ТА OCR) */}
+                {/* РОЗГОРНУТЕ ПРЕВ'Ю МЕДІА */}
                 {(() => {
                   const allUrls = ['uk', 'ru', 'en', 'sk'].flatMap(l => (newTaskContentMulti[l] || '').match(/(https?:\/\/[^\s]+)/g) || []);
                   const uniqueUrls = [...new Set(allUrls)];
@@ -5487,33 +5503,18 @@ html = html.replace(/\.{4,}/g, () => {
                           
                           return (
                             <div key={i} style={{ position: 'relative', background: theme.inputBg, padding: '20px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                              
                               <div style={{ display: 'flex', gap: '10px', alignItems: 'center', background: theme.cardBg, padding: '12px', borderRadius: '12px', flexWrap: 'wrap' }}>
                                 <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary }}>Показувати учням з інтерфейсом:</span>
                                 {['uk', 'sk', 'en', 'ru'].map(langKey => {
                                   const hasMedia = (newTaskContentMulti[langKey] || '').includes(mediaUrl);
                                   return (
-                                    <button
-                                      key={langKey}
-                                      onClick={(e) => {
-                                        e.preventDefault();
-                                        const text = newTaskContentMulti[langKey] || '';
-                                        if (hasMedia) {
-                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text.replace(mediaUrl, '').trim()});
-                                        } else {
-                                          setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text + (text ? '\n\n' : '') + mediaUrl});
-                                        }
-                                      }}
-                                      style={{ background: hasMedia ? '#38A169' : 'transparent', color: hasMedia ? '#fff' : theme.textSecondary, border: `1.5px solid ${hasMedia ? '#38A169' : theme.inputBorder}`, padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}
-                                    >
+                                    <button key={langKey} onClick={(e) => { e.preventDefault(); const text = newTaskContentMulti[langKey] || ''; if (hasMedia) { setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text.replace(mediaUrl, '').trim()}); } else { setNewTaskContentMulti({...newTaskContentMulti, [langKey]: text + (text ? '\n\n' : '') + mediaUrl}); } }} style={{ background: hasMedia ? '#38A169' : 'transparent', color: hasMedia ? '#fff' : theme.textSecondary, border: `1.5px solid ${hasMedia ? '#38A169' : theme.inputBorder}`, padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer', transition: '0.2s' }}>
                                       {hasMedia ? '✅ ' : ''}{langKey.toUpperCase()}
                                     </button>
                                   );
                                 })}
                               </div>
-
-                              <button onClick={(e) => { e.preventDefault(); const nextContent = { ...newTaskContentMulti }; ['uk', 'ru', 'en', 'sk'].forEach(l => { nextContent[l] = (nextContent[l] || '').replace(mediaUrl, '').trim(); }); setNewTaskContentMulti(nextContent); }} style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }} title="Видалити медіа з усіх мов">✕</button>
-
+                              <button onClick={(e) => { e.preventDefault(); const nextContent = { ...newTaskContentMulti }; ['uk', 'ru', 'en', 'sk'].forEach(l => { nextContent[l] = (nextContent[l] || '').replace(mediaUrl, '').trim(); }); setNewTaskContentMulti(nextContent); }} style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', fontSize: '16px' }} title="Видалити медіа з усіх мов">✕</button>
                               {isImage && <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />}
                               {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
                               {isAudio && <audio controls src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
@@ -5535,183 +5536,184 @@ html = html.replace(/\.{4,}/g, () => {
                   );
                 })()}
 
-                {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ) */}
-                <div style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: '0 15px 50px rgba(0,0,0,0.08)', border: `1px solid ${theme.inputBorder}`, display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
+                {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ: РОЗГОРТАННЯ ВГОРУ) */}
+                <div ref={composerRef} style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: '0 15px 50px rgba(0,0,0,0.08)', border: `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
                     
-                    {/* ЛІВІ ІКОНКИ (Скріпка, Налаштування, Мова) */}
-                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
-                        
-                        {/* 1. Пряме завантаження медіа (Скріпка) */}
-                        <label className="hover-card" title="Прикріпити медіа" style={{ background: 'transparent', border: 'none', cursor: isMediaUploading ? 'wait' : 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            {isMediaUploading ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
-                            <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
-                        </label>
+                    {/* === ВЕРХНЯ ЧАСТИНА: ВІДКРИТІ ПОЛЯ ВВОДУ (ВИЇЖДЖАЮТЬ ВГОРУ) === */}
+                    {isComposerExpanded && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '10px', borderBottom: `1px dashed ${theme.inputBorder}`, animation: 'fadeIn 0.2s ease', position: 'relative' }}>
+                            <button onClick={(e) => { e.stopPropagation(); setIsComposerExpanded(false); }} title="Згорнути" style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '18px', zIndex: 10, padding: '4px' }}>✕</button>
 
-                        {/* 2. Меню OCR (Іконка Сканера / 3 крапки) */}
-                        <div className="composer-menu-parent">
-                            <button className="hover-card" title="Оцифрувати текст (OCR)" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {isOcrRunning ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>}
-                            </button>
-                            <div className="composer-menu-dropdown" style={{ minWidth: '220px' }}>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Мова OCR:</label>
-                                <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
-                                  {[{code: 'slk', label: 'SK'}, {code: 'ukr', label: 'UK'}, {code: 'eng', label: 'EN'}].map(l => (
-                                    <label key={l.code} style={{ flex: 1, textAlign: 'center', fontSize: '12px', cursor: 'pointer', background: ocrLangs.includes(l.code) ? '#E0A345' : theme.inputBg, color: ocrLangs.includes(l.code) ? '#fff' : theme.text, padding: '6px', borderRadius: '6px', fontWeight: 'bold', transition: '0.2s' }}>
-                                      <input type="checkbox" checked={ocrLangs.includes(l.code)} onChange={() => toggleOcrLang(l.code)} style={{ display: 'none' }} />
-                                      {l.label}
-                                    </label>
-                                  ))}
-                                </div>
-                                <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: isOcrRunning ? 'wait' : 'pointer', padding: '12px 14px', background: isOcrRunning ? '#E0A345' : theme.inputBg, color: isOcrRunning ? '#fff' : theme.text, borderRadius: '12px', fontWeight: 'bold', fontSize: '13px' }}>
-                                    {isOcrRunning ? `⏳ Сканую... ${ocrProgress}%` : '👁️ Сканувати нове фото'}
-                                    <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
-                                </label>
-                            </div>
-                        </div>
-
-                        {/* Меню Налаштувань (Тип, Складність, Категорія) */}
-                        <div className="composer-menu-parent">
-                            <button className="hover-card" title="Налаштування" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                            </button>
-                            <div className="composer-menu-dropdown">
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Тип:</label>
-                                <select value={newTaskType} onChange={e=>setNewTaskType(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
-                                    <option value="text">📝 Текст / Теорія</option>
-                                    <option value="flashcard">🗂 Флешкартка</option>
-                                    <option value="quiz">✅ Квіз</option>
-                                </select>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Складність:</label>
-                                <select value={newTaskDifficulty} onChange={e=>setNewTaskDifficulty(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
-                                    <option value="easy">🟢 Легко</option>
-                                    <option value="medium">🟡 Середньо</option>
-                                    <option value="hard">🔴 Складно</option>
-                                </select>
-                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Категорія:</label>
-                                <select value={newTaskCategory} onChange={e=>setNewTaskCategory(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
-                                    <option value="grammar">📚 Граматика</option>
-                                    <option value="vocabulary">📝 Лексика</option>
-                                    <option value="reading">📖 Читання</option>
-                                    <option value="listening">🎧 Аудіювання</option>
-                                    <option value="bonus">🎁 Додатково</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        {/* Меню Мов та Перекладу */}
-                        <div className="composer-menu-parent">
-                            <button className="hover-card" title="Мова та переклад" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
-                            </button>
-                            <div className="composer-menu-dropdown" style={{ minWidth: '260px' }}>
-                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                                    {['uk', 'ru', 'en', 'sk'].map(l => (
-                                        <button key={l} disabled={isSingleLang} onClick={(e) => { e.preventDefault(); setSourceLang(l); }} style={{ background: sourceLang === l ? '#E0A345' : theme.inputBg, color: sourceLang === l ? '#fff' : theme.textSecondary, border: 'none', padding: '8px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', flex: 1 }}>{l.toUpperCase()}</button>
-                                    ))}
-                                </div>
-                                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: theme.text, cursor: 'pointer', fontWeight: 'bold', background: theme.inputBg, padding: '10px 12px', borderRadius: '8px' }}>
-                                    <input type="checkbox" checked={isSingleLang} onChange={e => setIsSingleLang(e.target.checked)} /> Тільки одна мова
-                                </label>
-                                <button onClick={handleAutoTranslate} disabled={isSingleLang} style={{ background: isSingleLang ? theme.inputBg : '#3182ce', color: isSingleLang ? theme.textSecondary : '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}>
-                                    {translateStatus}
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* ЦЕНТР: СУЦІЛЬНА КОМПАКТНА ЗОНА ВВЕДЕННЯ */}
-                    <div className="composer-input-area" style={{ flex: 1, background: theme.inputBg, borderRadius: '20px', padding: isComposerExpanded ? '4px 14px' : '0 14px', display: 'flex', flexDirection: 'column', border: `1px solid transparent`, position: 'relative', cursor: isComposerExpanded ? 'default' : 'text', transition: 'padding 0.2s ease' }} onClick={() => { if (!isComposerExpanded) setIsComposerExpanded(true); }}>
-                        
-                        {!isComposerExpanded ? (
-                            <div style={{ width: '100%', padding: '16px 0', color: theme.textSecondary, fontSize: '15px', fontWeight: 'bold' }}>
-                                Створити нове завдання...
-                            </div>
-                        ) : (
-                            <>
-                                {/* Хрестик для ручного згортання (з'являється лише коли розгорнуто) */}
-                                <button 
-                                    onClick={(e) => { e.stopPropagation(); setIsComposerExpanded(false); }} 
-                                    title="Згорнути" 
-                                    style={{ position: 'absolute', top: '10px', right: '12px', background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '16px', zIndex: 10, padding: '4px' }}
-                                >✕</button>
-
-                                {/* 1. Поле для Умови */}
-                                {(() => {
-                                    const currentRaw = newTaskContentMulti[sourceLang] || '';
-                                    const urls = currentRaw.match(/(https?:\/\/[^\s]+)/g) || [];
-                                    let cleanText = currentRaw;
-                                    urls.forEach(u => { cleanText = cleanText.replace(u, ''); });
-                                    return (
-                                        <textarea 
-                                            placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
-                                            value={cleanText} 
-                                            onChange={e => {
-                                                const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
-                                                setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
-                                            }} 
-                                            rows="1"
-                                            autoFocus
-                                            style={{ width: '100%', padding: '12px 30px 8px 0', border: 'none', borderBottom: `1px dashed ${theme.inputBorder}`, background: 'transparent', color: theme.textSecondary, fontSize: '13px', outline: 'none', resize: 'none', minHeight: '35px', fontWeight: 'bold' }}
-                                            onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; }}
-                                        />
-                                    );
-                                })()}
-
-                                {/* 2. Живий редактор для вправи */}
-                                <div style={{ padding: '6px 0', display: 'flex', flexDirection: 'column' }}>
-                                    <FormatToolbar theme={theme} />
-                                    <WYSIWYGEditor 
-                                        theme={theme}
-                                        value={newTaskExercise} 
-                                        onChange={setNewTaskExercise} 
-                                        placeholder="Введіть текст вправи (або Діалог: Текст)..." 
-                                        style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '40px', lineHeight: '1.5' }} 
+                            {/* 1. Поле для Умови */}
+                            {(() => {
+                                const currentRaw = newTaskContentMulti[sourceLang] || '';
+                                const urls = currentRaw.match(/(https?:\/\/[^\s]+)/g) || [];
+                                let cleanText = currentRaw;
+                                urls.forEach(u => { cleanText = cleanText.replace(u, ''); });
+                                return (
+                                    <textarea 
+                                        placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
+                                        value={cleanText} 
+                                        onChange={e => {
+                                            const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
+                                            setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
+                                        }} 
+                                        rows="1"
+                                        autoFocus
+                                        style={{ width: '100%', padding: '14px 35px 14px 14px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: theme.text, fontSize: '14px', outline: 'none', resize: 'none', minHeight: '45px', fontWeight: 'bold', boxSizing: 'border-box' }}
+                                        onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; }}
                                     />
-                                </div>
+                                );
+                            })()}
 
-                                {/* 3. Поле для правильної відповіді */}
-                                <input 
-                                    type="text" 
-                                    placeholder="Правильна відповідь (необов'язково)..." 
-                                    value={newTaskCorrectAnswer} 
-                                    onChange={e => setNewTaskCorrectAnswer(e.target.value)} 
-                                    style={{ width: '100%', padding: '10px 0', border: 'none', borderTop: `1px solid ${theme.inputBorder}`, background: 'transparent', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold' }}
+                            {/* 2. Живий редактор для вправи */}
+                            <div style={{ background: theme.inputBg, borderRadius: '16px', padding: '10px 14px', display: 'flex', flexDirection: 'column' }}>
+                                <FormatToolbar theme={theme} />
+                                <WYSIWYGEditor 
+                                    theme={theme}
+                                    value={newTaskExercise} 
+                                    onChange={setNewTaskExercise} 
+                                    placeholder="Введіть текст вправи (або Діалог: Текст)..." 
+                                    style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '60px', lineHeight: '1.5' }} 
                                 />
-                            </>
-                        )}
-                    </div>
+                            </div>
 
-                    {/* ПРАВІ КНОПКИ (Мікрофон, Зберегти) */}
-                    <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
-                        <button onClick={isRecording ? stopRecording : startRecording} className="hover-card" title={isRecording ? "Зупинити запис" : "Записати голос"} style={{ background: isRecording ? '#E53E3E' : 'transparent', color: isRecording ? '#fff' : theme.textSecondary, border: 'none', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s', animation: isRecording ? 'ffPulse 1.5s infinite' : 'none' }}>
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
-                        </button>
-                        {(() => {
-                            const isTaskEmpty = !(newTaskContentMulti.uk || newTaskContentMulti.ru || newTaskContentMulti.en || newTaskContentMulti.sk || (newTaskExercise || '').replace(/<[^>]*>|&nbsp;/g, '').trim() || newTaskCorrectAnswer);
-                            return (
-                                <button 
-                                    onClick={handleAddTask} 
-                                    disabled={isTaskEmpty} 
-                                    className={isTaskEmpty ? "" : "hover-card"} 
-                                    title={isTaskEmpty ? "Введіть текст або завантажте файл" : "Зберегти завдання"} 
-                                    style={{ 
-                                        background: isTaskEmpty ? theme.inputBg : '#E0A345', 
-                                        color: isTaskEmpty ? theme.textSecondary : '#fff', 
-                                        border: isTaskEmpty ? `1px solid ${theme.inputBorder}` : 'none', 
-                                        cursor: isTaskEmpty ? 'not-allowed' : 'pointer', 
-                                        width: '42px', height: '42px', borderRadius: '50%', 
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                                        boxShadow: isTaskEmpty ? 'none' : '0 4px 15px rgba(224,163,69,0.3)', 
-                                        transition: '0.2s', 
-                                        opacity: isTaskEmpty ? 0.6 : 1 
-                                    }}
-                                >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px' }}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                            {/* 3. Поле для правильної відповіді */}
+                            <input 
+                                type="text" 
+                                placeholder="Правильна відповідь (необов'язково)..." 
+                                value={newTaskCorrectAnswer} 
+                                onChange={e => setNewTaskCorrectAnswer(e.target.value)} 
+                                style={{ width: '100%', padding: '14px 16px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold', boxSizing: 'border-box' }}
+                            />
+                        </div>
+                    )}
+
+                    {/* === НИЖНЯ ЧАСТИНА: СМУЖКА ТА ІКОНКИ (ЗАВЖДИ ЗНИЗУ) === */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        
+                        {/* ЛІВІ ІКОНКИ (Скріпка, OCR, Налаштування, Мова) */}
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            
+                            {/* 1. Пряме завантаження медіа (Скріпка) */}
+                            <label className="hover-card" title="Прикріпити медіа" style={{ background: 'transparent', border: 'none', cursor: isMediaUploading ? 'wait' : 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {isMediaUploading ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                                <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
+                            </label>
+
+                            {/* 2. Меню OCR (Іконка Сканера) */}
+                            <div className="composer-menu-parent">
+                                <button className="hover-card" title="Оцифрувати текст (OCR)" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    {isOcrRunning ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>}
                                 </button>
-                            );
-                        })()}
-                    </div>
+                                <div className="composer-menu-dropdown" style={{ minWidth: '220px' }}>
+                                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Мова OCR:</label>
+                                    <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
+                                      {[{code: 'slk', label: 'SK'}, {code: 'ukr', label: 'UK'}, {code: 'eng', label: 'EN'}].map(l => (
+                                        <label key={l.code} style={{ flex: 1, textAlign: 'center', fontSize: '12px', cursor: 'pointer', background: ocrLangs.includes(l.code) ? '#E0A345' : theme.inputBg, color: ocrLangs.includes(l.code) ? '#fff' : theme.text, padding: '6px', borderRadius: '6px', fontWeight: 'bold', transition: '0.2s' }}>
+                                          <input type="checkbox" checked={ocrLangs.includes(l.code)} onChange={() => toggleOcrLang(l.code)} style={{ display: 'none' }} />
+                                          {l.label}
+                                        </label>
+                                      ))}
+                                    </div>
+                                    <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: isOcrRunning ? 'wait' : 'pointer', padding: '12px 14px', background: isOcrRunning ? '#E0A345' : theme.inputBg, color: isOcrRunning ? '#fff' : theme.text, borderRadius: '12px', fontWeight: 'bold', fontSize: '13px' }}>
+                                        {isOcrRunning ? `⏳ Сканую... ${ocrProgress}%` : '👁️ Сканувати нове фото'}
+                                        <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
+                                    </label>
+                                </div>
+                            </div>
 
+                            {/* 3. Меню Налаштувань */}
+                            <div className="composer-menu-parent">
+                                <button className="hover-card" title="Налаштування" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                                </button>
+                                <div className="composer-menu-dropdown">
+                                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Тип:</label>
+                                    <select value={newTaskType} onChange={e=>setNewTaskType(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="text">📝 Текст / Теорія</option>
+                                        <option value="flashcard">🗂 Флешкартка</option>
+                                        <option value="quiz">✅ Квіз</option>
+                                    </select>
+                                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Складність:</label>
+                                    <select value={newTaskDifficulty} onChange={e=>setNewTaskDifficulty(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="easy">🟢 Легко</option>
+                                        <option value="medium">🟡 Середньо</option>
+                                        <option value="hard">🔴 Складно</option>
+                                    </select>
+                                    <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Категорія:</label>
+                                    <select value={newTaskCategory} onChange={e=>setNewTaskCategory(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                                        <option value="grammar">📚 Граматика</option>
+                                        <option value="vocabulary">📝 Лексика</option>
+                                        <option value="reading">📖 Читання</option>
+                                        <option value="listening">🎧 Аудіювання</option>
+                                        <option value="bonus">🎁 Додатково</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {/* 4. Меню Мов та Перекладу */}
+                            <div className="composer-menu-parent">
+                                <button className="hover-card" title="Мова та переклад" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                                </button>
+                                <div className="composer-menu-dropdown" style={{ minWidth: '260px' }}>
+                                    <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
+                                        {['uk', 'ru', 'en', 'sk'].map(l => (
+                                            <button key={l} disabled={isSingleLang} onClick={(e) => { e.preventDefault(); setSourceLang(l); }} style={{ background: sourceLang === l ? '#E0A345' : theme.inputBg, color: sourceLang === l ? '#fff' : theme.textSecondary, border: 'none', padding: '8px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '12px', fontWeight: 'bold', flex: 1 }}>{l.toUpperCase()}</button>
+                                        ))}
+                                    </div>
+                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: theme.text, cursor: 'pointer', fontWeight: 'bold', background: theme.inputBg, padding: '10px 12px', borderRadius: '8px' }}>
+                                        <input type="checkbox" checked={isSingleLang} onChange={e => setIsSingleLang(e.target.checked)} /> Тільки одна мова
+                                    </label>
+                                    <button onClick={handleAutoTranslate} disabled={isSingleLang} style={{ background: isSingleLang ? theme.inputBg : '#3182ce', color: isSingleLang ? theme.textSecondary : '#fff', border: 'none', padding: '12px', borderRadius: '8px', cursor: isSingleLang ? 'not-allowed' : 'pointer', fontSize: '13px', fontWeight: 'bold', transition: '0.2s' }}>
+                                        {translateStatus}
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* ЦЕНТР: ПРЕВ'Ю СМУЖКА АБО ІНДИКАТОР РЕДАГУВАННЯ */}
+                        <div 
+                            onClick={() => { if (!isComposerExpanded) setIsComposerExpanded(true); }}
+                            style={{ flex: 1, padding: '0 16px', borderRadius: '16px', background: theme.inputBg, color: theme.textSecondary, fontSize: '15px', fontWeight: 'bold', cursor: isComposerExpanded ? 'default' : 'pointer', userSelect: 'none', display: 'flex', alignItems: 'center', height: '40px', boxSizing: 'border-box' }}
+                        >
+                            {!isComposerExpanded ? "Створити нове завдання..." : "✍️ Редагування завдання..."}
+                        </div>
+
+                        {/* ПРАВІ КНОПКИ (Мікрофон, Зберегти) */}
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <button onClick={isRecording ? stopRecording : startRecording} className="hover-card" title={isRecording ? "Зупинити запис" : "Записати голос"} style={{ background: isRecording ? '#E53E3E' : 'transparent', color: isRecording ? '#fff' : theme.textSecondary, border: 'none', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s', animation: isRecording ? 'ffPulse 1.5s infinite' : 'none' }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                            </button>
+                            
+                            {(() => {
+                                const isTaskEmpty = !(newTaskContentMulti.uk || newTaskContentMulti.ru || newTaskContentMulti.en || newTaskContentMulti.sk || (newTaskExercise || '').replace(/<[^>]*>|&nbsp;/g, '').trim() || newTaskCorrectAnswer);
+                                return (
+                                    <button 
+                                        onClick={handleAddTask} 
+                                        disabled={isTaskEmpty} 
+                                        className={isTaskEmpty ? "" : "hover-card"} 
+                                        title={isTaskEmpty ? "Введіть текст або завантажте файл" : "Зберегти завдання"} 
+                                        style={{ 
+                                            background: isTaskEmpty ? theme.inputBg : '#E0A345', 
+                                            color: isTaskEmpty ? theme.textSecondary : '#fff', 
+                                            border: isTaskEmpty ? `1px solid ${theme.inputBorder}` : 'none', 
+                                            cursor: isTaskEmpty ? 'not-allowed' : 'pointer', 
+                                            width: '42px', height: '42px', borderRadius: '50%', 
+                                            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                                            boxShadow: isTaskEmpty ? 'none' : '0 4px 15px rgba(224,163,69,0.3)', 
+                                            transition: '0.2s', 
+                                            opacity: isTaskEmpty ? 0.6 : 1 
+                                        }}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px' }}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                                    </button>
+                                );
+                            })()}
+                        </div>
+
+                    </div>
                 </div>
               </div>
             )}
