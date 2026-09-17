@@ -4996,29 +4996,48 @@ html = html.replace(/\.{4,}/g, () => {
               
               {isFilterMenuOpen && (
                 <div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
-                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                     <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '900' }}>Фільтри</h4>
-                     <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Скинути</button>
-                   </div>
-                   
-                   <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Категорія</label>
-                   <select value={taskFilterCategory} onChange={e => setTaskFilterCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, marginBottom: '15px', fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
-                      <option value="all">🌐 Усі категорії</option>
-                      <option value="grammar">📚 Граматика</option>
-                      <option value="vocabulary">📝 Лексика</option>
-                      <option value="reading">📖 Читання</option>
-                      <option value="listening">🎧 Аудіювання</option>
-                      <option value="bonus">🎁 Додатково</option>
-                   </select>
-                   
-                   <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Статус виконання</label>
-                   <select value={taskFilterStatus} onChange={e => setTaskFilterStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
-                      <option value="all">📋 Усі завдання</option>
-                      <option value="completed">✅ Виконані</option>
-                      <option value="uncompleted">⏳ Невиконані</option>
-                   </select>
-                </div>
-              )}
+                   <div style={{ marginBottom: '40px' }}>
+            <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
+            <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
+              <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
+              
+              {/* КНОПКА ТА МЕНЮ ФІЛЬТРУ (Прив'язана до заголовка) */}
+              <div style={{ position: 'relative' }}>
+                <button 
+                  onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                  className="hover-card"
+                  style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 16px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                  Фільтр
+                  {(taskFilterCategory !== 'all' || taskFilterStatus !== 'all') && <span style={{ background: '#E0A345', width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' }}></span>}
+                </button>
+                
+                {isFilterMenuOpen && (
+                  <div style={{ position: 'absolute', top: '115%', left: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
+                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                       <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '900' }}>Фільтри</h4>
+                       <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Скинути</button>
+                     </div>
+                     
+                     <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Категорія</label>
+                     <select value={taskFilterCategory} onChange={e => setTaskFilterCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, marginBottom: '15px', fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                        <option value="all">🌐 Усі категорії</option>
+                        <option value="grammar">📚 Граматика</option>
+                        <option value="vocabulary">📝 Лексика</option>
+                        <option value="reading">📖 Читання</option>
+                        <option value="listening">🎧 Аудіювання</option>
+                        <option value="bonus">🎁 Додатково</option>
+                     </select>
+                     
+                     <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Статус виконання</label>
+                     <select value={taskFilterStatus} onChange={e => setTaskFilterStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                        <option value="all">📋 Усі завдання</option>
+                        <option value="completed">✅ Виконані</option>
+                        <option value="uncompleted">⏳ Невиконані</option>
+                     </select>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
