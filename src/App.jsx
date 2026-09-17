@@ -2251,10 +2251,12 @@ function Platform() {
       : (parsed || '');
   };
 
-const [newTaskType, setNewTaskType] = useState('text');
+
+  const [newTaskType, setNewTaskType] = useState('text');
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
-  const [newTaskCategory, setNewTaskCategory] = useState('grammar'); // <--- ДОДАТИ ЦЕ
+  const [newTaskCategory, setNewTaskCategory] = useState('grammar'); 
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
+  const [isComposerExpanded, setIsComposerExpanded] = useState(false); // <--- ДОДАЛИ ЦЕ
   
   // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
   const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
@@ -3428,7 +3430,8 @@ async function handleAddTask() {
       setNewTaskExercise('');
       setNewTaskCorrectAnswer('');
       setIsSingleLang(false);
-      setNewTaskCategory('grammar'); // <--- ДОДАЙ ОСЬ ТУТ
+      setNewTaskCategory('grammar'); 
+      setIsComposerExpanded(false); // <--- ДОДАЛИ ЗГОРТАННЯ
     }
   }
 
@@ -5617,49 +5620,65 @@ html = html.replace(/\.{4,}/g, () => {
                     </div>
 
                     {/* ЦЕНТР: СУЦІЛЬНА КОМПАКТНА ЗОНА ВВЕДЕННЯ */}
-                    <div className="composer-input-area" style={{ flex: 1, background: theme.inputBg, borderRadius: '20px', padding: '4px 14px', display: 'flex', flexDirection: 'column', border: `1px solid transparent` }}>
+                    <div className="composer-input-area" style={{ flex: 1, background: theme.inputBg, borderRadius: '20px', padding: isComposerExpanded ? '4px 14px' : '0 14px', display: 'flex', flexDirection: 'column', border: `1px solid transparent`, position: 'relative', cursor: isComposerExpanded ? 'default' : 'text', transition: 'padding 0.2s ease' }} onClick={() => { if (!isComposerExpanded) setIsComposerExpanded(true); }}>
                         
-                        {/* 1. Поле для Умови */}
-                        {(() => {
-                            const currentRaw = newTaskContentMulti[sourceLang] || '';
-                            const urls = currentRaw.match(/(https?:\/\/[^\s]+)/g) || [];
-                            let cleanText = currentRaw;
-                            urls.forEach(u => { cleanText = cleanText.replace(u, ''); });
-                            return (
-                                <textarea 
-                                    placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
-                                    value={cleanText} 
-                                    onChange={e => {
-                                        const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
-                                        setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
-                                    }} 
-                                    rows="1"
-                                    style={{ width: '100%', padding: '12px 0 8px 0', border: 'none', borderBottom: `1px dashed ${theme.inputBorder}`, background: 'transparent', color: theme.textSecondary, fontSize: '13px', outline: 'none', resize: 'none', minHeight: '35px', fontWeight: 'bold' }}
-                                    onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; }}
+                        {!isComposerExpanded ? (
+                            <div style={{ width: '100%', padding: '16px 0', color: theme.textSecondary, fontSize: '15px', fontWeight: 'bold' }}>
+                                Створити нове завдання...
+                            </div>
+                        ) : (
+                            <>
+                                {/* Хрестик для ручного згортання (з'являється лише коли розгорнуто) */}
+                                <button 
+                                    onClick={(e) => { e.stopPropagation(); setIsComposerExpanded(false); }} 
+                                    title="Згорнути" 
+                                    style={{ position: 'absolute', top: '10px', right: '12px', background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '16px', zIndex: 10, padding: '4px' }}
+                                >✕</button>
+
+                                {/* 1. Поле для Умови */}
+                                {(() => {
+                                    const currentRaw = newTaskContentMulti[sourceLang] || '';
+                                    const urls = currentRaw.match(/(https?:\/\/[^\s]+)/g) || [];
+                                    let cleanText = currentRaw;
+                                    urls.forEach(u => { cleanText = cleanText.replace(u, ''); });
+                                    return (
+                                        <textarea 
+                                            placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
+                                            value={cleanText} 
+                                            onChange={e => {
+                                                const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
+                                                setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
+                                            }} 
+                                            rows="1"
+                                            autoFocus
+                                            style={{ width: '100%', padding: '12px 30px 8px 0', border: 'none', borderBottom: `1px dashed ${theme.inputBorder}`, background: 'transparent', color: theme.textSecondary, fontSize: '13px', outline: 'none', resize: 'none', minHeight: '35px', fontWeight: 'bold' }}
+                                            onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; }}
+                                        />
+                                    );
+                                })()}
+
+                                {/* 2. Живий редактор для вправи */}
+                                <div style={{ padding: '6px 0', display: 'flex', flexDirection: 'column' }}>
+                                    <FormatToolbar theme={theme} />
+                                    <WYSIWYGEditor 
+                                        theme={theme}
+                                        value={newTaskExercise} 
+                                        onChange={setNewTaskExercise} 
+                                        placeholder="Введіть текст вправи (або Діалог: Текст)..." 
+                                        style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '40px', lineHeight: '1.5' }} 
+                                    />
+                                </div>
+
+                                {/* 3. Поле для правильної відповіді */}
+                                <input 
+                                    type="text" 
+                                    placeholder="Правильна відповідь (необов'язково)..." 
+                                    value={newTaskCorrectAnswer} 
+                                    onChange={e => setNewTaskCorrectAnswer(e.target.value)} 
+                                    style={{ width: '100%', padding: '10px 0', border: 'none', borderTop: `1px solid ${theme.inputBorder}`, background: 'transparent', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold' }}
                                 />
-                            );
-                        })()}
-
-                        {/* 2. Живий редактор для вправи */}
-                        <div style={{ padding: '6px 0', display: 'flex', flexDirection: 'column' }}>
-                            <FormatToolbar theme={theme} />
-                            <WYSIWYGEditor 
-                                theme={theme}
-                                value={newTaskExercise} 
-                                onChange={setNewTaskExercise} 
-                                placeholder="Введіть текст вправи (або Діалог: Текст)..." 
-                                style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '40px', lineHeight: '1.5' }} 
-                            />
-                        </div>
-
-                        {/* 3. Поле для правильної відповіді */}
-                        <input 
-                            type="text" 
-                            placeholder="Правильна відповідь (необов'язково)..." 
-                            value={newTaskCorrectAnswer} 
-                            onChange={e => setNewTaskCorrectAnswer(e.target.value)} 
-                            style={{ width: '100%', padding: '10px 0', border: 'none', borderTop: `1px solid ${theme.inputBorder}`, background: 'transparent', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold' }}
-                        />
+                            </>
+                        )}
                     </div>
 
                     {/* ПРАВІ КНОПКИ (Мікрофон, Зберегти) */}
