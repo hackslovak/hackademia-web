@@ -4977,26 +4977,7 @@ html = html.replace(/\.{4,}/g, () => {
 
         <div style={{ flex: 1, padding: '100px 60px 40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
-            <div>
-              <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
-              <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
-            </div>
-            
-            {/* КНОПКА ТА МЕНЮ ФІЛЬТРУ */}
-            <div style={{ position: 'relative' }}>
-              <button 
-                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                className="hover-card"
-                style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '12px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                Фільтр
-                {(taskFilterCategory !== 'all' || taskFilterStatus !== 'all') && <span style={{ background: '#E0A345', width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' }}></span>}
-              </button>
-              
-              {isFilterMenuOpen && (
-                <div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
-                   <div style={{ marginBottom: '40px' }}>
+          <div style={{ marginBottom: '40px' }}>
             <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
               <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
