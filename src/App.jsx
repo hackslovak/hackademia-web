@@ -2047,8 +2047,21 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             } else { alert("Спочатку виділіть текст для створення спойлера!"); }
             break;
         case 'link':
-            const url = prompt('Введіть URL посилання:');
-            if(url) document.execCommand('createLink', false, url);
+            let url = prompt('Введіть URL посилання (наприклад: t.me/bot):');
+            if(url) {
+                // Автоматично додаємо https:// якщо його немає
+                if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url) && !/^tel:/i.test(url)) {
+                    url = 'https://' + url;
+                }
+                const sel = window.getSelection();
+                if(sel.rangeCount && !sel.isCollapsed) {
+                    const text = sel.toString();
+                    // Створюємо справжнє посилання з нашим фірмовим теплим кольором
+                    document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${text}</a>`);
+                } else {
+                    document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${url}</a>`);
+                }
+            }
             break;
         case 'date':
             const dateStr = new Date().toLocaleDateString('uk-UA');
@@ -4250,7 +4263,9 @@ function renderContent(taskContent, currentTask = null) {
 const parseToElements = (text, prefixKey) => {
       if (!text) return { texts: [], media: [] };
       const urlRegex = /(https?:\/\/[^\s]+)/g;
-      const parts = text.split(urlRegex);
+      
+      // МАГІЯ: Якщо це HTML-текст із живого редактора ('ex'), ми не розбиваємо його регулярками, щоб не зламати посилання!
+      const parts = prefixKey === 'ex' ? [text] : text.split(urlRegex);
       
       const texts = [];
       const media = [];
