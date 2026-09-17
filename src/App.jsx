@@ -4342,6 +4342,23 @@ const parseToElements = (text, prefixKey) => {
           } else if (part) {
             let html = String(part);
 
+            // === МАГІЯ ТЕЛЕГРАМУ: КОПІЮВАННЯ ТА СПОЙЛЕРИ ===
+            
+            // 1. Копіювання моноширинного тексту (Code) по кліку
+            const copyLogic = `event.stopPropagation(); const text = this.getAttribute('data-copy'); navigator.clipboard.writeText(text); const oldBg = this.style.background; const oldCol = this.style.color; this.style.background = '#38A169'; this.style.color = '#fff'; setTimeout(() => { this.style.background = oldBg; this.style.color = oldCol; }, 400);`;
+            const codeReplacer = (match, inner) => {
+                const plainText = inner.replace(/<[^>]*>/g, '').replace(/'/g, "&#39;").replace(/"/g, '&quot;');
+                return `<code data-copy="${plainText}" onclick="${copyLogic}" style="font-family: monospace; background: rgba(0,0,0,0.06); padding: 2px 6px; border-radius: 6px; cursor: pointer; color: #E53E3E; font-weight: bold; transition: 0.2s; box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);" title="Клікніть, щоб скопіювати">${inner}</code>`;
+            };
+            html = html.replace(/<font[^>]*face="monospace"[^>]*>([\s\S]*?)<\/font>/gi, codeReplacer);
+            html = html.replace(/<span[^>]*style="[^"]*font-family:\s*monospace[^"]*"[^>]*>([\s\S]*?)<\/span>/gi, codeReplacer);
+
+            // 2. Відкриття спойлерів по кліку
+            html = html.replace(/<span[^>]*title="Спойлер"[^>]*>([\s\S]*?)<\/span>/gi, (match, inner) => {
+                return `<span onclick="event.stopPropagation(); this.style.color='inherit'; this.style.backgroundColor='rgba(0,0,0,0.08)';" style="background-color: #4A5568; color: transparent; border-radius: 4px; cursor: pointer; padding: 2px 5px; transition: color 0.3s, background-color 0.3s;" title="Клікніть, щоб відкрити">${inner}</span>`;
+            });
+            // ===============================================
+
             let inlineCounter = -1;
             const safeTask = currentTask || { id: 'gen', correct_answer: '' };
             const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
