@@ -2580,7 +2580,13 @@ const [newTaskType, setNewTaskType] = useState('text');
   };
   
   const [courseProgress, setCourseProgress] = useState({ completed: 0, total: 0 });
+  const [moduleCompletionMap, setModuleCompletionMap] = useState({}); // Стан для завершених модулів
   const [myCards, setMyCards] = useState([]);
+  
+  // СТАНИ ДЛЯ ФІЛЬТРУ ЗАВДАНЬ
+  const [taskFilterCategory, setTaskFilterCategory] = useState('all');
+  const [taskFilterStatus, setTaskFilterStatus] = useState('all');
+  const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
   
   const [pendingCount, setPendingCount] = useState(0);
   const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
@@ -2993,17 +2999,32 @@ useEffect(() => {
 
         const modIds = mods.map(m => m.id);
         if (modIds.length > 0) {
-          const { data: tks } = await supabase.from('tasks').select('id').in('module_id', modIds);
+          const { data: tks } = await supabase.from('tasks').select('id, module_id').in('module_id', modIds);
           if (tks && tks.length > 0) {
             const totalTasks = tks.length;
             const taskIds = tks.map(t => t.id);
             const completedCount = taskIds.filter(id => completedTasks.includes(id)).length;
             setCourseProgress({ completed: completedCount, total: totalTasks });
+            
+            // Розрахунок 100% виконання для кожного модуля
+            const modCompletion = {};
+            mods.forEach(m => {
+              const modTasks = tks.filter(t => t.module_id === m.id);
+              if (modTasks.length > 0) {
+                const modCompletedTasks = modTasks.filter(t => completedTasks.includes(t.id));
+                modCompletion[m.id] = modCompletedTasks.length === modTasks.length;
+              } else {
+                modCompletion[m.id] = false;
+              }
+            });
+            setModuleCompletionMap(modCompletion);
           } else {
             setCourseProgress({ completed: 0, total: 0 });
+            setModuleCompletionMap({});
           }
         } else {
           setCourseProgress({ completed: 0, total: 0 });
+          setModuleCompletionMap({});
         }
       }
     }
@@ -4916,6 +4937,22 @@ html = html.replace(/\.{4,}/g, () => {
   
   // ЕКРАН 3: Список Завдань у Модулі (Оновлений преміум-дизайн з повним функціоналом)
   if (activeModule) {
+    // ЛОГІКА ФІЛЬТРУВАННЯ ЗАВДАНЬ
+    const filteredTasks = tasks.filter(task => {
+      let cat = task.category;
+      if (typeof cat === 'string') cat = cat.replace(/['"]/g, '').trim().toLowerCase();
+      const validCats = ['grammar', 'vocabulary', 'reading', 'listening', 'bonus'];
+      if (!validCats.includes(cat)) cat = 'bonus';
+
+      const matchCat = taskFilterCategory === 'all' || cat === taskFilterCategory;
+      const isCompleted = completedTasks.includes(task.id);
+      const matchStatus = taskFilterStatus === 'all' 
+          || (taskFilterStatus === 'completed' && isCompleted)
+          || (taskFilterStatus === 'uncompleted' && !isCompleted);
+
+      return matchCat && matchStatus;
+    });
+
     return (
       <div style={{ display: 'flex', minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif', boxSizing: 'border-box' }}>
         {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
@@ -4940,9 +4977,49 @@ html = html.replace(/\.{4,}/g, () => {
 
         <div style={{ flex: 1, padding: '100px 60px 40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          <div style={{ marginBottom: '40px' }}>
-            <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
-            <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '40px', flexWrap: 'wrap', gap: '20px' }}>
+            <div>
+              <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
+              <h2 style={{ color: theme.text, fontSize: '38px', margin: '10px 0 0 0', fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
+            </div>
+            
+            {/* КНОПКА ТА МЕНЮ ФІЛЬТРУ */}
+            <div style={{ position: 'relative' }}>
+              <button 
+                onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                className="hover-card"
+                style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '12px 20px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontWeight: 'bold', fontSize: '15px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                Фільтр
+                {(taskFilterCategory !== 'all' || taskFilterStatus !== 'all') && <span style={{ background: '#E0A345', width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' }}></span>}
+              </button>
+              
+              {isFilterMenuOpen && (
+                <div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
+                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                     <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '900' }}>Фільтри</h4>
+                     <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Скинути</button>
+                   </div>
+                   
+                   <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Категорія</label>
+                   <select value={taskFilterCategory} onChange={e => setTaskFilterCategory(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, marginBottom: '15px', fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                      <option value="all">🌐 Усі категорії</option>
+                      <option value="grammar">📚 Граматика</option>
+                      <option value="vocabulary">📝 Лексика</option>
+                      <option value="reading">📖 Читання</option>
+                      <option value="listening">🎧 Аудіювання</option>
+                      <option value="bonus">🎁 Додатково</option>
+                   </select>
+                   
+                   <label style={{ fontSize: '12px', color: theme.textSecondary, marginBottom: '6px', display: 'block', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Статус виконання</label>
+                   <select value={taskFilterStatus} onChange={e => setTaskFilterStatus(e.target.value)} style={{ width: '100%', padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '14px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
+                      <option value="all">📋 Усі завдання</option>
+                      <option value="completed">✅ Виконані</option>
+                      <option value="uncompleted">⏳ Невиконані</option>
+                   </select>
+                </div>
+              )}
+            </div>
           </div>
 
           <div style={{ maxWidth: '900px' }}>
@@ -4952,9 +5029,15 @@ html = html.replace(/\.{4,}/g, () => {
               <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', textAlign: 'center', marginBottom: '40px' }}>
                 <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0 }}>У цьому занятті ще немає матеріалів.</p>
               </div>
+            ) : filteredTasks.length === 0 ? (
+              <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)', textAlign: 'center', marginBottom: '40px' }}>
+                <div style={{ fontSize: '40px', marginBottom: '15px' }}>🔍</div>
+                <p style={{ color: theme.textSecondary, fontSize: '16px', margin: 0, fontWeight: 'bold' }}>За вашими фільтрами нічого не знайдено.</p>
+                <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
+              </div>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
-                {tasks.map((task, idx) => {
+                {filteredTasks.map((task, idx) => {
                   // Зчитуємо категорію завдання
                   let cat = task.category;
                   if (typeof cat === 'string') {
@@ -5792,6 +5875,13 @@ html = html.replace(/\.{4,}/g, () => {
                     
                     {/* Декоративний фон для Модуля */}
                     <div style={{ position: 'absolute', right: '-30px', bottom: '-30px', width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(43,108,176,0.15) 0%, rgba(43,108,176,0) 70%)', borderRadius: '50%', pointerEvents: 'none' }}></div>
+
+                    {/* Галочка завершеного модуля */}
+                    {moduleCompletionMap[mod.id] && (
+                      <div style={{ position: 'absolute', top: '20px', right: '20px', background: '#38A169', color: '#fff', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 10px rgba(56, 161, 105, 0.3)', zIndex: 5 }} title="Модуль повністю пройдено">
+                        <svg width="18" height="18" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                      </div>
+                    )}
 
                     {/* Контент модуля */}
                     <div onClick={() => setActiveModule(mod)} style={{ cursor: 'pointer', position: 'relative', zIndex: 1, flex: 1 }}>
