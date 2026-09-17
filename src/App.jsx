@@ -2256,6 +2256,16 @@ function Platform() {
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
   const [newTaskCategory, setNewTaskCategory] = useState('grammar'); 
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
+  
+  
+  // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
+  const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
+  const [sourceLang, setSourceLang] = useState('uk');
+  const [isSingleLang, setIsSingleLang] = useState(false); // Галочка вимкнення перекладу
+  const [translateStatus, setTranslateStatus] = useState('🪄 Автопереклад');
+  const [newTaskExercise, setNewTaskExercise] = useState(''); // Для нового завдання
+  const [editTaskExercise, setEditTaskExercise] = useState(''); // Для редагування
+  
   const [isComposerExpanded, setIsComposerExpanded] = useState(false);
 
   // РОЗУМНЕ АВТОЗГОРТАННЯ КОМПОЗЕРА
@@ -2273,14 +2283,6 @@ function Platform() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isComposerExpanded, newTaskContentMulti, newTaskExercise, newTaskCorrectAnswer]);
-  
-  // ТЕПЕР КОНТЕНТ — ЦЕ ОБ'ЄКТ ІЗ МОВАМИ
-  const [newTaskContentMulti, setNewTaskContentMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
-  const [sourceLang, setSourceLang] = useState('uk');
-  const [isSingleLang, setIsSingleLang] = useState(false); // Галочка вимкнення перекладу
-  const [translateStatus, setTranslateStatus] = useState('🪄 Автопереклад');
-  const [newTaskExercise, setNewTaskExercise] = useState(''); // Для нового завдання
-  const [editTaskExercise, setEditTaskExercise] = useState(''); // Для редагування
   
  // --- OCR (РОЗПІЗНАВАННЯ ТЕКСТУ) ---
   const [isOcrRunning, setIsOcrRunning] = useState(false);
