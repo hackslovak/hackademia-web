@@ -1928,7 +1928,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const editorRef = React.useRef(null);
   const isInternalChange = React.useRef(false);
   const [speakers, setSpeakers] = React.useState([]);
-  
+
   // Стан для контекстного меню
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, align: 'right-side' });
 
@@ -1946,20 +1946,27 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   React.useEffect(() => {
     if (!isInternalChange.current && editorRef.current && document.activeElement !== editorRef.current) {
         let cleanVal = value || '';
+        
+        // ЛІКУВАННЯ АБРАКАДАБРИ: Перетворюємо &nbsp; та &lt; на нормальний текст
         if (cleanVal.includes('&lt;') || cleanVal.includes('&amp;')) {
             cleanVal = cleanVal.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
         }
+
         if (editorRef.current.innerHTML !== cleanVal) {
             editorRef.current.innerHTML = cleanVal;
         }
     }
     isInternalChange.current = false;
 
+    // ПЛАВАЮЧА ПАНЕЛЬКА: Шукаємо імена (напр. MÁRIA:)
     if (value) {
         const textContent = value.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ');
         const matches = textContent.match(/^([A-ZÁÉÍÓÚÝČĎĽŇŠŤŽА-ЯІЇЄҐ]+[a-záéíóúýčďľňšťžа-яіїєґ]*):/gm);
-        if (matches) setSpeakers([...new Set(matches.map(m => m.trim()))]);
-        else setSpeakers([]);
+        if (matches) {
+           setSpeakers([...new Set(matches.map(m => m.trim()))]);
+        } else {
+           setSpeakers([]);
+        }
     }
   }, [value]);
 
@@ -1978,6 +1985,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z' || e.key === 'Z') { setTimeout(handleInput, 10); return; }
     }
+    // ФІКС ENTER ТА BACKSPACE
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       document.execCommand('insertHTML', false, '<br>\u200B'); 
@@ -1998,14 +2006,14 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (x + menuWidth + submenuWidth > window.innerWidth) {
         align = 'left-side';
     }
-    // Щоб саме меню не вилізло за екран
+    // Щоб саме головне меню не вилізло за екран
     if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-    if (y + 350 > window.innerHeight) y = window.innerHeight - 350;
+    if (y + 400 > window.innerHeight) y = window.innerHeight - 400;
 
     setContextMenu({ visible: true, x, y, align });
   };
 
-  const execMenuCommand = async (action, e) => {
+  const execMenuCommand = async (action, e, extraVal = null) => {
     e.stopPropagation();
     setContextMenu({ visible: false, x: 0, y: 0, align: 'right-side' });
     editorRef.current.focus();
@@ -2023,6 +2031,8 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             break;
         case 'delete': document.execCommand('delete'); break;
         case 'selectAll': document.execCommand('selectAll'); break;
+        
+        // ФОРМАТУВАННЯ
         case 'bold': document.execCommand('bold'); break;
         case 'italic': document.execCommand('italic'); break;
         case 'underline': document.execCommand('underline'); break;
@@ -2034,17 +2044,20 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             if(sel.rangeCount && !sel.isCollapsed) {
                 const text = sel.toString();
                 document.execCommand('insertHTML', false, `<span style="background-color: #4A5568; color: transparent; border-radius: 4px; cursor: pointer; padding: 0 4px;" title="Спойлер">${text}</span>`);
-            } else { alert("Спочатку виділіть текст для спойлера!"); }
+            } else { alert("Спочатку виділіть текст для створення спойлера!"); }
             break;
         case 'link':
             const url = prompt('Введіть URL посилання:');
             if(url) document.execCommand('createLink', false, url);
             break;
-        case 'date':
-            const dateStr = new Date().toLocaleDateString('uk-UA');
-            document.execCommand('insertText', false, dateStr);
+            
+        // КОЛІР ТА ОЧИЩЕННЯ
+        case 'color': 
+            document.execCommand('foreColor', false, extraVal); 
             break;
-        case 'clear': document.execCommand('removeFormat'); break;
+        case 'clear': 
+            document.execCommand('removeFormat'); 
+            break;
     }
     handleInput();
   };
@@ -2072,36 +2085,49 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
       {/* ТЕЛЕГРАМ-МЕНЮ ПКМ */}
       {contextMenu.visible && (
         <div className="tg-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onContextMenu={e => e.preventDefault()}>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('undo', e)}><span>↩️ Скасувати останню дію</span><span className="tg-menu-hotkey">Ctrl+Z</span></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('redo', e)}><span>↪️ Повторити</span><span className="tg-menu-hotkey">Ctrl+Y</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('undo', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>↩️</span> Скасувати останню дію</span><span className="tg-menu-hotkey">Ctrl+Z</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('redo', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>↪️</span> Повторити</span><span className="tg-menu-hotkey">Ctrl+Y</span></div>
             <div className="tg-menu-divider"></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('cut', e)}><span>✂️ Вирізати</span><span className="tg-menu-hotkey">Ctrl+X</span></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('copy', e)}><span>📄 Копіювати</span><span className="tg-menu-hotkey">Ctrl+C</span></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('paste', e)}><span>📋 Вставити</span><span className="tg-menu-hotkey">Ctrl+V</span></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('delete', e)}><span>🗑 Видалити</span><span className="tg-menu-hotkey">Del</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('cut', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>✂️</span> Вирізати</span><span className="tg-menu-hotkey">Ctrl+X</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('copy', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>📄</span> Копіювати</span><span className="tg-menu-hotkey">Ctrl+C</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('paste', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>📋</span> Вставити</span><span className="tg-menu-hotkey">Ctrl+V</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('delete', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>🗑</span> Видалити</span><span className="tg-menu-hotkey">Del</span></div>
             <div className="tg-menu-divider"></div>
             
             {/* Підменю "Форматування" */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
-                <span>✨ Форматування</span><span className="tg-menu-hotkey">▶</span>
+                <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>✨</span> Форматування</span><span className="tg-menu-hotkey">▶</span>
                 <div className="tg-submenu">
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('bold', e)}><span style={{fontWeight: 'bold'}}>Жирний</span><span className="tg-menu-hotkey">Ctrl+B</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('italic', e)}><span style={{fontStyle: 'italic'}}>Курсив</span><span className="tg-menu-hotkey">Ctrl+I</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('underline', e)}><span style={{textDecoration: 'underline'}}>Підкреслений</span><span className="tg-menu-hotkey">Ctrl+U</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('strikethrough', e)}><span style={{textDecoration: 'line-through'}}>Закреслений</span><span className="tg-menu-hotkey">Ctrl+Shift+X</span></div>
-                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('quote', e)}><span>Цитата</span><span className="tg-menu-hotkey">Ctrl+Shift+.</span></div>
-                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('monospace', e)}><span style={{fontFamily: 'monospace'}}>Моноширинний</span><span className="tg-menu-hotkey">Ctrl+Shift+M</span></div>
-                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('spoiler', e)}><span>Спойлер</span><span className="tg-menu-hotkey">Ctrl+Shift+P</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('monospace', e)}><span style={{fontFamily: 'monospace', background: 'rgba(0,0,0,0.05)', padding: '2px 4px', borderRadius: '4px'}}>Моноширинний</span><span className="tg-menu-hotkey">Ctrl+Shift+M</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('spoiler', e)}><span><span style={{background: '#4A5568', color: 'transparent', borderRadius: '3px', padding: '0 4px'}}>Спойлер</span></span><span className="tg-menu-hotkey">Ctrl+Shift+P</span></div>
                     <div className="tg-menu-divider"></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('quote', e)}><span>💬 Блок цитати</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('link', e)}><span>🔗 Додати посилання</span><span className="tg-menu-hotkey">Ctrl+K</span></div>
-                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('date', e)}><span>📅 Дата</span><span className="tg-menu-hotkey">Ctrl+Shift+D</span></div>
                     <div className="tg-menu-divider"></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('clear', e)}><span>🧹 Без форматування</span><span className="tg-menu-hotkey">Ctrl+Shift+N</span></div>
                 </div>
             </div>
+
+            {/* Підменю "Колір тексту" */}
+            <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
+                <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>🎨</span> Колір тексту</span><span className="tg-menu-hotkey">▶</span>
+                <div className="tg-submenu" style={{ minWidth: '180px' }}>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#E0A345')}><span style={{color: '#E0A345', fontWeight: 'bold'}}>🟡 Помаранчевий</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#E53E3E')}><span style={{color: '#E53E3E', fontWeight: 'bold'}}>🔴 Червоний</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#38A169')}><span style={{color: '#38A169', fontWeight: 'bold'}}>🟢 Зелений</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#3182ce')}><span style={{color: '#3182ce', fontWeight: 'bold'}}>🔵 Синій</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#805AD5')}><span style={{color: '#805AD5', fontWeight: 'bold'}}>🟣 Фіолетовий</span></div>
+                    <div className="tg-menu-divider"></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('clear', e)}><span>⚪ Стандартний текст</span></div>
+                </div>
+            </div>
             
             <div className="tg-menu-divider"></div>
-            <div className="tg-menu-item" onClick={(e) => execMenuCommand('selectAll', e)}><span>✅ Вибрати все</span><span className="tg-menu-hotkey">Ctrl+A</span></div>
+            <div className="tg-menu-item" onClick={(e) => execMenuCommand('selectAll', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>✅</span> Вибрати все</span><span className="tg-menu-hotkey">Ctrl+A</span></div>
         </div>
       )}
     </div>
@@ -4781,7 +4807,7 @@ html = html.replace(/\.{4,}/g, () => {
       .tg-has-submenu.right-side .tg-submenu { left: 100%; margin-left: 4px; }
       /* Якщо меню справа екрану - підменю випадає вліво */
       .tg-has-submenu.left-side .tg-submenu { right: 100%; margin-right: 4px; }
-      .tg-has-submenu:hover .tg-submenu { display: block; animation: fadeIn 0.15s ease-out; }
+      .tg-has-submenu:hover > .tg-submenu { display: block; animation: fadeIn 0.15s ease-out; }
     `}</style>
   );
 
