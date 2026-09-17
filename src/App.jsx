@@ -4264,7 +4264,7 @@ const parseToElements = (text, prefixKey) => {
       if (!text) return { texts: [], media: [] };
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       
-      // МАГІЯ: Якщо це HTML-текст із живого редактора ('ex'), ми не розбиваємо його регулярками, щоб не зламати посилання!
+      // 1. ЗАХИСТ HTML: Якщо це редактор ('ex'), не розбиваємо регуляркою, щоб не зламати посилання!
       const parts = prefixKey === 'ex' ? [text] : text.split(urlRegex);
       
       const texts = [];
@@ -4295,134 +4295,134 @@ const parseToElements = (text, prefixKey) => {
 
       for (let i = 0; i < parts.length; i++) {
         const part = parts[i];
-        if (part.match(urlRegex) && part.includes('#slice')) {
+        
+        if (prefixKey === 'desc' && part.match(urlRegex) && part.includes('#slice')) {
           sliceGroup.push(part);
-        } else if (sliceGroup.length > 0 && part.trim() === '') {
+        } else if (prefixKey === 'desc' && sliceGroup.length > 0 && part.trim() === '') {
           continue;
         } else {
           flushSlices();
-          if (part.match(urlRegex)) {
-        const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
-        
-        if (ytMatch && ytMatch[1]) {
-            media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                    <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />
-                </div>
-            );
-        } else if (part.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i) || part.includes("/audio/") || part.includes("voice_")) {
-            media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', width: '100%' }}>
-                    <audio controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', outline: 'none' }} />
-                </div>
-            );
-        } else if (part.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
-            media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                    <video controls controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />
-                </div>
-            );
-        } else if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
-            const cleanUrl = part.replace(/#split\d|#slice/g, '');
-            media.push(
-                <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', textAlign: 'center' }}>
-                    <img src={cleanUrl} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="task-img" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '12px', cursor: 'zoom-in', border: '1px solid rgba(0,0,0,0.1)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
-                </div>
-            );
-        } else {
-            texts.push(
-                <a key={`${prefixKey}-${i}`} href={part} target="_blank" rel="noreferrer" style={{ color: '#E0A345', textDecoration: 'underline' }}>
-                    {part}
-                </a>
-            );
-        }
-    } else if (part) {
+          
+          // 2. ВАЖЛИВО: Перевіряємо prefixKey === 'desc', щоб не конвертувати в медіа HTML-код з редактора!
+          if (prefixKey === 'desc' && part.match(urlRegex)) {
+            const ytMatch = part.match(/(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/);
+            
+            if (ytMatch && ytMatch[1]) {
+                media.push(
+                    <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
+                        <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />
+                    </div>
+                );
+            } else if (part.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i) || part.includes("/audio/") || part.includes("voice_")) {
+                media.push(
+                    <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', width: '100%' }}>
+                        <audio controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', outline: 'none' }} />
+                    </div>
+                );
+            } else if (part.match(/\.(mp4|webm|mov)(\?.*)?$/i)) {
+                media.push(
+                    <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
+                        <video controls controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} src={part} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />
+                    </div>
+                );
+            } else if (part.match(/\.(jpeg|jpg|gif|png|webp)(\?.*)?$/i) || part.includes("/images/") || part.includes("t.me") || part.includes("chat-images")) {
+                const cleanUrl = part.replace(/#split\d|#slice/g, '');
+                media.push(
+                    <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0', textAlign: 'center' }}>
+                        <img src={cleanUrl} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="task-img" onClick={() => setFullscreenTaskImg(cleanUrl)} className="hover-card" style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '12px', cursor: 'zoom-in', border: '1px solid rgba(0,0,0,0.1)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
+                    </div>
+                );
+            } else {
+                texts.push(
+                    <a key={`${prefixKey}-${i}`} href={part} target="_blank" rel="noreferrer" style={{ color: '#E0A345', textDecoration: 'underline', fontWeight: 'bold' }}>
+                        {part}
+                    </a>
+                );
+            }
+          } else if (part) {
             let html = String(part);
 
-            // Обробка Markdown-розмітки, кольорів та перетворення 4 крапок на інтерактивний інпут
-let inlineCounter = -1;
-    const safeTask = currentTask || { id: 'gen', correct_answer: '' };
-    const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
+            let inlineCounter = -1;
+            const safeTask = currentTask || { id: 'gen', correct_answer: '' };
+            const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
-html = html.replace(/\.{4,}/g, () => {
-      inlineCounter++;
-      const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
-      const savedVal = localStorage.getItem(cacheKey) || '';
-      const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
-      
-      const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
-      const cleanSaved = normalize(savedVal);
-      const cleanCorrect = normalize(correctVal);
-
-      let extraClasses = '';
-      let extraAttrs = '';
-      // МАГІЯ 1: Використовуємо 'em' із коефіцієнтом, щоб широкі букви (як 'm') містилися, а вузькі не створювали дір
-      const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
-      let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
-
-      if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
-          extraClasses = 'solved';
-      }
-
-      const stopReact = "event.stopPropagation();";
-      const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
-      
-      const updateLogic = `
-          localStorage.setItem('${cacheKey}', this.value); 
-          this.setAttribute('value', this.value); 
-          this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
-          this.classList.remove('error-flash', 'success-flash', 'solved'); 
-          void this.offsetWidth;
-          
-          if ('${safeCorrect}' !== '') {
-              const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
-              const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+            html = html.replace(/\.{4,}/g, () => {
+              inlineCounter++;
+              const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
+              const savedVal = localStorage.getItem(cacheKey) || '';
+              const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
               
-              if (studentText !== '' && studentText === correctText) {
-                  this.classList.add('solved', 'success-flash');
-                  this.style.width = 'auto'; /* Скидаємо ширину для злиття */
-                  if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+              const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+              const cleanSaved = normalize(savedVal);
+              const cleanCorrect = normalize(correctVal);
+
+              let extraClasses = '';
+              let extraAttrs = '';
+              const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
+              let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+
+              if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
+                  extraClasses = 'solved';
               }
-          }
-      `.replace(/\n/g, ' ');
 
-      return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
-    });
+              const stopReact = "event.stopPropagation();";
+              const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
+              
+              const updateLogic = `
+                  localStorage.setItem('${cacheKey}', this.value); 
+                  this.setAttribute('value', this.value); 
+                  this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
+                  this.classList.remove('error-flash', 'success-flash', 'solved'); 
+                  void this.offsetWidth;
+                  
+                  if ('${safeCorrect}' !== '') {
+                      const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+                      const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+                      
+                      if (studentText !== '' && studentText === correctText) {
+                          this.classList.add('solved', 'success-flash');
+                          this.style.width = 'auto'; 
+                          if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+                      }
+                  }
+              `.replace(/\n/g, ' ');
 
-    const palettes = [
-      'linear-gradient(135deg, #E0A345 0%, #D69E2E 100%)', 
-      'linear-gradient(135deg, #48BB78 0%, #38A169 100%)', 
-      'linear-gradient(135deg, #4299E1 0%, #3182ce 100%)', 
-      'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)'  
-    ];
-    let speakers = [];
-    let currentPaletteIndex = 0;
-    let normalizedText = html.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<p[^>]*>/gi, '').replace(/<div[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-    let lines = normalizedText.split('\n');
-    
-    setTimeout(() => {
-        document.querySelectorAll('.inline-blank-input').forEach(input => {
-            const tId = input.getAttribute('data-task-id');
-            const idx = input.getAttribute('data-index');
-            const cleanCorrect = input.getAttribute('data-correct');
-            if (tId && idx !== null) {
-                const val = localStorage.getItem(`task_${tId}_${idx}`) || '';
-                if (val && input.value !== val) {
-                    input.value = val;
-                    input.setAttribute('value', val);
-                    input.style.width = ((Math.max(val.length, 1) * 0.6) + 0.5) + 'em';
-                    
-                    const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
-                    if (normalize(val) !== '' && cleanCorrect !== '' && normalize(val) === cleanCorrect) {
-                        input.classList.add('solved');
-                        input.style.width = 'auto'; /* Скидаємо ширину для злиття */
+              return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
+            });
+
+            const palettes = [
+              'linear-gradient(135deg, #E0A345 0%, #D69E2E 100%)', 
+              'linear-gradient(135deg, #48BB78 0%, #38A169 100%)', 
+              'linear-gradient(135deg, #4299E1 0%, #3182ce 100%)', 
+              'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)'  
+            ];
+            let speakers = [];
+            let currentPaletteIndex = 0;
+            let normalizedText = html.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<p[^>]*>/gi, '').replace(/<div[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
+            let lines = normalizedText.split('\n');
+            
+            setTimeout(() => {
+                document.querySelectorAll('.inline-blank-input').forEach(input => {
+                    const tId = input.getAttribute('data-task-id');
+                    const idx = input.getAttribute('data-index');
+                    const cleanCorrect = input.getAttribute('data-correct');
+                    if (tId && idx !== null) {
+                        const val = localStorage.getItem(`task_${tId}_${idx}`) || '';
+                        if (val && input.value !== val) {
+                            input.value = val;
+                            input.setAttribute('value', val);
+                            input.style.width = ((Math.max(val.length, 1) * 0.6) + 0.5) + 'em';
+                            
+                            const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+                            if (normalize(val) !== '' && cleanCorrect !== '' && normalize(val) === cleanCorrect) {
+                                input.classList.add('solved');
+                                input.style.width = 'auto';
+                            }
+                        }
                     }
-                }
-            }
-        });
-    }, 50);
+                });
+            }, 50);
 
-			
             let resultHtml = '';
             let inBubble = false;
             let inContainer = false;
@@ -4496,7 +4496,6 @@ html = html.replace(/\.{4,}/g, () => {
       }
       flushSlices();
       
-      // Безпечний фільтр, який перевіряє як звичайний текст, так і dangerouslySetInnerHTML
       const validTexts = texts.filter(t => {
         if (t?.props?.children && typeof t.props.children === 'string') {
           return t.props.children.trim() !== '';
