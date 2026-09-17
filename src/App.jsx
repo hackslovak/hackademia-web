@@ -5532,16 +5532,16 @@ html = html.replace(/\.{4,}/g, () => {
                   );
                 })()}
 
-                {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ) */}
+                {/* {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ) */}
                 <div style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: '0 15px 50px rgba(0,0,0,0.08)', border: `1px solid ${theme.inputBorder}`, display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
                     
                     {/* ЛІВІ ІКОНКИ (Скріпка, Налаштування, Мова) */}
-                    <div style={{ display: 'flex', gap: '4px', paddingBottom: '6px' }}>
+                    <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                         
                         {/* Меню Вкладень (Скріпка + OCR) */}
                         <div className="composer-menu-parent">
-                            <button className="hover-card" title="Прикріпити" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {isMediaUploading ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                            <button className="hover-card" title="Прикріпити" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {isMediaUploading ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
                             </button>
                             <div className="composer-menu-dropdown">
                                 <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 14px', background: theme.inputBg, borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', color: theme.text }}>
@@ -5554,7 +5554,7 @@ html = html.replace(/\.{4,}/g, () => {
                                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Мова OCR:</label>
                                 <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
                                   {[{code: 'slk', label: 'SK'}, {code: 'ukr', label: 'UK'}, {code: 'eng', label: 'EN'}].map(l => (
-                                    <label key={l.code} style={{ flex: 1, textAlign: 'center', fontSize: '12px', color: theme.text, cursor: 'pointer', background: ocrLangs.includes(l.code) ? '#E0A345' : theme.inputBg, color: ocrLangs.includes(l.code) ? '#fff' : theme.text, padding: '6px', borderRadius: '6px', fontWeight: 'bold', transition: '0.2s' }}>
+                                    <label key={l.code} style={{ flex: 1, textAlign: 'center', fontSize: '12px', cursor: 'pointer', background: ocrLangs.includes(l.code) ? '#E0A345' : theme.inputBg, color: ocrLangs.includes(l.code) ? '#fff' : theme.text, padding: '6px', borderRadius: '6px', fontWeight: 'bold', transition: '0.2s' }}>
                                       <input type="checkbox" checked={ocrLangs.includes(l.code)} onChange={() => toggleOcrLang(l.code)} style={{ display: 'none' }} />
                                       {l.label}
                                     </label>
@@ -5569,8 +5569,8 @@ html = html.replace(/\.{4,}/g, () => {
 
                         {/* Меню Налаштувань (Тип, Складність, Категорія) */}
                         <div className="composer-menu-parent">
-                            <button className="hover-card" title="Налаштування" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                            <button className="hover-card" title="Налаштування" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                             </button>
                             <div className="composer-menu-dropdown">
                                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Тип:</label>
@@ -5598,8 +5598,8 @@ html = html.replace(/\.{4,}/g, () => {
 
                         {/* Меню Мов та Перекладу */}
                         <div className="composer-menu-parent">
-                            <button className="hover-card" title="Мова та переклад" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '38px', height: '38px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+                            <button className="hover-card" title="Мова та переклад" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
                             </button>
                             <div className="composer-menu-dropdown" style={{ minWidth: '260px' }}>
                                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
@@ -5664,20 +5664,16 @@ html = html.replace(/\.{4,}/g, () => {
                     </div>
 
                     {/* ПРАВІ КНОПКИ (Мікрофон, Зберегти) */}
-                    <div style={{ display: 'flex', gap: '6px', paddingBottom: '6px' }}>
+                    <div style={{ display: 'flex', gap: '6px', marginBottom: '4px' }}>
                         <button onClick={isRecording ? stopRecording : startRecording} className="hover-card" title={isRecording ? "Зупинити запис" : "Записати голос"} style={{ background: isRecording ? '#E53E3E' : 'transparent', color: isRecording ? '#fff' : theme.textSecondary, border: 'none', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s', animation: isRecording ? 'ffPulse 1.5s infinite' : 'none' }}>
-                            <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path><path d="M19 10v2a7 7 0 0 1-14 0v-2"></path><line x1="12" y1="19" x2="12" y2="23"></line><line x1="8" y1="23" x2="16" y2="23"></line></svg>
                         </button>
-                        <button onClick={handleAddTask} className="hover-card" title="Зберегти завдання" style={{ background: '#E0A345', color: '#fff', border: 'none', cursor: 'pointer', width: '44px', height: '44px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(224,163,69,0.3)', transition: '0.2s' }}>
-                            <svg width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px' }}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        <button onClick={handleAddTask} className="hover-card" title="Зберегти завдання" style={{ background: '#E0A345', color: '#fff', border: 'none', cursor: 'pointer', width: '42px', height: '42px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(224,163,69,0.3)', transition: '0.2s' }}>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ marginLeft: '-2px' }}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                         </button>
                     </div>
 
                 </div>
-              </div>
-            )}
-          </div>
-        </div>
 
         {/* МОДАЛКИ ДЛЯ ЕКРАНУ МОДУЛЯ (ЗУМ, КРОПЕР, СПОВІЩЕННЯ) */}
         {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
