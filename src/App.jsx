@@ -1929,8 +1929,8 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const isInternalChange = React.useRef(false);
   const [speakers, setSpeakers] = React.useState([]);
 
-  // Стан для контекстного меню
-  const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, align: 'right-side' });
+  // Стан для контекстного меню (+ додано vAlign для розумного позиціонування по вертикалі)
+  const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, align: 'right-side', vAlign: 'top' });
 
   // Ховаємо меню при кліку будь-де
   React.useEffect(() => {
@@ -1946,19 +1946,15 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   React.useEffect(() => {
     if (!isInternalChange.current && editorRef.current && document.activeElement !== editorRef.current) {
         let cleanVal = value || '';
-        
-        // ЛІКУВАННЯ АБРАКАДАБРИ: Перетворюємо &nbsp; та &lt; на нормальний текст
         if (cleanVal.includes('&lt;') || cleanVal.includes('&amp;')) {
             cleanVal = cleanVal.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
         }
-
         if (editorRef.current.innerHTML !== cleanVal) {
             editorRef.current.innerHTML = cleanVal;
         }
     }
     isInternalChange.current = false;
 
-    // ПЛАВАЮЧА ПАНЕЛЬКА: Шукаємо імена (напр. MÁRIA:)
     if (value) {
         const textContent = value.replace(/<[^>]+>/g, '\n').replace(/&nbsp;/g, ' ');
         const matches = textContent.match(/^([A-ZÁÉÍÓÚÝČĎĽŇŠŤŽА-ЯІЇЄҐ]+[a-záéíóúýčďľňšťžа-яіїєґ]*):/gm);
@@ -1985,7 +1981,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z' || e.key === 'Z') { setTimeout(handleInput, 10); return; }
     }
-    // ФІКС ENTER ТА BACKSPACE
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       document.execCommand('insertHTML', false, '<br>\u200B'); 
@@ -1993,29 +1988,39 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     }
   };
 
-  // --- ЛОГІКА ТЕЛЕГРАМ-МЕНЮ ---
+  // --- ЛОГІКА ТЕЛЕГРАМ-МЕНЮ З РОЗУМНИМ ПОЗИЦІОНУВАННЯМ ---
   const handleContextMenu = (e) => {
     e.preventDefault();
     const menuWidth = 240;
     const submenuWidth = 240;
+    const menuHeight = 400; 
+    
     let x = e.clientX;
     let y = e.clientY;
-    let align = 'right-side'; // Підменю відкривається вправо
+    let align = 'right-side'; 
+    let vAlign = 'top';
 
     // Якщо клік занадто близько до правого краю - підменю відкриваємо вліво
     if (x + menuWidth + submenuWidth > window.innerWidth) {
         align = 'left-side';
     }
-    // Щоб саме головне меню не вилізло за екран
+    // Щоб саме головне меню не вилізло за екран по горизонталі
     if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-    if (y + 400 > window.innerHeight) y = window.innerHeight - 400;
+    
+    // МАГІЯ ТУТ: Якщо клікаємо в НИЖНІЙ половині екрану - підменю мають рости ВГОРУ
+    if (e.clientY > window.innerHeight / 2) {
+        vAlign = 'bottom';
+    }
 
-    setContextMenu({ visible: true, x, y, align });
+    // Щоб саме головне меню не вилізло за екран по вертикалі
+    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+
+    setContextMenu({ visible: true, x, y, align, vAlign });
   };
 
   const execMenuCommand = async (action, e, extraVal = null) => {
     e.stopPropagation();
-    setContextMenu({ visible: false, x: 0, y: 0, align: 'right-side' });
+    setContextMenu({ visible: false, x: 0, y: 0, align: 'right-side', vAlign: 'top' });
     editorRef.current.focus();
 
     switch(action) {
@@ -2031,8 +2036,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             break;
         case 'delete': document.execCommand('delete'); break;
         case 'selectAll': document.execCommand('selectAll'); break;
-        
-        // ФОРМАТУВАННЯ
         case 'bold': document.execCommand('bold'); break;
         case 'italic': document.execCommand('italic'); break;
         case 'underline': document.execCommand('underline'); break;
@@ -2050,8 +2053,10 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             const url = prompt('Введіть URL посилання:');
             if(url) document.execCommand('createLink', false, url);
             break;
-            
-        // КОЛІР ТА ОЧИЩЕННЯ
+        case 'date':
+            const dateStr = new Date().toLocaleDateString('uk-UA');
+            document.execCommand('insertText', false, dateStr);
+            break;
         case 'color': 
             document.execCommand('foreColor', false, extraVal); 
             break;
@@ -2062,6 +2067,9 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     handleInput();
   };
 
+  // Допоміжний стиль для підменю, щоб воно росло вгору, якщо меню внизу
+  const submenuStyle = contextMenu.vAlign === 'bottom' ? { top: 'auto', bottom: '-8px' } : { top: '-8px', bottom: 'auto' };
+
   return (
     <div style={{ position: 'relative' }}>
       <div 
@@ -2070,7 +2078,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         className="wysiwyg-content" data-placeholder={placeholder}
       />
       
-      {/* ПЛАВАЮЧІ ПІДКАЗКИ ІМЕН */}
       {speakers.length > 0 && (
         <div style={{ position: 'absolute', bottom: '15px', right: '15px', display: 'flex', gap: '8px', opacity: 0.25, transition: 'opacity 0.2s', background: theme.cardBg, padding: '8px 12px', borderRadius: '12px', boxShadow: '0 4px 15px rgba(0,0,0,0.15)', zIndex: 10, border: `1px solid ${theme.inputBorder}`, alignItems: 'center' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0.25}>
            <span style={{fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase', cursor: 'default'}}>🗣 Хто говорить:</span>
@@ -2082,7 +2089,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         </div>
       )}
 
-      {/* ТЕЛЕГРАМ-МЕНЮ ПКМ */}
       {contextMenu.visible && (
         <div className="tg-context-menu" style={{ left: contextMenu.x, top: contextMenu.y }} onContextMenu={e => e.preventDefault()}>
             <div className="tg-menu-item" onClick={(e) => execMenuCommand('undo', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>↩️</span> Скасувати останню дію</span><span className="tg-menu-hotkey">Ctrl+Z</span></div>
@@ -2094,10 +2100,9 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             <div className="tg-menu-item" onClick={(e) => execMenuCommand('delete', e)}><span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>🗑</span> Видалити</span><span className="tg-menu-hotkey">Del</span></div>
             <div className="tg-menu-divider"></div>
             
-            {/* Підменю "Форматування" */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>✨</span> Форматування</span><span className="tg-menu-hotkey">▶</span>
-                <div className="tg-submenu">
+                <div className="tg-submenu" style={submenuStyle}>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('bold', e)}><span style={{fontWeight: 'bold'}}>Жирний</span><span className="tg-menu-hotkey">Ctrl+B</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('italic', e)}><span style={{fontStyle: 'italic'}}>Курсив</span><span className="tg-menu-hotkey">Ctrl+I</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('underline', e)}><span style={{textDecoration: 'underline'}}>Підкреслений</span><span className="tg-menu-hotkey">Ctrl+U</span></div>
@@ -2107,15 +2112,15 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                     <div className="tg-menu-divider"></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('quote', e)}><span>💬 Блок цитати</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('link', e)}><span>🔗 Додати посилання</span><span className="tg-menu-hotkey">Ctrl+K</span></div>
+                    <div className="tg-menu-item" onClick={(e) => execMenuCommand('date', e)}><span>📅 Дата</span><span className="tg-menu-hotkey">Ctrl+Shift+D</span></div>
                     <div className="tg-menu-divider"></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('clear', e)}><span>🧹 Без форматування</span><span className="tg-menu-hotkey">Ctrl+Shift+N</span></div>
                 </div>
             </div>
 
-            {/* Підменю "Колір тексту" */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>🎨</span> Колір тексту</span><span className="tg-menu-hotkey">▶</span>
-                <div className="tg-submenu" style={{ minWidth: '180px' }}>
+                <div className="tg-submenu" style={{ minWidth: '180px', ...submenuStyle }}>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#E0A345')}><span style={{color: '#E0A345', fontWeight: 'bold'}}>🟡 Помаранчевий</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#E53E3E')}><span style={{color: '#E53E3E', fontWeight: 'bold'}}>🔴 Червоний</span></div>
                     <div className="tg-menu-item" onClick={(e) => execMenuCommand('color', e, '#38A169')}><span style={{color: '#38A169', fontWeight: 'bold'}}>🟢 Зелений</span></div>
