@@ -5532,7 +5532,7 @@ html = html.replace(/\.{4,}/g, () => {
                   );
                 })()}
 
-                {/* {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ) */}
+                {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ (ТЕЛЕГРАМ-СТИЛЬ) */}
                 <div style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: '0 15px 50px rgba(0,0,0,0.08)', border: `1px solid ${theme.inputBorder}`, display: 'flex', alignItems: 'flex-end', gap: '10px' }}>
                     
                     {/* ЛІВІ ІКОНКИ (Скріпка, Налаштування, Мова) */}
