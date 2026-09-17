@@ -5538,19 +5538,18 @@ html = html.replace(/\.{4,}/g, () => {
                     {/* ЛІВІ ІКОНКИ (Скріпка, Налаштування, Мова) */}
                     <div style={{ display: 'flex', gap: '4px', marginBottom: '4px' }}>
                         
-                        {/* Меню Вкладень (Скріпка + OCR) */}
+                        {/* 1. Пряме завантаження медіа (Скріпка) */}
+                        <label className="hover-card" title="Прикріпити медіа" style={{ background: 'transparent', border: 'none', cursor: isMediaUploading ? 'wait' : 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            {isMediaUploading ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                            <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
+                        </label>
+
+                        {/* 2. Меню OCR (Іконка Сканера / 3 крапки) */}
                         <div className="composer-menu-parent">
-                            <button className="hover-card" title="Прикріпити" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                {isMediaUploading ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>}
+                            <button className="hover-card" title="Оцифрувати текст (OCR)" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                {isOcrRunning ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>}
                             </button>
-                            <div className="composer-menu-dropdown">
-                                <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '12px 14px', background: theme.inputBg, borderRadius: '12px', fontWeight: 'bold', fontSize: '13px', color: theme.text }}>
-                                    🖼️ Завантажити медіа
-                                    <input type="file" accept="image/*,video/*,audio/*" onChange={handleImageUpload} style={{ display: 'none' }} disabled={isMediaUploading} />
-                                </label>
-                                
-                                <div style={{ borderTop: `1px solid ${theme.inputBorder}`, margin: '5px 0' }}></div>
-                                
+                            <div className="composer-menu-dropdown" style={{ minWidth: '220px' }}>
                                 <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Мова OCR:</label>
                                 <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
                                   {[{code: 'slk', label: 'SK'}, {code: 'ukr', label: 'UK'}, {code: 'eng', label: 'EN'}].map(l => (
