@@ -4967,11 +4967,11 @@ html = html.replace(/\.{4,}/g, () => {
                   
                   // Кольори та іконки для бейджів
                   const categoryLabels = {
-                    grammar: { title: 'Граматика', icon: '📚', color: '#3182ce', bg: 'rgba(49, 130, 206, 0.1)' },
-                    vocabulary: { title: 'Лексика', icon: '📝', color: '#E0A345', bg: 'rgba(224, 163, 69, 0.1)' },
-                    reading: { title: 'Читання', icon: '📖', color: '#38A169', bg: 'rgba(56, 161, 105, 0.1)' },
-                    listening: { title: 'Аудіювання', icon: '🎧', color: '#805AD5', bg: 'rgba(128, 90, 213, 0.1)' },
-                    bonus: { title: 'Додатково', icon: '🎁', color: theme.textSecondary, bg: theme.inputBg }
+                    grammar: { title: t('catGrammar'), icon: '📚', color: '#3182ce', bg: 'rgba(49, 130, 206, 0.1)' },
+                    vocabulary: { title: t('catVocabulary'), icon: '📝', color: '#E0A345', bg: 'rgba(224, 163, 69, 0.1)' },
+                    reading: { title: t('catReading'), icon: '📖', color: '#38A169', bg: 'rgba(56, 161, 105, 0.1)' },
+                    listening: { title: t('catListening'), icon: '🎧', color: '#805AD5', bg: 'rgba(128, 90, 213, 0.1)' },
+                    bonus: { title: t('catBonus'), icon: '🎁', color: theme.textSecondary, bg: theme.inputBg }
                   };
                   const catData = categoryLabels[cat] || categoryLabels['bonus'];
 

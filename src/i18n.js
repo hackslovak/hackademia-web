@@ -13,6 +13,7 @@ export const translations = {
     spacedRep: "Інтервальне повторення",
     vocabSub: "A1-B2 БАЗА СЛІВ",
     vocabTitle: "Тематичний словник",
+    catGrammar: "Граматика", catVocabulary: "Лексика", catReading: "Читання", catListening: "Аудіювання", catBonus: "Додатково",
     
     // Landing
     heroLabel: "( Школа онлайн )", heroTitle1: "ВИВЧАЙ СЛОВАЦЬКУ", heroTitle2: "З HACKADEMIA",
@@ -61,6 +62,7 @@ export const translations = {
     spacedRep: "Intervalové opakovanie",
     vocabSub: "A1-B2 ZÁSOBA SLOV",
     vocabTitle: "Tematický slovník",
+    catGrammar: "Gramatika", catVocabulary: "Slovná zásoba", catReading: "Čítanie", catListening: "Počúvanie", catBonus: "Doplnkové",
     
     heroLabel: "( Online škola )", heroTitle1: "UČ SA SLOVENČINU", heroTitle2: "S HACKADEMIA",
     heroSub: "Nový, skvelý formát výučby v našej škole. Štart nových skupín už čoskoro!",
@@ -108,6 +110,7 @@ export const translations = {
     spacedRep: "Spaced Repetition",
     vocabSub: "A1-B2 VOCABULARY",
     vocabTitle: "Thematic Dictionary",
+    catGrammar: "Grammar", catVocabulary: "Vocabulary", catReading: "Reading", catListening: "Listening", catBonus: "Bonus",
     
     heroLabel: "( Online School )", heroTitle1: "LEARN SLOVAK", heroTitle2: "WITH HACKADEMIA",
     heroSub: "A new, cool format of studying at our school. New groups starting soon!",
@@ -155,6 +158,7 @@ export const translations = {
     spacedRep: "Интервальное повторение",
     vocabSub: "A1-B2 БАЗА СЛОВ",
     vocabTitle: "Тематический словарь",
+    catGrammar: "Грамматика", catVocabulary: "Лексика", catReading: "Чтение", catListening: "Аудирование", catBonus: "Дополнительно",
     
     heroLabel: "( Онлайн школа )", heroTitle1: "ИЗУЧАЙ СЛОВАЦКИЙ", heroTitle2: "С HACKADEMIA",
     heroSub: "Новый, крутой формат обучения в нашей школе. Старт новых групп уже скоро!",
