@@ -3583,17 +3583,7 @@ useEffect(() => {
   const renderComposer = (isInline = false) => (
       <div className="composer-container" style={{ marginTop: isInline ? '15px' : '30px', marginBottom: isInline ? '15px' : '0', position: 'relative' }}>
         
-        {/* === ПЛАВАЮЧИЙ ВІДЖЕТ CATBOX (Показуємо тільки знизу, щоб не заважав по центру) === */}
-        {!isInline && (
-            <div style={{ position: 'fixed', right: '30px', top: '250px', width: '260px', background: theme.cardBg, border: `2px solid #E0A345`, borderRadius: '16px', padding: '20px', boxShadow: '0 15px 40px rgba(0,0,0,0.15)', zIndex: 9999, display: 'flex', flexDirection: 'column', gap: '15px' }}>
-              <h4 style={{ margin: 0, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px', fontSize: '15px' }}>📦 Завантаження Відео</h4>
-              <ol style={{ margin: 0, paddingLeft: '20px', color: theme.textSecondary, fontSize: '13px', lineHeight: '1.6' }}>
-                <li>Натисніть кнопку нижче</li><li>Перетягніть відео (до 200 МБ) у вікно Catbox</li><li>Скопіюйте зелене посилання</li><li>Вставте <b>(Ctrl+V)</b> у поле тексту на платформі</li>
-              </ol>
-              <a href="https://catbox.moe/" target="_blank" rel="noopener noreferrer" className="hover-card" style={{ background: '#E0A345', color: 'white', padding: '12px', borderRadius: '10px', textAlign: 'center', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 10px rgba(224, 163, 69, 0.3)' }}>Відкрити Catbox ↗</a>
-              <button onClick={async (e) => { e.preventDefault(); try { const text = await navigator.clipboard.readText(); if (text.includes('catbox.moe')) { alert(`✅ Посилання скопійовано успішно!\n\n${text}\n\nКлікніть у поле тексту завдання та натисніть Ctrl+V.`); } else { alert('❌ У вашому буфері немає посилання Catbox. Скопіюйте його на сайті!'); } } catch (err) { alert('Натисніть Ctrl+V у полі тексту, щоб вставити посилання.'); } }} style={{ background: 'transparent', border: `1px dashed ${theme.inputBorder}`, color: theme.textSecondary, padding: '10px', borderRadius: '10px', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>📋 Перевірити буфер</button>
-            </div>
-        )}
+
 
         {/* РОЗГОРНУТЕ ПРЕВ'Ю МЕДІА */}
         {(() => {
