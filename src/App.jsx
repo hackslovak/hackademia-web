@@ -2401,6 +2401,8 @@ function Platform() {
 
 
   const [newTaskType, setNewTaskType] = useState('text');
+  const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
+  const [editRequiresVoice, setEditRequiresVoice] = useState(false);
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
   const [newTaskCategory, setNewTaskCategory] = useState('grammar'); 
   const [newTaskCorrectAnswer, setNewTaskCorrectAnswer] = useState('');
@@ -3692,24 +3694,7 @@ useEffect(() => {
                         <button className="hover-card" title="Оцифрувати текст (OCR)" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             {isOcrRunning ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><rect x="7" y="7" width="10" height="10" rx="1"/></svg>}
                         </button>
-                        <div className="composer-menu-dropdown" style={{ minWidth: '220px' }}>
-                            <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Мова OCR:</label>
-                            <div style={{ display: 'flex', gap: '5px', marginBottom: '5px' }}>
-                              {[{code: 'slk', label: 'SK'}, {code: 'ukr', label: 'UK'}, {code: 'eng', label: 'EN'}].map(l => (
-                                <label key={l.code} style={{ flex: 1, textAlign: 'center', fontSize: '12px', cursor: 'pointer', background: ocrLangs.includes(l.code) ? '#E0A345' : theme.inputBg, color: ocrLangs.includes(l.code) ? '#fff' : theme.text, padding: '6px', borderRadius: '6px', fontWeight: 'bold', transition: '0.2s' }}>
-                                  <input type="checkbox" checked={ocrLangs.includes(l.code)} onChange={() => toggleOcrLang(l.code)} style={{ display: 'none' }} />
-                                  {l.label}
-                                </label>
-                              ))}
-                            </div>
-                            <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: isOcrRunning ? 'wait' : 'pointer', padding: '12px 14px', background: isOcrRunning ? '#E0A345' : theme.inputBg, color: isOcrRunning ? '#fff' : theme.text, borderRadius: '12px', fontWeight: 'bold', fontSize: '13px' }}>
-                                {isOcrRunning ? `⏳ Сканую... ${ocrProgress}%` : '👁️ Сканувати нове фото'}
-                                <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
-                            </label>
-                        </div>
-                    </div>
-
-                    <div className="composer-menu-parent">
+                        <div className="composer-menu-parent">
                         <button className="hover-card" title="Налаштування" style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
                         </button>
@@ -3734,6 +3719,13 @@ useEffect(() => {
                                 <option value="listening">🎧 Аудіювання</option>
                                 <option value="bonus">🎁 Додатково</option>
                             </select>
+                            
+                            {/* РОЗДІЛЮВАЧ ТА НОВА ГАЛОЧКА ДЛЯ ГОЛОСУ */}
+                            <div style={{ height: '1px', background: theme.inputBorder, margin: '4px 0', opacity: 0.5 }}></div>
+                            <label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: theme.text, cursor: 'pointer', fontWeight: 'bold', background: newTaskRequiresVoice ? 'rgba(229, 62, 62, 0.1)' : theme.inputBg, border: `1px solid ${newTaskRequiresVoice ? '#E53E3E' : 'transparent'}`, padding: '10px 12px', borderRadius: '10px', transition: 'all 0.2s ease' }}>
+                                <input type="checkbox" checked={newTaskRequiresVoice} onChange={e => setNewTaskRequiresVoice(e.target.checked)} style={{ accentColor: '#E53E3E', cursor: 'pointer', width: '16px', height: '16px', margin: 0 }} /> 
+                                🎤 Запит аудіо-відповіді
+                            </label>
                         </div>
                     </div>
 
@@ -3785,7 +3777,7 @@ async function handleAddTask() {
     let finalCorrectAnswer = newTaskCorrectAnswer;
     
     let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
-    const contentToSave = { ...baseContent, exercise: newTaskExercise };
+    const contentToSave = { ...baseContent, exercise: newTaskExercise, requiresVoice: newTaskRequiresVoice }; // <--- ДОДАЛИ requiresVoice
 
     const { data, error } = await supabase.from('tasks').insert({ 
       module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer, category: newTaskCategory
@@ -4241,6 +4233,14 @@ const handleResetTaskAnswers = (task) => {
     // 3. Знімаємо статус "виконано"
     setCompletedTasks(prev => prev.filter(id => id !== task.id));
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+  };
+  
+  const handleTheoryComplete = async (task) => {
+    showMotivation(); playUiSound('ding', isSoundEnabled);
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    const diff = difficultyConfig[task.difficulty || 'medium'];
+    await supabase.from('progress').upsert({ user_id: dbUserId, task_id: task.id, status: 'completed', points: diff.points }, { onConflict: 'user_id, task_id' });
+    setCompletedTasks([...new Set([...completedTasks, task.id])]);
   };
   
   // Обробка звичайного текстового тесту (quiz)
@@ -5576,6 +5576,7 @@ const parseToElements = (text, prefixKey) => {
                               if (typeof safeCat === 'string') safeCat = safeCat.replace(/['"]/g, '').trim().toLowerCase();
                               setEditCategory(safeCat); 
                               setEditLang('uk');
+							  setEditRequiresVoice(task.content?.requiresVoice || false);
                             }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                             
                             <button onClick={() => handleDeleteTask(task.id)} className="hover-card" title="Видалити завдання" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
@@ -5853,39 +5854,57 @@ const parseToElements = (text, prefixKey) => {
                              {renderContent(task.content, task)}
                            </div>
 
-                           {!effectiveIsAdmin && (
-                             <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px' }}>
-                               {task.correct_answer && (
-                                 <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', alignItems: 'center' }}>
-                                   <input 
-                                     type="text" 
-                                     placeholder="Ваша текстова відповідь..." 
-                                     value={userAnswers[task.id] || ''} 
-                                     onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} 
-                                     onKeyDown={(e) => {
-                                         e.stopPropagation(); // Блокуємо глобальні перехоплювачі (щоб пробіл і бекспейс працювали ідеально)
-                                         if (e.key === 'Enter') handleAnswerSubmit(task); // Відправка відповіді по Enter
-                                     }}
-                                     style={{ flex: 1, padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }}
-                                   />
-                                   <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
-                                     Перевірити
-                                   </button>
-                                 </div>
-                               )}
+                           {!effectiveIsAdmin && !completedTasks.includes(task.id) && (() => {
+                             // Аналізуємо завдання, щоб дати учню правильний інтерфейс
+                             const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
+                             const hasInlineBlanks = rawText.includes('....');
+                             const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
+                             const isTheory = task.type === 'text' || task.type === 'material';
 
-                               <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                 <button 
-                                   onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}
-                                   className="hover-card"
-                                   style={{ background: recordingTaskId === task.id ? '#E53E3E' : theme.inputBg, color: recordingTaskId === task.id ? '#fff' : theme.text, padding: '14px 24px', borderRadius: '14px', border: `1px solid ${recordingTaskId === task.id ? '#E53E3E' : theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'inline-flex', alignItems: 'center', gap: '8px', transition: '0.2s', animation: recordingTaskId === task.id ? 'ffPulse 1.5s infinite' : 'none' }}
-                                 >
-                                   {recordingTaskId === task.id ? '⏹ Відправити аудіо' : '🎤 Записати вимову'}
-                                 </button>
-                                 {recordingTaskId === task.id && <span style={{ color: '#E53E3E', fontWeight: 'bold', fontSize: '14px' }}>🔴 Запис іде...</span>}
+                             return (
+                               <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+                                 
+                                 {/* ЛОГІКА 1: Звичайний квіз (немає пропусків, але є правильна відповідь) */}
+                                 {task.type === 'quiz' && !hasInlineBlanks && task.correct_answer && (
+                                   <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
+                                     <input 
+                                       type="text" 
+                                       placeholder="Ваша текстова відповідь..." 
+                                       value={userAnswers[task.id] || ''} 
+                                       onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} 
+                                       onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') handleAnswerSubmit(task); }}
+                                       style={{ flex: 1, padding: '16px', borderRadius: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }}
+                                     />
+                                     <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', whiteSpace: 'nowrap' }}>
+                                       Перевірити
+                                     </button>
+                                   </div>
+                                 )}
+
+                                 {/* ЛОГІКА 2: Теорія / Матеріал (Просто кнопка ознайомлення) */}
+                                 {isTheory && !requiresVoice && !hasInlineBlanks && (
+                                   <button onClick={() => handleTheoryComplete(task)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)' }}>
+                                     ✅ Ознайомився / Продовжити
+                                   </button>
+                                 )}
+
+                                 {/* ЛОГІКА 3: Аудіо-відповідь (Тільки якщо адмін увімкнув галочку) */}
+                                 {requiresVoice && (
+                                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: isTheory || hasInlineBlanks ? '1 1 100%' : 'auto' }}>
+                                     <button 
+                                       onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}
+                                       className="hover-card"
+                                       style={{ background: recordingTaskId === task.id ? '#E53E3E' : theme.inputBg, color: recordingTaskId === task.id ? '#fff' : theme.text, padding: '16px 24px', borderRadius: '14px', border: `1px solid ${recordingTaskId === task.id ? '#E53E3E' : theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s', animation: recordingTaskId === task.id ? 'ffPulse 1.5s infinite' : 'none', flex: 1 }}
+                                     >
+                                       {recordingTaskId === task.id ? '⏹ Відправити аудіо' : '🎤 Натисніть, щоб відповісти голосом'}
+                                     </button>
+                                     {recordingTaskId === task.id && <span style={{ color: '#E53E3E', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>🔴 Запис...</span>}
+                                   </div>
+                                 )}
+
                                </div>
-                             </div>
-                           )}
+                             );
+                           })()}
 
                            {/* СТАТУС ВИКОНАННЯ */}
                            {completedTasks.includes(task.id) && (
