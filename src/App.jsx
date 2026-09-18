@@ -3916,12 +3916,12 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // === НОВА ПЕРЕВІРКА НА ВЕЛИКІ ФАЙЛИ (> 50 МБ) ===
-    const MAX_MB = 50; 
+    // === ВІДЛОВЛЮЄМО ВСІ ФАЙЛИ БІЛЬШЕ 50 МБ ДЛЯ РУЧНОГО ЗАВАНТАЖЕННЯ ===
+    const MAX_MB = 50;
     if (file.size > MAX_MB * 1024 * 1024) {
       setShowCatboxModal(true);
-      e.target.value = ''; 
-      return; 
+      e.target.value = '';
+      return;
     }
 
     setIsMediaUploading(true);
