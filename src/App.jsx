@@ -7032,3 +7032,5 @@ function App() {
 }
 
 export default App;
+
+// Форсуємо оновлення сервера
