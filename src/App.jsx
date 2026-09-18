@@ -5865,6 +5865,10 @@ const parseToElements = (text, prefixKey) => {
                                      placeholder="Ваша текстова відповідь..." 
                                      value={userAnswers[task.id] || ''} 
                                      onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} 
+                                     onKeyDown={(e) => {
+                                         e.stopPropagation(); // Блокуємо глобальні перехоплювачі (щоб пробіл і бекспейс працювали ідеально)
+                                         if (e.key === 'Enter') handleAnswerSubmit(task); // Відправка відповіді по Enter
+                                     }}
                                      style={{ flex: 1, padding: '16px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '16px' }}
                                    />
                                    <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '16px' }}>
