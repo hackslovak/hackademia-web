@@ -4658,7 +4658,7 @@ const parseToElements = (text, prefixKey) => {
               const cleanCorrect = normalize(correctVal);
 
               let extraClasses = '';
-              let extraAttrs = '';
+              let extraAttrs = `data-index="${inlineCounter}" data-task-id="${safeTask.id}"`;
               const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
               let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
 
@@ -5912,7 +5912,10 @@ const parseToElements = (text, prefixKey) => {
                       ) : (
                          <div>
                            {/* САМ КОНТЕНТ ЗАВДАННЯ */}
-                           <div style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}>
+                           <div 
+                             style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
+                             onInput={(e) => handleInlineInput(e, task)}
+                           >
                              {renderContent(task.content, task)}
                            </div>
 
