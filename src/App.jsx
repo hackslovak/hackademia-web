@@ -5531,49 +5531,15 @@ const parseToElements = (text, prefixKey) => {
                   };
                   const catData = categoryLabels[cat] || categoryLabels['bonus'];
 
-                  // Рядок 5313:
-            return (
-              <React.Fragment key={task.id}>
+        return (
+          <React.Fragment key={task.id}>
                 
                 {/* 1. ВАША КАРТКА ЗАВДАННЯ (Забираємо key з div, бо він тепер у Fragment) */}
                 <div id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
                     {/* ... ТУТ УВЕСЬ ВАШ СТАРИЙ КОД КАРТКИ (нічого не міняєте всередині) ... */}
                 </div>
 
-                {/* 2. НОВА ЛІНІЯ ДЛЯ ІНЛАЙН-ВСТАВКИ МІЖ ЗАВДАННЯМИ */}
-                {effectiveIsAdmin && (
-                  <div style={{ position: 'relative' }}>
-                      {/* Прихована лінія-тригер */}
-                      <div
-                          className="hover-card"
-                          onClick={() => {
-                              setActiveInsertIndex(idx); // ЗВЕРНІТЬ УВАГУ: тут idx, бо у вас у map написано (task, idx)
-                              setIsComposerExpanded(true); 
-                          }}
-                          style={{
-                              height: '24px', margin: '-15px 0 15px 0', zIndex: 10, display: 'flex', alignItems: 'center',
-                              cursor: 'pointer', opacity: activeInsertIndex === idx ? 1 : 0, transition: 'opacity 0.2s', position: 'relative'
-                          }}
-                          onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                          onMouseLeave={(e) => { if (activeInsertIndex !== idx) e.currentTarget.style.opacity = 0; }}
-                      >
-                          {/* Кружечок з плюсом зліва */}
-                          <div style={{ position: 'absolute', left: '-12px', background: '#E0A345', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>+</div>
-                          {/* Сама тонка помаранчева лінія */}
-                          <div style={{ width: '100%', height: '2px', background: '#E0A345', zIndex: 1 }}></div>
-                      </div>
-
-                      {/* ЯКЩО НАТИСНУЛИ ТУТ - ВИКЛИКАЄМО ІНЛАЙН-РЕДАКТОР */}
-                      {activeInsertIndex === idx && (
-                          <div style={{ animation: 'fadeInDown 0.3s ease', marginBottom: '30px' }}>
-                              {renderComposer(true)}
-                          </div>
-                      )}
-                  </div>
-                )}
-
-              </React.Fragment>
-            );
+                
                     <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     					
                       {/* ШАПКА ЗАВДАННЯ */}
@@ -5932,12 +5898,44 @@ const parseToElements = (text, prefixKey) => {
                          </div>
                       )}
                     </div>
-                  );
+
+    {/* === НОВА ЛІНІЯ ДЛЯ ІНЛАЙН-ВСТАВКИ МІЖ ЗАВДАННЯМИ (КРОК 3) === */}
+    {effectiveIsAdmin && (
+      <div style={{ position: 'relative' }}>
+          {/* Прихована лінія-тригер */}
+          <div
+              className="hover-card"
+              onClick={() => {
+                  setActiveInsertIndex(idx);
+                  setIsComposerExpanded(true); 
+              }}
+              style={{
+                  height: '24px', margin: '-15px 0 15px 0', zIndex: 10, display: 'flex', alignItems: 'center',
+                  cursor: 'pointer', opacity: activeInsertIndex === idx ? 1 : 0, transition: 'opacity 0.2s', position: 'relative'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+              onMouseLeave={(e) => { if (activeInsertIndex !== idx) e.currentTarget.style.opacity = 0; }}
+          >
+              <div style={{ position: 'absolute', left: '-12px', background: '#E0A345', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>+</div>
+              <div style={{ width: '100%', height: '2px', background: '#E0A345', zIndex: 1 }}></div>
+          </div>
+
+          {/* ЯКЩО НАТИСНУЛИ ТУТ - ВИКЛИКАЄМО ІНЛАЙН-РЕДАКТОР */}
+          {activeInsertIndex === idx && (
+              <div style={{ animation: 'fadeInDown 0.3s ease', marginBottom: '30px' }}>
+                  {renderComposer(true)}
+              </div>
+          )}
+      </div>
+    )}
+
+  </React.Fragment>
+);
                 })}
               </div>
             )}
 
-            {/* ОСЬ СЮДИ ВСТАВЛЯЄМО НИЖНІЙ РЕДАКТОР (КРОК 4) */}
+            {/* НИЖНІЙ РЕДАКТОР (Показується тільки тоді, коли немає відкритого інлайн-редактора) */}
             {effectiveIsAdmin && activeInsertIndex === null && (
               <div>
                 {renderComposer(false)}
