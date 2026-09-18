@@ -1017,6 +1017,7 @@ function ChatView({ dbUserId, isAdmin, userProfile, theme, t, courses, onBack })
   const [unreadPerUser, setUnreadPerUser] = React.useState({});
   const [isUploadingImage, setIsUploadingImage] = React.useState(false);
   
+  
   // --- СТАНИ ДЛЯ ГОЛОСОВИХ ПОВІДОМЛЕНЬ В ЧАТІ ---
   const [isRecordingVoice, setIsRecordingVoice] = React.useState(false);
   const [voiceRecorder, setVoiceRecorder] = React.useState(null);
@@ -1993,7 +1994,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     e.preventDefault();
     const menuWidth = 240;
     const submenuWidth = 240;
-    const menuHeight = 400; 
+    const menuHeight = 420; // Оптимальний запас висоти
     
     let x = e.clientX;
     let y = e.clientY;
@@ -2004,12 +2005,14 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         align = 'left-side';
     }
     if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
-    
-    if (e.clientY > window.innerHeight / 2) {
-        vAlign = 'bottom';
-    }
 
-    if (y + menuHeight > window.innerHeight) y = window.innerHeight - menuHeight - 10;
+    // === ЖОРСТКА ЛОГІКА ВИДИМОСТІ (Ніколи не випадає за екран) ===
+    if (y + menuHeight > window.innerHeight) {
+        y = Math.max(10, window.innerHeight - menuHeight - 10);
+        vAlign = 'bottom'; // Примусово відкриваємо підменю вгору
+    } else if (e.clientY > window.innerHeight * 0.55) {
+        vAlign = 'bottom'; // Якщо просто клік низько - теж вгору
+    }
 
     setContextMenu({ visible: true, x, y, align, vAlign });
   };
@@ -2324,6 +2327,7 @@ function Platform() {
   const [isLoadingTasks, setIsLoadingTasks] = useState(false);
   const [isMediaUploading, setIsMediaUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [showCatboxModal, setShowCatboxModal] = useState(false);
 
   const [newModuleTitleMulti, setNewModuleTitleMulti] = useState({ uk: '', ru: '', en: '', sk: '' });
   const [moduleSourceLang, setModuleSourceLang] = useState('uk');
@@ -3860,11 +3864,12 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    // ЗАПОБІЖНИК: Перевіряємо розмір (200 МБ = 200 * 1024 * 1024 байт)
-    if (file.size > 200 * 1024 * 1024) {
-      alert("❌ Файл занадто великий! Обмеження Catbox — 200 МБ. Будь ласка, стисніть відео і спробуйте знову.");
-      e.target.value = '';
-      return;
+// === НОВА ПЕРЕВІРКА НА ВЕЛИКІ ФАЙЛИ (> 50 МБ) ===
+    const MAX_MB = 50; 
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setShowCatboxModal(true);
+      e.target.value = ''; 
+      return; 
     }
 
     setIsMediaUploading(true); // Вмикаємо анімацію завантаження
@@ -3911,10 +3916,12 @@ async function handleImageUpload(e) {
     const file = e.target.files[0];
     if (!file) return;
 
-    if (file.size > 200 * 1024 * 1024) {
-      alert("❌ Файл занадто великий! Обмеження Catbox — 200 МБ. Будь ласка, стисніть відео і спробуйте знову.");
-      e.target.value = '';
-      return;
+    // === НОВА ПЕРЕВІРКА НА ВЕЛИКІ ФАЙЛИ (> 50 МБ) ===
+    const MAX_MB = 50; 
+    if (file.size > MAX_MB * 1024 * 1024) {
+      setShowCatboxModal(true);
+      e.target.value = ''; 
+      return; 
     }
 
     setIsMediaUploading(true);
@@ -5955,6 +5962,39 @@ const parseToElements = (text, prefixKey) => {
         {/* МОДАЛКИ ДЛЯ ЕКРАНУ МОДУЛЯ (ЗУМ, КРОПЕР, СПОВІЩЕННЯ) */}
         {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
         
+		{/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
+        {showCatboxModal && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }} onClick={() => setShowCatboxModal(false)}>
+            <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', width: '90%', maxWidth: '420px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: `1px solid ${theme.inputBorder}`, position: 'relative', animation: 'fadeInDown 0.3s ease' }} onClick={e => e.stopPropagation()}>
+              <button onClick={() => setShowCatboxModal(false)} className="hover-card" style={{ position: 'absolute', top: '20px', right: '20px', background: theme.inputBg, border: 'none', color: theme.textSecondary, width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '16px' }}>✕</button>
+              
+              <div style={{ width: '64px', height: '64px', background: 'rgba(224,163,69,0.15)', color: '#E0A345', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '32px', marginBottom: '20px' }}>📦</div>
+              <h3 style={{ margin: '0 0 10px 0', color: theme.text, fontSize: '20px', fontWeight: '900' }}>Файл завеликий!</h3>
+              <p style={{ color: theme.textSecondary, fontSize: '14px', lineHeight: '1.6', marginBottom: '20px' }}>
+                Ваш файл перевищує ліміт <b>50 МБ</b>. Для завантаження важких відео та аудіо (до 200 МБ) скористайтеся безкоштовним сервісом <b>Catbox</b>:
+              </p>
+              
+              <div style={{ background: theme.inputBg, padding: '16px', borderRadius: '16px', marginBottom: '25px', border: `1px dashed ${theme.inputBorder}` }}>
+                <ol style={{ margin: 0, paddingLeft: '20px', color: theme.text, fontSize: '13px', lineHeight: '1.8', fontWeight: 'bold' }}>
+                  <li>Відкрийте сайт за кнопкою нижче</li>
+                  <li>Перетягніть ваш файл у їхнє вікно</li>
+                  <li>Скопіюйте зелене посилання</li>
+                  <li>Вставте <b>(Ctrl+V)</b> прямо у поле тексту завдання</li>
+                </ol>
+              </div>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <a href="https://catbox.moe/" target="_blank" rel="noopener noreferrer" className="hover-card" style={{ flex: 1, background: '#E0A345', color: 'white', padding: '14px', borderRadius: '14px', textAlign: 'center', textDecoration: 'none', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 15px rgba(224, 163, 69, 0.3)' }}>
+                  Відкрити Catbox ↗
+                </a>
+                <button onClick={async () => { try { const text = await navigator.clipboard.readText(); if (text.includes('catbox.moe')) { alert(`✅ Посилання скопійовано!\n\n${text}\n\nКлікніть у поле тексту завдання та натисніть Ctrl+V.`); setShowCatboxModal(false); } else { alert('❌ У вашому буфері немає посилання Catbox. Скопіюйте його на сайті!'); } } catch (err) { alert('Натисніть Ctrl+V у полі тексту, щоб вставити посилання.'); } }} className="hover-card" style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '14px', borderRadius: '14px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px' }}>
+                  📋 Перевірити
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+		
         {fullscreenTaskImg && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
             <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
