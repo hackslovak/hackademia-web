@@ -5903,33 +5903,40 @@ const parseToElements = (text, prefixKey) => {
 
     {/* 2. ІНТЕРАКТИВНА ЛІНІЯ ТА ІНЛАЙН-РЕДАКТОР (Тільки МІЖ завданнями, не після останнього) */}
             {effectiveIsAdmin && idx < filteredTasks.length - 1 && (
-              <div style={{ position: 'relative' }}>
-                  {/* Тонка лінія-тригер з плюсиком */}
-                  <div
-                      className="hover-card"
-                      onClick={() => {
-                          setActiveInsertIndex(idx);
-                          setIsComposerExpanded(true); 
-                      }}
-                      style={{
-                          height: '24px', margin: '-15px 0 15px 0', zIndex: 10, display: 'flex', alignItems: 'center',
-                          cursor: 'pointer', opacity: activeInsertIndex === idx ? 1 : 0, transition: 'opacity 0.2s', position: 'relative'
-                      }}
-                      onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
-                      onMouseLeave={(e) => { if (activeInsertIndex !== idx) e.currentTarget.style.opacity = 0; }}
-                  >
-                      <div style={{ position: 'absolute', left: '-12px', background: '#E0A345', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>+</div>
-                      <div style={{ width: '100%', height: '2px', background: '#E0A345', zIndex: 1 }}></div>
-                  </div>
-
-                  {/* РЕДАКТОР З'ЯВЛЯЄТЬСЯ ЛИШЕ ТОДІ, КОЛИ НАТИСНУЛИ ПЛЮС НА ЦЬОМУ РЯДКУ */}
-                  {activeInsertIndex === idx && (
-                      <div style={{ animation: 'fadeInDown 0.3s ease', marginBottom: '30px' }}>
-                          {renderComposer(true)}
-                      </div>
-                  )}
+          <div style={{ position: 'relative' }}>
+              {/* Тонка лінія з плюсиком (з'являється при наведенні) */}
+              <div
+                  className="hover-card"
+                  onClick={() => {
+                      setActiveInsertIndex(idx);
+                      setIsComposerExpanded(true); 
+                  }}
+                  style={{
+                      height: '24px', 
+                      margin: '-15px 0 15px 0', 
+                      zIndex: 10, 
+                      display: 'flex', 
+                      alignItems: 'center',
+                      cursor: 'pointer', 
+                      opacity: activeInsertIndex === idx ? 1 : 0, 
+                      transition: 'opacity 0.2s', 
+                      position: 'relative'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.opacity = 1}
+                  onMouseLeave={(e) => { if (activeInsertIndex !== idx) e.currentTarget.style.opacity = 0; }}
+              >
+                  <div style={{ position: 'absolute', left: '-12px', background: '#E0A345', color: '#fff', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold', fontSize: '18px', zIndex: 2, boxShadow: '0 2px 5px rgba(0,0,0,0.1)' }}>+</div>
+                  <div style={{ width: '100%', height: '2px', background: '#E0A345', zIndex: 1 }}></div>
               </div>
-            )}
+
+              {/* РЕДАКТОР З'ЯВЛЯЄТЬСЯ ВИКЛЮЧНО ТОДІ, КОЛИ НАТИСНУЛИ ПЛЮС НА ЦЬОМУ РЯДКУ */}
+              {activeInsertIndex === idx && (
+                  <div style={{ animation: 'fadeInDown 0.3s ease', marginBottom: '30px' }}>
+                      {renderComposer(true)}
+                  </div>
+              )}
+          </div>
+        )}
 
   </React.Fragment>
 );
