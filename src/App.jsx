@@ -3819,6 +3819,8 @@ async function handleAddTask() {
             setIsComposerExpanded(false); 
             setActiveInsertIndex(null); // <--- Обов'язково ховаємо інлайн-редактор
         }
+} // <--- ОСЬ ЦЮ ДУЖКУ ТРЕБА ДОДАТИ! ВОНА ЗАКРИВАЄ ФУНКЦІЮ handleAddTask
+
 
   // 🚀 Завантаження важких медіа на Catbox із ВІДСОТКАМИ PROGRESS BAR
   function uploadToCatbox(file, onProgress) {
