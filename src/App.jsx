@@ -5536,12 +5536,7 @@ const parseToElements = (text, prefixKey) => {
         return (
           <React.Fragment key={task.id}>
                 
-                {/* 1. ВАША КАРТКА ЗАВДАННЯ (Забираємо key з div, бо він тепер у Fragment) */}
-                <div id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.05)', marginBottom: '30px' }}>
-                    {/* ... ТУТ УВЕСЬ ВАШ СТАРИЙ КОД КАРТКИ (нічого не міняєте всередині) ... */}
-                </div>
-
-                
+                {/* 1. ВАША КАРТКА ЗАВДАННЯ (Забираємо key з div, бо він тепер у Fragment) */}            
                     <div key={task.id} id={`task-card-${task.id}`} style={{ background: theme.cardBg, padding: '35px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                     					
                       {/* ШАПКА ЗАВДАННЯ */}
