@@ -2151,6 +2151,64 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   );
 };
 
+const SmartTheoryAction = ({ task, theme, onComplete }) => {
+  const [status, setStatus] = React.useState('waiting');
+  const [mediaType, setMediaType] = React.useState('none');
+
+  React.useEffect(() => {
+    const contentStr = JSON.stringify(task.content || '');
+    const hasVideo = contentStr.match(/\.(mp4|webm|mov)/i) || contentStr.includes("youtube.com") || contentStr.includes("youtu.be");
+    const hasAudio = contentStr.match(/\.(mp3|wav|ogg|m4a)/i) || contentStr.includes("/audio/") || contentStr.includes("voice_");
+
+    if (hasVideo) {
+      setMediaType('video');
+      const timer = setTimeout(() => setStatus('ready'), 60000); // Кнопка через 60 секунд
+      return () => clearTimeout(timer);
+    } else if (hasAudio) {
+      setMediaType('audio');
+      // Шукаємо аудіо на сторінці і чекаємо завершення
+      const checkAudio = setInterval(() => {
+         const card = document.getElementById(`task-card-${task.id}`);
+         if (card) {
+           const audios = card.querySelectorAll('audio');
+           if (audios.length > 0) {
+             audios.forEach(aud => { aud.onended = () => setStatus('ready'); });
+             clearInterval(checkAudio);
+           }
+         }
+      }, 1000);
+      return () => clearInterval(checkAudio);
+    } else {
+      setMediaType('none');
+      // Текст і картинки зараховуємо автоматично через 3 секунди
+      const timer = setTimeout(() => {
+         onComplete(task);
+         setStatus('auto-completed');
+      }, 3000); 
+      return () => clearTimeout(timer);
+    }
+  }, [task.id]);
+
+  if (status === 'auto-completed' || mediaType === 'none') {
+     return <div style={{ marginTop: '20px', fontSize: '13px', color: '#38A169', fontWeight: 'bold', textAlign: 'center' }}>✨ Матеріал зараховано автоматично (+1 бал)</div>;
+  }
+
+  if (status === 'waiting') {
+     return (
+       <div style={{ marginTop: '20px', padding: '16px', borderRadius: '14px', background: theme.inputBg, color: theme.textSecondary, textAlign: 'center', fontSize: '14px', border: `1px dashed ${theme.inputBorder}`, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+          <span style={{ animation: 'ffPulse 1.5s infinite' }}>⏳</span> 
+          {mediaType === 'video' ? 'Перегляньте відео (мінімум 1 хв), щоб підтвердити...' : 'Прослухайте аудіо до кінця, щоб підтвердити...'}
+       </div>
+     );
+  }
+
+  return (
+    <button onClick={() => onComplete(task)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', marginTop: '20px', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)' }}>
+      ✅ Ознайомився (+1 бал)
+    </button>
+  );
+};
+
 function Platform() {
   const navigate = useNavigate();
 
@@ -4232,11 +4290,19 @@ const handleResetTaskAnswers = (task) => {
   };
   
   const handleTheoryComplete = async (task) => {
-    showMotivation(); playUiSound('ding', isSoundEnabled);
+    // Прибрали showMotivation(), яка ламала кнопку
+    if (typeof playUiSound === 'function') playUiSound('ding', isSoundEnabled);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    const diff = difficultyConfig[task.difficulty || 'medium'];
-    await supabase.from('progress').upsert({ user_id: dbUserId, task_id: task.id, status: 'completed', points: diff.points }, { onConflict: 'user_id, task_id' });
-    setCompletedTasks([...new Set([...completedTasks, task.id])]);
+    
+    // Зараховуємо рівно 1 бал за теорію
+    await supabase.from('progress').upsert({ 
+      user_id: dbUserId, 
+      task_id: task.id, 
+      status: 'completed', 
+      points: 1 
+    }, { onConflict: 'user_id, task_id' });
+    
+    setCompletedTasks(prev => [...new Set([...prev, task.id])]);
   };
   
   // Обробка звичайного текстового тесту (quiz)
@@ -5879,9 +5945,9 @@ const parseToElements = (text, prefixKey) => {
 
                                  {/* ЛОГІКА 2: Теорія / Матеріал (Просто кнопка ознайомлення) */}
                                  {isTheory && !requiresVoice && !hasInlineBlanks && (
-                                   <button onClick={() => handleTheoryComplete(task)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)' }}>
-                                     ✅ Ознайомився / Продовжити
-                                   </button>
+                                   <div style={{ flex: '1 1 100%' }}>
+                                     <SmartTheoryAction task={task} theme={theme} onComplete={handleTheoryComplete} />
+                                   </div>
                                  )}
 
                                  {/* ЛОГІКА 3: Аудіо-відповідь (Тільки якщо адмін увімкнув галочку) */}
