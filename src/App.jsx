@@ -3683,7 +3683,7 @@ useEffect(() => {
                       </div>
                       <button onClick={(e) => { e.preventDefault(); const nextContent = { ...newTaskContentMulti }; ['uk', 'ru', 'en', 'sk'].forEach(l => { nextContent[l] = (nextContent[l] || '').replace(mediaUrl, '').trim(); }); setNewTaskContentMulti(nextContent); }} style={{ position: 'absolute', top: '-12px', right: '-12px', background: '#E53E3E', color: 'white', width: '32px', height: '32px', borderRadius: '50%', border: 'none', fontWeight: 'bold', cursor: 'pointer', zIndex: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 12px rgba(229,62,62,0.4)', fontSize: '16px' }} title="Видалити медіа з усіх мов">✕</button>
                       {isImage && <img src={cleanUrl} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}` }} />}
-                      {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
+                      {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', aspectRatio: '16/9', borderRadius: '12px', border: 'none' }} allowFullScreen />}
                       {isAudio && <audio controls src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
                       {isVideoFile && <video controls src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
                       
@@ -4594,7 +4594,7 @@ const parseToElements = (text, prefixKey) => {
             if (ytMatch && ytMatch[1]) {
                 media.push(
                     <div key={`${prefixKey}-${i}`} style={{ margin: '15px 0' }}>
-                        <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />
+                        <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', aspectRatio: '16/9', borderRadius: '12px', border: 'none' }} allowFullScreen />
                     </div>
                 );
             } else if (part.match(/\.(mp3|wav|ogg|m4a)(\?.*)?$/i) || part.includes("/audio/") || part.includes("voice_")) {
@@ -5836,7 +5836,7 @@ const parseToElements = (text, prefixKey) => {
                                          >✕</button>
 
                                          {isImage && <img src={cleanUrl} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="preview" onClick={() => setFullscreenTaskImg(cleanUrl)} style={{ width: '100%', maxHeight: '400px', objectFit: 'contain', borderRadius: '12px', cursor: 'zoom-in', background: 'rgba(0,0,0,0.02)', border: `1px solid ${theme.inputBorder}`, userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />}
-										 {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', height: '300px', borderRadius: '12px', border: 'none' }} allowFullScreen />}
+										 {ytMatch && <iframe src={`https://www.youtube.com/embed/${ytMatch[1]}`} title="YouTube" style={{ width: '100%', aspectRatio: '16/9', borderRadius: '12px', border: 'none' }} allowFullScreen />}
 										 {isAudio && <audio controls controlsList="nodownload" onContextMenu={(e) => e.preventDefault()} src={cleanUrl} style={{ width: '100%', outline: 'none' }} />}
 										 {isVideoFile && <video controls controlsList="nodownload" disablePictureInPicture onContextMenu={(e) => e.preventDefault()} src={cleanUrl} style={{ width: '100%', maxHeight: '400px', borderRadius: '12px', background: '#000' }} />}
                                          
