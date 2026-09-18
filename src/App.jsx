@@ -7033,4 +7033,4 @@ function App() {
 
 export default App;
 
-// Форсуємо оновлення сервера
+// Форсуємо оновлення сервера// force update  
