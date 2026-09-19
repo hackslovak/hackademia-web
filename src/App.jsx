@@ -3909,7 +3909,7 @@ useEffect(() => {
             </div>
 
             {/* === БУДІВНИК ТЕЛЕГРАМ-КВІЗУ === */}
-            {(isInline ? newTaskType : (typeof task !== 'undefined' ? task?.type : '')) === 'quiz' && (() => {
+            {newTaskType === 'quiz' && (() => {
                 const quizData = isInline ? newTaskQuiz : editTaskQuiz;
                 const setQuizData = isInline ? setNewTaskQuiz : setEditTaskQuiz;
                 
