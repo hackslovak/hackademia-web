@@ -2270,7 +2270,23 @@ const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled }) => {
                             <div style={{ width: '22px', height: '22px', borderRadius: quizData.multiple ? '6px' : '50%', border: `2px solid ${isSelected || (isSubmitted && isCorrectOption) ? borderColor : theme.textSecondary}`, display: 'flex', alignItems: 'center', justifyContent: 'center', background: isSelected || (isSubmitted && isCorrectOption) ? borderColor : 'transparent' }}>
                                 {(isSelected || (isSubmitted && isCorrectOption)) && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: quizData.multiple ? '2px' : '50%' }}></div>}
                             </div>
-                            <span style={{ color: textColor, fontSize: '15px', fontWeight: isSelected ? 'bold' : 'normal' }}>{opt.text}</span>
+                            <div style={{ display: 'flex', width: '100%', alignItems: 'center', zIndex: 2 }}>
+    <span style={{ color: textColor, fontSize: '15px', fontWeight: isSelected ? 'bold' : 'normal' }}>
+        {opt.text}
+    </span>
+    
+    {/* Телеграм-емоджі та візуальна статистика після відповіді */}
+    {isSubmitted && isCorrectOption && (
+        <span style={{ marginLeft: 'auto', fontSize: '14px', color: '#fff', background: '#38A169', padding: '2px 8px', borderRadius: '12px' }}>
+            ✅ 87%
+        </span>
+    )}
+    {isSubmitted && isSelected && !isCorrectOption && (
+        <span style={{ marginLeft: 'auto', fontSize: '14px', color: '#fff', background: '#E53E3E', padding: '2px 8px', borderRadius: '12px' }}>
+            ❌ 13%
+        </span>
+    )}
+</div>
                         </div>
                     );
                 })}
@@ -6058,7 +6074,7 @@ const parseToElements = (text, prefixKey) => {
                              {renderContent(task.content, task)}
                            </div>
 
-{!effectiveIsAdmin && !completedTasks.includes(task.id) && (() => {
+{!effectiveIsAdmin && (!completedTasks.includes(task.id) || task.type === 'quiz') && (() => {
                              // Аналізуємо завдання, щоб дати учню правильний інтерфейс
                              const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
                              const hasInlineBlanks = rawText.includes('....');
@@ -6108,7 +6124,7 @@ const parseToElements = (text, prefixKey) => {
                            })()}
 
                            {/* СТАТУС ВИКОНАННЯ */}
-                           {completedTasks.includes(task.id) && (
+                           {completedTasks.includes(task.id) && task.type !== 'quiz' && (
                              <div style={{ marginTop: '20px', color: '#38A169', fontWeight: '900', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 161, 105, 0.1)', padding: '12px 20px', borderRadius: '12px', display: 'inline-flex' }}>
                                ✅ Завдання успішно виконано
                              </div>
