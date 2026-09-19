@@ -3908,6 +3908,7 @@ useEffect(() => {
                 </div>
             </div>
 
+
             {/* === БУДІВНИК ТЕЛЕГРАМ-КВІЗУ === */}
             {newTaskType === 'quiz' && (() => {
                 const quizData = isInline ? newTaskQuiz : editTaskQuiz;
