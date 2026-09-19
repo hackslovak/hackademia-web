@@ -2210,7 +2210,7 @@ const SmartTheoryAction = ({ task, theme, onComplete }) => {
 };
 
 const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled }) => {
-    const quizData = task.content?.quizData;
+    const quizData = task.content?.quizData || task.quizData || { options: ['', ''], correct: [], multiple: false };
     if (!quizData) return null;
 
     const [selected, setSelected] = React.useState([]);
@@ -3985,6 +3985,8 @@ async function handleAddTask() {
             
             // ОЧИЩЕННЯ ФОРМИ (це важливо залишити!)
             setNewTaskContentMulti({ uk: '', ru: '', en: '', sk: '' });
+			setNewTaskType('text'); // Скидаємо тип на звичайний текст
+			setNewTaskQuiz({ options: ['', ''], correct: [], multiple: false, explanation: '' }); // Очищаємо варіанти
             setNewTaskExercise('');
             setNewTaskCorrectAnswer('');
             setIsSingleLang(false);
@@ -6070,7 +6072,7 @@ const parseToElements = (text, prefixKey) => {
                                  {task.type === 'quiz' && !hasInlineBlanks && (
                                     task.content?.quizData ? (
                                       <div style={{ flex: '1 1 100%' }}>
-                                        <TelegramQuizViewer task={task} theme={theme} onComplete={handleTheoryComplete} isSoundEnabled={isSoundEnabled} />
+                                        <TelegramQuizViewer task={task} quizData={task.content.quizData} theme={theme} onComplete={handleTheoryComplete} isSoundEnabled={isSoundEnabled} />
                                       </div>
                                     ) : task.correct_answer ? (
                                       <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
