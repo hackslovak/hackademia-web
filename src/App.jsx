@@ -3911,8 +3911,8 @@ useEffect(() => {
 
             {/* === БУДІВНИК ТЕЛЕГРАМ-КВІЗУ === */}
             {newTaskType === 'quiz' && (() => {
-                const quizData = isInline ? newTaskQuiz : editTaskQuiz;
-                const setQuizData = isInline ? setNewTaskQuiz : setEditTaskQuiz;
+                const quizData = newTaskQuiz;
+				const setQuizData = setNewTaskQuiz;
                 
                 const updateOpt = (i, val) => { const newOpts = [...quizData.options]; newOpts[i] = val; setQuizData({...quizData, options: newOpts}); };
                 const removeOpt = (i) => setQuizData({...quizData, options: quizData.options.filter((_, idx) => idx !== i), correct: quizData.correct.filter(c => c !== i).map(c => c > i ? c - 1 : c)});
