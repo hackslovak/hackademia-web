@@ -2927,6 +2927,32 @@ function Platform() {
   const [taskViewMode, setTaskViewMode] = React.useState('list'); // 'list' або 'carousel'
   const [carouselIndex, setCarouselIndex] = React.useState(0); // номер поточного завдання в каруселі
   
+  // Підтримка фізичних стрілок на клавіатурі для каруселі
+    React.useEffect(() => {
+        const handleKeyDown = (e) => {
+            // 1. Ігноруємо стрілки, якщо учень зараз друкує текст у полі вводу
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+
+            // 2. Знаходимо наші крапочки. Якщо їх немає — карусель вимкнена, нічого не робимо
+            const dotsContainer = document.getElementById('carousel-dots-container');
+            if (!dotsContainer) return; 
+            
+            // 3. Рахуємо максимальний індекс завдання
+            const maxIndex = dotsContainer.children.length - 1;
+            
+            // 4. Перемикаємо карусель
+            if (e.key === 'ArrowRight') {
+                setCarouselIndex(prev => prev < maxIndex ? prev + 1 : 0); // Вправо
+            } else if (e.key === 'ArrowLeft') {
+                setCarouselIndex(prev => prev > 0 ? prev - 1 : maxIndex); // Вліво
+            }
+        };
+        
+        // Вмикаємо "слухач" клавіатури
+        window.addEventListener('keydown', handleKeyDown);
+        return () => window.removeEventListener('keydown', handleKeyDown);
+    }, []);
+  
   const [pendingCount, setPendingCount] = useState(0);
   const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
 
@@ -5673,7 +5699,7 @@ const parseToElements = (text, prefixKey) => {
 
         <div style={{ flex: 1, padding: '100px 60px 40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          <div style={{ marginBottom: '40px' }}>
+          <div className={taskViewMode === 'carousel' ? "dynamic-header" : ""} style={{ marginBottom: '40px' }}>
             <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
               <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
@@ -5729,7 +5755,7 @@ const parseToElements = (text, prefixKey) => {
           </div>
 		  
 
-          <div style={{ maxWidth: '900px' }}>
+          <div style={{ maxWidth: taskViewMode === 'carousel' ? '1200px' : '900px', width: '100%', margin: '0 auto' }}>
             
             {/* СІТКА ЗАВДАНЬ */}
             {tasks.length === 0 ? (
@@ -5748,31 +5774,44 @@ const parseToElements = (text, prefixKey) => {
                 {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
         {taskViewMode === 'carousel' && (
             <style>{`
-                /* 1. Блокуємо прокручування ВСІЄЇ сторінки (як в Instagram) */
-                body, html {
-                    overflow: hidden !important;
+                /* 1. Блокуємо прокручування ВСІЄЇ сторінки */
+                body, html { overflow: hidden !important; }
+                
+                /* 2. Компактна шапка (в один рядок, як ви просили) */
+                .dynamic-header {
+                    display: flex !important;
+                    flex-direction: row !important;
+                    justify-content: space-between !important;
+                    align-items: center !important;
+                    margin-bottom: 15px !important;
                 }
-                /* 2. Робимо контейнер на всю висоту екрана (залишаємо місце лише для шапки) */
+                .dynamic-header > span { display: none !important; } /* ховаємо дрібний надпис курсу зверху */
+                .dynamic-header h2 { font-size: 24px !important; margin-bottom: 0 !important; }
+                .dynamic-header button { padding: 8px 14px !important; font-size: 13px !important; }
+                
+                /* 3. Головний контейнер на всю доступну висоту */
                 .carousel-container {
-                    height: calc(100vh - 120px) !important; 
+                    height: calc(100vh - 140px) !important; 
                     margin-bottom: 0 !important;
                 }
-                /* 3. Розтягуємо картку завдання */
+                
+                /* 4. Сама картка: не обрізається, а має власний внутрішній скрол! */
                 .carousel-container > div:last-child {
                     flex: 1 !important;
+                    height: 100% !important;
+                    max-height: calc(100vh - 200px) !important; 
+                    overflow-y: auto !important; 
+                    box-sizing: border-box !important;
                     display: flex !important;
                     flex-direction: column !important;
                     justify-content: flex-start !important;
-                    height: 100% !important;
-                    overflow-y: auto !important; /* Внутрішній скрол для вмісту */
-                    box-sizing: border-box !important;
                 }
             `}</style>
         )}
 
                 {/* ІНСТАГРАМ-КРАПОЧКИ (Навігація каруселі) */}
                 {taskViewMode === 'carousel' && filteredTasks.length > 1 && (
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                    <div id="carousel-dots-container" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
                         {filteredTasks.map((_, idx) => (
                             <div 
                                 key={idx}
