@@ -5746,29 +5746,29 @@ const parseToElements = (text, prefixKey) => {
             <div className={taskViewMode === 'carousel' ? "carousel-container" : ""} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
                 
                 {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
-                {taskViewMode === 'carousel' && (
-                    <style>{`
-                        /* 1. Фіксуємо висоту загального контейнера */
-                        .carousel-container {
-                            height: calc(100vh - 280px) !important; 
-                            margin-bottom: 0 !important;
-                        }
-                        /* 2. Розтягуємо саму картку завдання на всі 100% висоти і центруємо вміст */
-                        .carousel-container > div:last-child {
-                            flex: 1 !important;
-                            display: flex !important;
-                            flex-direction: column !important;
-                            justify-content: center !important;
-                            height: 100% !important;
-                            box-sizing: border-box !important;
-                        }
-                        /* 3. Якщо текст у завданні великий - прокручуватиметься тільки він */
-                        .carousel-container > div:last-child > div {
-                            overflow-y: auto !important;
-                            max-height: 100%;
-                        }
-                    `}</style>
-                )}
+        {taskViewMode === 'carousel' && (
+            <style>{`
+                /* 1. Блокуємо прокручування ВСІЄЇ сторінки (як в Instagram) */
+                body, html {
+                    overflow: hidden !important;
+                }
+                /* 2. Робимо контейнер на всю висоту екрана (залишаємо місце лише для шапки) */
+                .carousel-container {
+                    height: calc(100vh - 120px) !important; 
+                    margin-bottom: 0 !important;
+                }
+                /* 3. Розтягуємо картку завдання */
+                .carousel-container > div:last-child {
+                    flex: 1 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    justify-content: flex-start !important;
+                    height: 100% !important;
+                    overflow-y: auto !important; /* Внутрішній скрол для вмісту */
+                    box-sizing: border-box !important;
+                }
+            `}</style>
+        )}
 
                 {/* ІНСТАГРАМ-КРАПОЧКИ (Навігація каруселі) */}
                 {taskViewMode === 'carousel' && filteredTasks.length > 1 && (
@@ -6278,7 +6278,7 @@ const parseToElements = (text, prefixKey) => {
             )}
 
             {/* НИЖНІЙ РЕДАКТОР (Показується тільки тоді, коли немає відкритого інлайн-редактора) */}
-            {effectiveIsAdmin && activeInsertIndex === null && (
+            {effectiveIsAdmin && activeInsertIndex === null && taskViewMode === 'list' && (
               <div>
                 {renderComposer(false)}
               </div>
