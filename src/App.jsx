@@ -5743,24 +5743,23 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
               </div>
             ) : (
-              {/* ВЕРХНЯ НАВІГАЦІЯ КАРУСЕЛІ ТА ЛІЧИЛЬНИК (Для всіх пристроїв) */}
-    {taskViewMode === 'carousel' && filteredTasks.length > 0 && (
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '12px 20px', background: theme.cardBg, borderRadius: '15px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-            <button onClick={() => setCarouselIndex(prev => prev > 0 ? prev - 1 : filteredTasks.length - 1)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Попереднє
-            </button>
-            <span style={{ fontWeight: '900', color: '#E0A345', fontSize: '16px' }}>
-                {Math.min(carouselIndex + 1, filteredTasks.length)} / {filteredTasks.length}
-            </span>
-            <button onClick={() => setCarouselIndex(prev => prev < filteredTasks.length - 1 ? prev + 1 : 0)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
-                Наступне <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-            </button>
-        </div>
-    )}
-
-    {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
-    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
+              <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
         
+        {/* ВЕРХНЯ НАВІГАЦІЯ КАРУСЕЛІ ТА ЛІЧИЛЬНИК (Для всіх пристроїв) */}
+        {taskViewMode === 'carousel' && filteredTasks.length > 0 && (
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: theme.cardBg, borderRadius: '15px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+                <button onClick={() => setCarouselIndex(prev => prev > 0 ? prev - 1 : filteredTasks.length - 1)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Попереднє
+                </button>
+                <span style={{ fontWeight: '900', color: '#E0A345', fontSize: '16px' }}>
+                    {Math.min(carouselIndex + 1, filteredTasks.length)} / {filteredTasks.length}
+                </span>
+                <button onClick={() => setCarouselIndex(prev => prev < filteredTasks.length - 1 ? prev + 1 : 0)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
+                    Наступне <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </div>
+        )}
+
         {/* БІЧНІ КНОПКИ ДЛЯ ПК (З'являються тільки на широких екранах) */}
         {taskViewMode === 'carousel' && filteredTasks.length > 1 && window.innerWidth > 800 && (
             <>
