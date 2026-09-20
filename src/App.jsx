@@ -5704,70 +5704,59 @@ const parseToElements = (text, prefixKey) => {
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
               <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
               
-              {/* КНОПКА ТА МЕНЮ ФІЛЬТРУ (Прив'язана до заголовка) */}
               {/* ПЛАВАЮЧІ КНОПКИ (Завжди в правому верхньому куті) */}
 <div className={taskViewMode === 'carousel' ? "floating-controls carousel-mini" : "floating-controls"} style={{ position: 'fixed', top: '25px', right: '30px', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
     <style>{`
-        .floating-controls button {
+        /* Робимо кнопки круглими і плаваючими */
+        .floating-controls > button, .floating-controls > div > button {
             background: rgba(150, 150, 150, 0.15) !important;
             backdrop-filter: blur(8px);
             border: none !important;
             border-radius: 50% !important;
             width: 48px !important;
             height: 48px !important;
-            color: transparent !important; /* Повністю ховаємо текст */
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
             box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
             transition: all 0.2s ease !important;
             padding: 0 !important;
+            color: #888 !important; /* Колір іконок */
+            cursor: pointer;
         }
-        .floating-controls button:hover {
+        .floating-controls > button:hover, .floating-controls > div > button:hover {
             background: rgba(150, 150, 150, 0.3) !important;
             transform: scale(1.05);
-        }
-        /* В каруселі робимо їх ще меншими та акуратнішими */
-        .floating-controls.carousel-mini button {
-            width: 38px !important;
-            height: 38px !important;
         }
         /* Ховаємо текст у кнопці фільтру */
         .floating-controls span { display: none !important; }
         
-        /* Вирівнюємо іконки */
-        .floating-controls button svg {
-            position: absolute !important;
-            top: 50% !important; left: 50% !important;
-            transform: translate(-50%, -50%) !important;
-            color: #888 !important;
-            width: 22px !important; height: 22px !important;
-        }
-        .floating-controls.carousel-mini button svg {
-            width: 18px !important; height: 18px !important;
-        }
+        /* Налаштування розмірів SVG */
+        .floating-controls svg { width: 22px !important; height: 22px !important; }
         
-        /* Малюємо гарну іконку для кнопки перемикання вигляду замість тексту */
-        .floating-controls > button:first-child::before {
-            content: '';
-            position: absolute;
-            top: 50%; left: 50%;
-            transform: translate(-50%, -50%);
-            width: 22px; height: 22px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='8' y1='6' x2='21' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='12' x2='21' y2='12'%3E%3C/line%3E%3Cline x1='8' y1='18' x2='21' y2='18'%3E%3C/line%3E%3Cline x1='3' y1='6' x2='3.01' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='12' x2='3.01' y2='12'%3E%3C/line%3E%3Cline x1='3' y1='18' x2='3.01' y2='18'%3E%3C/line%3E%3C/svg%3E");
-            background-size: cover;
+        /* В каруселі робимо кнопки меншими */
+        .floating-controls.carousel-mini > button, .floating-controls.carousel-mini > div > button {
+            width: 38px !important;
+            height: 38px !important;
         }
-        .floating-controls.carousel-mini > button:first-child::before { width: 18px; height: 18px; }
+        .floating-controls.carousel-mini svg { width: 18px !important; height: 18px !important; }
     `}</style>
-			  <button 
+
+    {/* КНОПКА ПЕРЕМИКАННЯ РЕЖИМУ (Тепер зі справжніми SVG) */}
+    <button 
         onClick={() => {
             setTaskViewMode(prev => prev === 'list' ? 'carousel' : 'list');
             setCarouselIndex(0);
         }}
-        className="hover-card"
-        style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 16px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}
+        title="Змінити вигляд"
     >
-        {taskViewMode === 'list' ? '📺 Карусель' : '📜 Список'}
+        {taskViewMode === 'list' ? (
+            /* Іконка "Карусель" (Сітка) */
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+        ) : (
+            /* Іконка "Список" (Рядки) */
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+        )}
     </button>
                 <button 
                   onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
@@ -5827,11 +5816,10 @@ const parseToElements = (text, prefixKey) => {
                 {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
         {taskViewMode === 'carousel' && (
             <style>{`
-                /* Блокуємо зовнішнє прокручування */
+                /* Блокуємо ТІЛЬКИ зовнішнє прокручування сторінки */
                 body, html, #root { overflow: hidden !important; }
-                div[style*="overflow-y: auto"] { overflow: hidden !important; }
 
-                /* Заголовок "1 лекція" стає по центру і напівпрозорим, бо кнопки полетіли вправо */
+                /* Заголовок "1 лекція" */
                 .dynamic-header {
                     margin-top: -15px !important;
                     margin-bottom: 10px !important;
@@ -5841,7 +5829,7 @@ const parseToElements = (text, prefixKey) => {
                 .dynamic-header > span, .dynamic-header > div > span { display: none !important; } 
                 .dynamic-header h2 { font-size: 18px !important; opacity: 0.3 !important; margin: 0 !important; }
 
-                /* === ГОЛОВНИЙ ФІКС ОБРІЗАННЯ === */
+                /* === ГОЛОВНИЙ ФІКС СКРОЛУ ЗАВДАНЬ === */
                 .carousel-container {
                     height: calc(100vh - 90px) !important; 
                     margin-bottom: 0 !important;
@@ -5849,13 +5837,14 @@ const parseToElements = (text, prefixKey) => {
                     flex-direction: column !important;
                 }
                 
-                /* Секретний трюк min-height: 0 рятує завдання від обрізання знизу! */
+                /* Дозволяємо прокручувати САМЕ завдання, якщо воно довге! */
                 .carousel-container > div:last-child {
                     flex: 1 !important;
                     min-height: 0 !important; 
                     height: 100% !important;
-                    overflow-y: auto !important; 
-                    padding-bottom: 20px !important;
+                    overflow-y: auto !important; /* Ось це повертає скрол для відео/довгих тестів */
+                    padding-bottom: 30px !important;
+                    -webkit-overflow-scrolling: touch !important; /* Плавний скрол на телефонах */
                 }
             `}</style>
         )}
