@@ -2209,7 +2209,7 @@ const SmartTheoryAction = ({ task, theme, onComplete }) => {
   );
 };
 
-const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled }) => {
+const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, questionNode }) => {
     const quizData = task.content?.quizData || task.quizData || { options: ['', ''], correct: [], multiple: false };
     if (!quizData) return null;
 
@@ -2250,7 +2250,13 @@ const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled }) => {
 
     return (
         <div className={isShaking ? 'shake-animation' : ''} style={{ background: theme.cardBg, borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, padding: '20px', marginTop: '20px', maxWidth: '500px' }}>
-            <div style={{ fontWeight: 'bold', marginBottom: '15px', color: theme.textSecondary, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Жирне питання всередині квізу, як у Telegram */}
+{questionNode && (
+    <div style={{ fontWeight: 'bold', fontSize: '16px', color: theme.text, marginBottom: '15px' }}>
+        {questionNode}
+    </div>
+)}
+			<div style={{ fontWeight: 'bold', marginBottom: '15px', color: theme.textSecondary, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 📊 {quizData.multiple ? 'Декілька правильних відповідей' : 'Опитування'}
             </div>
             
@@ -2292,7 +2298,7 @@ const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled }) => {
                 })}
             </div>
 
-            {!isSubmitted && (
+            {!isSubmitted && !isAdmin && (
                 <button onClick={handleSubmit} disabled={selected.length === 0} style={{ width: '100%', padding: '14px', marginTop: '20px', borderRadius: '12px', background: selected.length > 0 ? '#E0A345' : theme.inputBg, color: selected.length > 0 ? '#fff' : theme.textSecondary, border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: selected.length > 0 ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
                     ВІДПОВІСТИ
                 </button>
@@ -3926,9 +3932,9 @@ useEffect(() => {
 
 
             {/* === БУДІВНИК ТЕЛЕГРАМ-КВІЗУ === */}
-            {newTaskType === 'quiz' && (() => {
-                const quizData = newTaskQuiz;
-				const setQuizData = setNewTaskQuiz;
+            {(typeof editingTaskId !== 'undefined' && editingTaskId ? editTaskType : newTaskType) === 'quiz' && (() => {
+                const quizData = (typeof editingTaskId !== 'undefined' && editingTaskId) ? editTaskQuiz : newTaskQuiz;
+				const setQuizData = (typeof editingTaskId !== 'undefined' && editingTaskId) ? setEditTaskQuiz : setNewTaskQuiz;
                 
                 const updateOpt = (i, val) => { const newOpts = [...quizData.options]; newOpts[i] = val; setQuizData({...quizData, options: newOpts}); };
                 const removeOpt = (i) => setQuizData({...quizData, options: quizData.options.filter((_, idx) => idx !== i), correct: quizData.correct.filter(c => c !== i).map(c => c > i ? c - 1 : c)});
@@ -5775,7 +5781,8 @@ const parseToElements = (text, prefixKey) => {
                             <button onClick={() => handleResetTaskAnswers(task)} className="hover-card" title="Скинути введені тестові відповіді" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', padding: '10px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>🔄 Скинути</button>
                             
                             <button onClick={() => { 
-                              setEditingTaskId(task.id); 
+                              setEditingTaskId(task.id);
+                              setEditTaskType(task.type);							  
                               if (typeof task.content === 'object' && task.content !== null) {
                                 const { exercise, ...restLangs } = task.content;
                                 setEditContentMulti({ uk: restLangs.uk || '', ru: restLangs.ru || '', en: restLangs.en || '', sk: restLangs.sk || '' });
@@ -5793,7 +5800,7 @@ const parseToElements = (text, prefixKey) => {
                               setEditCategory(safeCat); 
                               setEditLang('uk');
 							  setEditRequiresVoice(task.content?.requiresVoice || false);
-							  setEditTaskQuiz(task.content?.quizData || defaultQuizData);
+							  setEditTaskQuiz(task.content?.quizData || task.quizData || { options: ['', ''], correct: [], multiple: false, explanation: '' });
                             }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                             
                             <button onClick={() => handleDeleteTask(task.id)} className="hover-card" title="Видалити завдання" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
@@ -6067,12 +6074,47 @@ const parseToElements = (text, prefixKey) => {
                       ) : (
                          <div>
                            {/* САМ КОНТЕНТ ЗАВДАННЯ */}
-                           <div 
-                             style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
-                             onInput={(e) => handleInlineInput(e, task)}
-                           >
-                             {renderContent(task.content, task)}
-                           </div>
+                           {/* Текст завдання показуємо окремо ТІЛЬКИ якщо це не квіз */}
+{task.type !== 'quiz' && (
+    <div
+        style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
+        onInput={(e) => handleInlineInput(e, task)}
+    >
+        {renderContent(task.content, task)}
+    </div>
+)}
+
+{/* А ЯКЩО ЦЕ КВІЗ - малюємо його тут, щоб адмін теж його бачив */}
+{task.type === 'quiz' && task.content?.quizData && (
+    <div style={{ flex: '1 1 100%', marginBottom: '15px' }}>
+        <TelegramQuizViewer 
+            task={task} 
+            theme={theme} 
+            onComplete={handleTheoryComplete} 
+            isSoundEnabled={isSoundEnabled} 
+            isAdmin={effectiveIsAdmin}
+            questionNode={
+                <div style={{ whiteSpace: 'pre-wrap' }}>
+                    {renderContent(task.content, task)}
+                </div>
+            }
+        />
+    </div>
+)}
+
+{/* КВІЗ ЗАВЖДИ ВИДНО ВСІМ (АДМІНУ І УЧНЮ) */}
+{task.type === 'quiz' && task.content?.quizData && (
+    <div style={{ flex: '1 1 100%', marginBottom: '15px' }}>
+        <TelegramQuizViewer 
+            task={task} 
+            theme={theme} 
+            onComplete={handleTheoryComplete} 
+            isSoundEnabled={isSoundEnabled} 
+            isAdmin={effectiveIsAdmin}
+            questionNode={renderContent(task.content, task)} 
+        />
+    </div>
+)}
 
 {!effectiveIsAdmin && (!completedTasks.includes(task.id) || task.type === 'quiz') && (() => {
                              // Аналізуємо завдання, щоб дати учню правильний інтерфейс
@@ -6085,11 +6127,6 @@ const parseToElements = (text, prefixKey) => {
                                <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                                  
                                  {/* ЛОГІКА 1: Квіз (Телеграм-опитування або старий текстовий формат) */}
-                                 {task.type === 'quiz' && !hasInlineBlanks && (
-                                    task.content?.quizData ? (
-                                      <div style={{ flex: '1 1 100%' }}>
-                                        <TelegramQuizViewer task={task} quizData={task.content.quizData} theme={theme} onComplete={handleTheoryComplete} isSoundEnabled={isSoundEnabled} />
-                                      </div>
                                     ) : task.correct_answer ? (
                                       <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
                                         <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') handleAnswerSubmit(task); }} style={{ flex: 1, padding: '16px', borderRadius: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
