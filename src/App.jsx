@@ -5714,9 +5714,8 @@ const parseToElements = (text, prefixKey) => {
 			  {/* ПЛАВАЮЧІ КНОПКИ (Завжди в правому верхньому куті) */}
 <div className={taskViewMode === 'carousel' ? "floating-controls carousel-mini" : "floating-controls"} style={{ position: 'fixed', top: '25px', right: '30px', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
     <style>{`
-        <style>{`
-        /* Робимо кнопки круглими і плаваючими */
-        .floating-controls > button, .floating-controls > div > button {
+    /* Робимо кнопки круглими і плаваючими */
+    .floating-controls > button, .floating-controls > div > button {
             background: rgba(150, 150, 150, 0.15) !important;
             backdrop-filter: blur(8px);
             border: none !important;
