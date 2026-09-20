@@ -5774,37 +5774,90 @@ const parseToElements = (text, prefixKey) => {
                 {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
         {taskViewMode === 'carousel' && (
             <style>{`
-                /* 1. Блокуємо прокручування ВСІЄЇ сторінки */
-                body, html { overflow: hidden !important; }
+                /* 1. ПОВНІСТЮ ВБИВАЄМО "ЛЮФТ" (зовнішній скрол) */
+                body, html, #root { overflow: hidden !important; }
                 
-                /* 2. Компактна шапка (в один рядок, як ви просили) */
+                /* Знаходимо зовнішній контейнер з відступами і блокуємо його скрол */
+                div[style*="overflow-y: auto"], div[style*="overflow-y: scroll"] {
+                    overflow: hidden !important;
+                }
+
+                /* 2. ШАПКА ЗЛІТАЄ ВГОРУ (Ховаємо зайве, робимо плаваючою) */
                 .dynamic-header {
+                    margin-top: -70px !important; /* Залазимо у верхній пустий простір (відступ) */
+                    margin-bottom: 10px !important;
                     display: flex !important;
                     flex-direction: row !important;
                     justify-content: space-between !important;
                     align-items: center !important;
-                    margin-bottom: 15px !important;
                 }
-                .dynamic-header > span { display: none !important; } /* ховаємо дрібний надпис курсу зверху */
-                .dynamic-header h2 { font-size: 24px !important; margin-bottom: 0 !important; }
-                .dynamic-header button { padding: 8px 14px !important; font-size: 13px !important; }
+
+                /* Ховаємо дрібний надпис "А1" */
+                .dynamic-header > span, .dynamic-header > div > span { display: none !important; } 
                 
-                /* 3. Головний контейнер на всю доступну висоту */
+                /* Робимо заголовок модуля ("1 лекція") мінімалістичним і напівпрозорим */
+                .dynamic-header h2 { 
+                    font-size: 20px !important; 
+                    opacity: 0.3 !important; 
+                    margin: 0 !important;
+                }
+
+                /* 3. КНОПКИ ПЕРЕТВОРЮЮТЬСЯ НА ПЛАВАЮЧІ КРУГЛІ ІКОНКИ */
+                .dynamic-header > div:last-child {
+                    gap: 12px !important;
+                }
+
+                .dynamic-header button {
+                    background: rgba(150, 150, 150, 0.15) !important;
+                    backdrop-filter: blur(5px);
+                    border: none !important;
+                    width: 44px !important;
+                    height: 44px !important;
+                    border-radius: 50% !important;
+                    padding: 0 !important;
+                    position: relative !important;
+                    color: transparent !important; /* Ховаємо текст ("Фільтр", "Карусель") */
+                    box-shadow: none !important;
+                    transition: all 0.2s ease !important;
+                }
+                .dynamic-header button:hover {
+                    background: rgba(150, 150, 150, 0.3) !important;
+                }
+                
+                /* Відцентровуємо SVG (іконку фільтру) всередині кнопки */
+                .dynamic-header button svg {
+                    position: absolute !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    color: #999 !important; /* Робимо іконку нейтральною */
+                    width: 22px !important;
+                    height: 22px !important;
+                }
+                
+                /* Додаємо стильну іконку "Списку" замість тексту для першої кнопки */
+                .dynamic-header button:first-child::before {
+                    content: '';
+                    position: absolute !important;
+                    top: 50% !important;
+                    left: 50% !important;
+                    transform: translate(-50%, -50%) !important;
+                    width: 22px;
+                    height: 22px;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cline x1='8' y1='6' x2='21' y2='6'%3E%3C/line%3E%3Cline x1='8' y1='12' x2='21' y2='12'%3E%3C/line%3E%3Cline x1='8' y1='18' x2='21' y2='18'%3E%3C/line%3E%3Cline x1='3' y1='6' x2='3.01' y2='6'%3E%3C/line%3E%3Cline x1='3' y1='12' x2='3.01' y2='12'%3E%3C/line%3E%3Cline x1='3' y1='18' x2='3.01' y2='18'%3E%3C/line%3E%3C/svg%3E");
+                    background-size: cover;
+                }
+
+                /* 4. ГОЛОВНИЙ КОНТЕЙНЕР (Завдання) розтягується ідеально на весь екран */
                 .carousel-container {
-                    height: calc(100vh - 140px) !important; 
+                    height: calc(100vh - 100px) !important; 
                     margin-bottom: 0 !important;
                 }
                 
-                /* 4. Сама картка: не обрізається, а має власний внутрішній скрол! */
+                /* Тільки сама картка може прокручуватися всередині! */
                 .carousel-container > div:last-child {
-                    flex: 1 !important;
                     height: 100% !important;
-                    max-height: calc(100vh - 200px) !important; 
                     overflow-y: auto !important; 
-                    box-sizing: border-box !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    justify-content: flex-start !important;
                 }
             `}</style>
         )}
@@ -5876,7 +5929,7 @@ const parseToElements = (text, prefixKey) => {
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '15px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
                           <div style={{ width: '45px', height: '45px', borderRadius: '14px', background: 'rgba(224,163,69,0.15)', color: '#E0A345', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '20px', fontWeight: '900' }}>
-                            {idx + 1}
+                            {taskViewMode === 'carousel' ? carouselIndex + 1 : idx + 1}
                           </div>
                           
                           {/* ІНДИВІДУАЛЬНИЙ БЕЙДЖ КАТЕГОРІЇ ДЛЯ КОЖНОГО ЗАВДАННЯ */}
