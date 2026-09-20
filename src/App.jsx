@@ -6126,14 +6126,15 @@ const parseToElements = (text, prefixKey) => {
                              return (
                                <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                                  
-                                 {/* ЛОГІКА 1: Квіз (Телеграм-опитування або старий текстовий формат) */}
-                                    ) : task.correct_answer ? (
-                                      <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
-                                        <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} onKeyDown={(e) => { e.stopPropagation(); if (e.key === 'Enter') handleAnswerSubmit(task); }} style={{ flex: 1, padding: '16px', borderRadius: '14px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px' }} />
-                                        <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px' }}>Перевірити</button>
-                                      </div>
-                                    ) : null
-                                 )}
+                                 {/* ЛОГІКА 1: Старий текстовий формат з ручним введенням */}
+        {task.type !== 'quiz' && task.correct_answer ? (
+            <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
+                <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} className="hover-card" style={{ flex: 1, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px', outline: 'none' }} />
+                <button onClick={() => handleAnswersSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    Відповісти
+                </button>
+            </div>
+        ) : null}
 
                                  {/* ЛОГІКА 2: Теорія / Матеріал (Просто кнопка ознайомлення) */}
                                  {isTheory && !requiresVoice && !hasInlineBlanks && (
