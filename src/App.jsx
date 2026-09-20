@@ -6085,7 +6085,7 @@ const parseToElements = (text, prefixKey) => {
     </div>
 )}
 
-{/* А ЯКЩО ЦЕ КВІЗ - малюємо його тут, щоб адмін теж його бачив */}
+{/* КВІЗ ЗАВЖДИ ВИДНО ВСІМ (АДМІНУ І УЧНЮ) */}
 {task.type === 'quiz' && task.content?.quizData && (
     <div style={{ flex: '1 1 100%', marginBottom: '15px' }}>
         <TelegramQuizViewer 
@@ -6103,19 +6103,7 @@ const parseToElements = (text, prefixKey) => {
     </div>
 )}
 
-{/* КВІЗ ЗАВЖДИ ВИДНО ВСІМ (АДМІНУ І УЧНЮ) */}
-{task.type === 'quiz' && task.content?.quizData && (
-    <div style={{ flex: '1 1 100%', marginBottom: '15px' }}>
-        <TelegramQuizViewer 
-            task={task} 
-            theme={theme} 
-            onComplete={handleTheoryComplete} 
-            isSoundEnabled={isSoundEnabled} 
-            isAdmin={effectiveIsAdmin}
-            questionNode={renderContent(task.content, task)} 
-        />
-    </div>
-)}
+
 
 {!effectiveIsAdmin && (!completedTasks.includes(task.id) || task.type === 'quiz') && (() => {
                              // Аналізуємо завдання, щоб дати учню правильний інтерфейс
