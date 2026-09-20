@@ -5743,54 +5743,53 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
               </div>
             ) : (
-			
-             {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
-        {taskViewMode === 'carousel' && (
-            <style>{`
-                /* 1. Фіксуємо висоту загального контейнера */
-                .carousel-container {
-                    height: calc(100vh - 280px) !important; 
-                    margin-bottom: 0 !important;
-                }
-                /* 2. Розтягуємо саму картку завдання на всі 100% висоти і центруємо вміст */
-                .carousel-container > div:last-child {
-                    flex: 1 !important;
-                    display: flex !important;
-                    flex-direction: column !important;
-                    justify-content: center !important;
-                    height: 100% !important;
-                    box-sizing: border-box !important;
-                }
-                /* 3. Якщо текст у завданні великий - прокручуватиметься тільки він */
-                .carousel-container > div:last-child > div {
-                    overflow-y: auto !important;
-                    max-height: 100%;
-                }
-            `}</style>
-        )}
+            {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
+            <div className={taskViewMode === 'carousel' ? "carousel-container" : ""} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
+                
+                {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
+                {taskViewMode === 'carousel' && (
+                    <style>{`
+                        /* 1. Фіксуємо висоту загального контейнера */
+                        .carousel-container {
+                            height: calc(100vh - 280px) !important; 
+                            margin-bottom: 0 !important;
+                        }
+                        /* 2. Розтягуємо саму картку завдання на всі 100% висоти і центруємо вміст */
+                        .carousel-container > div:last-child {
+                            flex: 1 !important;
+                            display: flex !important;
+                            flex-direction: column !important;
+                            justify-content: center !important;
+                            height: 100% !important;
+                            box-sizing: border-box !important;
+                        }
+                        /* 3. Якщо текст у завданні великий - прокручуватиметься тільки він */
+                        .carousel-container > div:last-child > div {
+                            overflow-y: auto !important;
+                            max-height: 100%;
+                        }
+                    `}</style>
+                )}
 
-        {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
-        <div className={taskViewMode === 'carousel' ? "carousel-container" : ""} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
-            
-            {/* ІНСТАГРАМ-КРАПОЧКИ (Навігація каруселі) */}
-            {taskViewMode === 'carousel' && filteredTasks.length > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
-                    {filteredTasks.map((_, idx) => (
-                        <div 
-                            key={idx}
-                            onClick={() => setCarouselIndex(idx)}
-                            style={{
-                                width: carouselIndex === idx ? '24px' : '8px',
-                                height: '8px',
-                                borderRadius: '4px',
-                                background: carouselIndex === idx ? '#E0A345' : 'rgba(150, 150, 150, 0.3)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                        />
-                    ))}
-                </div>
-            )}
+                {/* ІНСТАГРАМ-КРАПОЧКИ (Навігація каруселі) */}
+                {taskViewMode === 'carousel' && filteredTasks.length > 1 && (
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                        {filteredTasks.map((_, idx) => (
+                            <div 
+                                key={idx}
+                                onClick={() => setCarouselIndex(idx)}
+                                style={{
+                                    width: carouselIndex === idx ? '24px' : '8px',
+                                    height: '8px',
+                                    borderRadius: '4px',
+                                    background: carouselIndex === idx ? '#E0A345' : 'rgba(150, 150, 150, 0.3)',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                            />
+                        ))}
+                    </div>
+                )}
 
         {/* БІЧНІ КНОПКИ ДЛЯ ПК (З'являються тільки на широких екранах) */}
         {taskViewMode === 'carousel' && filteredTasks.length > 1 && window.innerWidth > 800 && (
