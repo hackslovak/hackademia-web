@@ -5743,22 +5743,54 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
               </div>
             ) : (
-              <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
-        
-        {/* ВЕРХНЯ НАВІГАЦІЯ КАРУСЕЛІ ТА ЛІЧИЛЬНИК (Для всіх пристроїв) */}
-        {taskViewMode === 'carousel' && filteredTasks.length > 0 && (
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 20px', background: theme.cardBg, borderRadius: '15px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-                <button onClick={() => setCarouselIndex(prev => prev > 0 ? prev - 1 : filteredTasks.length - 1)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Попереднє
-                </button>
-                <span style={{ fontWeight: '900', color: '#E0A345', fontSize: '16px' }}>
-                    {Math.min(carouselIndex + 1, filteredTasks.length)} / {filteredTasks.length}
-                </span>
-                <button onClick={() => setCarouselIndex(prev => prev < filteredTasks.length - 1 ? prev + 1 : 0)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
-                    Наступне <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
-                </button>
-            </div>
+			
+             {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
+        {taskViewMode === 'carousel' && (
+            <style>{`
+                /* 1. Фіксуємо висоту загального контейнера */
+                .carousel-container {
+                    height: calc(100vh - 280px) !important; 
+                    margin-bottom: 0 !important;
+                }
+                /* 2. Розтягуємо саму картку завдання на всі 100% висоти і центруємо вміст */
+                .carousel-container > div:last-child {
+                    flex: 1 !important;
+                    display: flex !important;
+                    flex-direction: column !important;
+                    justify-content: center !important;
+                    height: 100% !important;
+                    box-sizing: border-box !important;
+                }
+                /* 3. Якщо текст у завданні великий - прокручуватиметься тільки він */
+                .carousel-container > div:last-child > div {
+                    overflow-y: auto !important;
+                    max-height: 100%;
+                }
+            `}</style>
         )}
+
+        {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
+        <div className={taskViewMode === 'carousel' ? "carousel-container" : ""} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
+            
+            {/* ІНСТАГРАМ-КРАПОЧКИ (Навігація каруселі) */}
+            {taskViewMode === 'carousel' && filteredTasks.length > 1 && (
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '8px', marginBottom: '15px', flexWrap: 'wrap' }}>
+                    {filteredTasks.map((_, idx) => (
+                        <div 
+                            key={idx}
+                            onClick={() => setCarouselIndex(idx)}
+                            style={{
+                                width: carouselIndex === idx ? '24px' : '8px',
+                                height: '8px',
+                                borderRadius: '4px',
+                                background: carouselIndex === idx ? '#E0A345' : 'rgba(150, 150, 150, 0.3)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
+                    ))}
+                </div>
+            )}
 
         {/* БІЧНІ КНОПКИ ДЛЯ ПК (З'являються тільки на широких екранах) */}
         {taskViewMode === 'carousel' && filteredTasks.length > 1 && window.innerWidth > 800 && (
