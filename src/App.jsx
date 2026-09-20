@@ -5743,7 +5743,6 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
               </div>
             ) : (
-            {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
             <div className={taskViewMode === 'carousel' ? "carousel-container" : ""} style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
                 
                 {/* МАГІЯ CSS ДЛЯ ІДЕАЛЬНОГО ФУЛСКРІНУ КАРУСЕЛІ */}
