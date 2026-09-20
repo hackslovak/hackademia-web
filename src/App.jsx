@@ -5699,14 +5699,22 @@ const parseToElements = (text, prefixKey) => {
 
         <div style={{ flex: 1, padding: '100px 60px 40px 60px', overflowY: 'auto', boxSizing: 'border-box', textAlign: 'left' }}>
           
-          <div className={taskViewMode === 'carousel' ? "dynamic-header" : ""} style={{ marginBottom: '40px' }}>
+          <div className="dynamic-header">
             <span style={{ fontSize: '14px', color: '#E0A345', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedCourse?.title}</span>
             <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginTop: '10px' }}>
               <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
               
-              {/* ПЛАВАЮЧІ КНОПКИ (Завжди в правому верхньому куті) */}
+              {/* ПІДКАЗКА ДЛЯ РЕЖИМУ СПИСКУ */}
+{taskViewMode === 'list' && (
+    <div style={{ textAlign: 'center', color: '#bbb', fontSize: '13px', fontWeight: 'bold', marginBottom: '30px', animation: 'bounceScroll 2s infinite ease-in-out' }}>
+        👇 Гортайте вниз для перегляду завдань
+    </div>
+)}
+			  
+			  {/* ПЛАВАЮЧІ КНОПКИ (Завжди в правому верхньому куті) */}
 <div className={taskViewMode === 'carousel' ? "floating-controls carousel-mini" : "floating-controls"} style={{ position: 'fixed', top: '25px', right: '30px', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
     <style>{`
+        <style>{`
         /* Робимо кнопки круглими і плаваючими */
         .floating-controls > button, .floating-controls > div > button {
             background: rgba(150, 150, 150, 0.15) !important;
@@ -5721,25 +5729,51 @@ const parseToElements = (text, prefixKey) => {
             box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
             transition: all 0.2s ease !important;
             padding: 0 !important;
-            color: #888 !important; /* Колір іконок */
+            color: transparent !important; /* Ховаємо текст */
             cursor: pointer;
         }
         .floating-controls > button:hover, .floating-controls > div > button:hover {
             background: rgba(150, 150, 150, 0.3) !important;
             transform: scale(1.05);
         }
-        /* Ховаємо текст у кнопці фільтру */
         .floating-controls span { display: none !important; }
         
-        /* Налаштування розмірів SVG */
-        .floating-controls svg { width: 22px !important; height: 22px !important; }
+        /* ФІКС ІКОНКИ ФІЛЬТРУ (Повертаємо їй колір!) */
+        .floating-controls svg { 
+            width: 22px !important; 
+            height: 22px !important; 
+            stroke: #888 !important; /* Ось ця магія повертає іконку */
+        }
         
         /* В каруселі робимо кнопки меншими */
         .floating-controls.carousel-mini > button, .floating-controls.carousel-mini > div > button {
-            width: 38px !important;
-            height: 38px !important;
+            width: 38px !important; height: 38px !important;
         }
         .floating-controls.carousel-mini svg { width: 18px !important; height: 18px !important; }
+
+        /* ========================================= */
+        /* МІНІМАЛІЗМ ДЛЯ ОБОХ РЕЖИМІВ (Список і Карусель) */
+        
+        /* 1. Зрізаємо величезний порожній відступ (було 100px) */
+        div[style*="padding: 100px 60px"] {
+            padding-top: 30px !important; 
+        }
+        
+        /* 2. Налаштування компактної шапки */
+        .dynamic-header {
+            display: flex !important;
+            justify-content: center !important;
+            margin-bottom: 25px !important;
+            margin-top: -15px !important;
+        }
+        .dynamic-header > span, .dynamic-header > div > span { display: none !important; } 
+        .dynamic-header h2 { font-size: 20px !important; opacity: 0.3 !important; margin: 0 !important; }
+        
+        /* 3. Анімація для підказки скролу */
+        @keyframes bounceScroll {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(6px); }
+        }
     `}</style>
 
     {/* КНОПКА ПЕРЕМИКАННЯ РЕЖИМУ (Тепер зі справжніми SVG) */}
