@@ -2563,6 +2563,7 @@ function Platform() {
 
 
   const [newTaskType, setNewTaskType] = useState('text');
+  const [editTaskType, setEditTaskType] = React.useState('text');
   const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
   const defaultQuizData = { options: ['', ''], correct: [], multiple: false, randomize: false, explanation: '' };
   const [newTaskQuiz, setNewTaskQuiz] = useState(defaultQuizData);
