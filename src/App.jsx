@@ -2924,6 +2924,8 @@ function Platform() {
   const [taskFilterCategory, setTaskFilterCategory] = useState('all');
   const [taskFilterStatus, setTaskFilterStatus] = useState('all');
   const [isFilterMenuOpen, setIsFilterMenuOpen] = useState(false);
+  const [taskViewMode, setTaskViewMode] = React.useState('list'); // 'list' або 'carousel'
+  const [carouselIndex, setCarouselIndex] = React.useState(0); // номер поточного завдання в каруселі
   
   const [pendingCount, setPendingCount] = useState(0);
   const [studentsNeedingCourses, setStudentsNeedingCourses] = useState([]);
@@ -5677,7 +5679,17 @@ const parseToElements = (text, prefixKey) => {
               <h2 style={{ color: theme.text, fontSize: '38px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{getTranslatedTitle(activeModule.title)}</h2>
               
               {/* КНОПКА ТА МЕНЮ ФІЛЬТРУ (Прив'язана до заголовка) */}
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', display: 'flex', gap: '10px' }}>
+			  <button 
+        onClick={() => {
+            setTaskViewMode(prev => prev === 'list' ? 'carousel' : 'list');
+            setCarouselIndex(0);
+        }}
+        className="hover-card"
+        style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 16px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}
+    >
+        {taskViewMode === 'list' ? '📺 Карусель' : '📜 Список'}
+    </button>
                 <button 
                   onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
                   className="hover-card"
@@ -5688,7 +5700,7 @@ const parseToElements = (text, prefixKey) => {
                 </button>
                 
                 {isFilterMenuOpen && (
-                  <div style={{ position: 'absolute', top: '115%', left: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
+                  <div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                        <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '900' }}>Фільтри</h4>
                        <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Скинути</button>
@@ -5731,8 +5743,41 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} className="hover-card" style={{ marginTop: '20px', background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold' }}>Скинути фільтри</button>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '50px' }}>
-                {filteredTasks.map((task, idx) => {
+              {/* ВЕРХНЯ НАВІГАЦІЯ КАРУСЕЛІ ТА ЛІЧИЛЬНИК (Для всіх пристроїв) */}
+    {taskViewMode === 'carousel' && filteredTasks.length > 0 && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', padding: '12px 20px', background: theme.cardBg, borderRadius: '15px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
+            <button onClick={() => setCarouselIndex(prev => prev > 0 ? prev - 1 : filteredTasks.length - 1)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg> Попереднє
+            </button>
+            <span style={{ fontWeight: '900', color: '#E0A345', fontSize: '16px' }}>
+                {Math.min(carouselIndex + 1, filteredTasks.length)} / {filteredTasks.length}
+            </span>
+            <button onClick={() => setCarouselIndex(prev => prev < filteredTasks.length - 1 ? prev + 1 : 0)} className="hover-card" style={{ background: 'transparent', border: 'none', color: theme.text, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: 'bold', fontSize: '15px' }}>
+                Наступне <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+            </button>
+        </div>
+    )}
+
+    {/* ОСНОВНИЙ КОНТЕЙНЕР ЗАВДАНЬ */}
+    <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '40px' }}>
+        
+        {/* БІЧНІ КНОПКИ ДЛЯ ПК (З'являються тільки на широких екранах) */}
+        {taskViewMode === 'carousel' && filteredTasks.length > 1 && window.innerWidth > 800 && (
+            <>
+                <button onClick={() => setCarouselIndex(prev => prev > 0 ? prev - 1 : filteredTasks.length - 1)} className="hover-card" style={{ position: 'absolute', top: '50%', left: '-80px', transform: 'translateY(-50%)', width: '60px', height: '60px', borderRadius: '50%', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+                </button>
+                <button onClick={() => setCarouselIndex(prev => prev < filteredTasks.length - 1 ? prev + 1 : 0)} className="hover-card" style={{ position: 'absolute', top: '50%', right: '-80px', transform: 'translateY(-50%)', width: '60px', height: '60px', borderRadius: '50%', background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', zIndex: 10, boxShadow: '0 10px 25px rgba(0,0,0,0.1)' }}>
+                    <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                </button>
+            </>
+        )}
+
+        {/* ХИТРИЙ ВИВІД: Одне завдання для каруселі, або всі для списку */}
+        {(taskViewMode === 'carousel' && filteredTasks.length > 0 
+            ? [filteredTasks[Math.min(carouselIndex, Math.max(0, filteredTasks.length - 1))]] 
+            : filteredTasks
+        ).map((task, idx) => {
                   // Зчитуємо категорію завдання
                   let cat = task.category;
                   if (typeof cat === 'string') {
