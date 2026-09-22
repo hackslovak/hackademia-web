@@ -4146,7 +4146,13 @@ useEffect(() => {
 
                     <div style={{ background: theme.inputBg, borderRadius: '16px', padding: '10px 14px', display: 'flex', flexDirection: 'column' }}>
                         <FormatToolbar theme={theme} />
-                        <WYSIWYGEditor theme={theme} value={newTaskExercise} onChange={setNewTaskExercise} placeholder={newTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : "Введіть текст вправи (або Діалог: Текст)..."} style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '60px', lineHeight: '1.5' }} />
+                        <WYSIWYGEditor 
+  theme={theme} 
+  value={newTaskExercise} 
+  onChange={setNewTaskExercise} 
+  placeholder={newTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : newTaskType === 'dialogue' ? "💬 Для діалогу пишіть: Ім'я: Текст (щоб зробити пропуск, поставте ....)" : "Введіть текст вправи..."} 
+  style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '60px', lineHeight: '1.5' }} 
+/>
                     </div>
 
                     <input type="text" placeholder="Правильна відповідь (необов'язково)..." value={newTaskCorrectAnswer} onChange={e => setNewTaskCorrectAnswer(e.target.value)} style={{ width: '100%', padding: '14px 16px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold', boxSizing: 'border-box' }} />
@@ -4169,6 +4175,7 @@ useEffect(() => {
                             <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Тип:</label>
                             <select value={newTaskType} onChange={e=>setNewTaskType(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
                                 <option value="text">📝 Текст / Теорія</option>
+								<option value="dialogue">💬 Діалог</option>
                                 <option value="flashcard">🗂 Флешкартка</option>
                                 <option value="quiz">✅ Квіз</option>
                             </select>
@@ -6295,7 +6302,7 @@ const parseToElements = (text, prefixKey) => {
                           {/* Показуємо тип завдання ТІЛЬКИ адміну */}
 						  {effectiveIsAdmin && (
 						  <span style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', borderLeft: `2px solid ${theme.inputBorder}`, paddingLeft: '15px' }}>
-                            {task.type === 'flashcard' ? '🗂 Флешкартка' : task.type === 'quiz' ? '✅ Тест' : '📝 Матеріал'}
+                            {task.type === 'flashcard' ? '🗂 Флешкартка' : task.type === 'quiz' ? '✅ Тест' : task.type === 'dialogue' ? '💬 Діалог' : '📝 Матеріал'}
                           </span>
 						  )}
                         </div>
@@ -6382,7 +6389,7 @@ const parseToElements = (text, prefixKey) => {
   theme={theme}
   value={editTaskExercise} 
   onChange={setEditTaskExercise} 
-  placeholder={editTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : "Введіть текст... (Для створення діалогу просто напишіть Ім'я: текст)"} 
+  placeholder={editTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : editTaskType === 'dialogue' ? "💬 Для діалогу пишіть: Ім'я: Текст (щоб зробити пропуск, поставте ....)" : "Введіть текст..."} 
   style={{ width: '100%', padding: '16px', borderRadius: '0 0 10px 10px', border: `1px solid ${theme.inputBorder}`, borderTop: 'none', background: theme.cardBg, color: theme.text, fontSize: '16px', marginBottom: '15px', lineHeight: '1.5' }} 
 />
 
@@ -6561,6 +6568,7 @@ const parseToElements = (text, prefixKey) => {
                                <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Тип завдання:</label>
                                <select value={editTaskType} onChange={e => setEditTaskType(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontWeight: 'bold' }}>
                                   <option value="text">📝 Текст / Відео (Ознайомлення)</option>
+								  <option value="dialogue">💬 Діалог</option>
                                   <option value="flashcard">🗂 Флешкартки</option>
                                   <option value="quiz">✅ Квіз / Тест</option>
                                </select>
@@ -6660,7 +6668,7 @@ const parseToElements = (text, prefixKey) => {
                              const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
                              const hasInlineBlanks = rawText.includes('....');
                              const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
-                             const isTheory = task.type === 'text' || task.type === 'material';
+                             const isTheory = task.type === 'text' || task.type === 'material' || task.type === 'dialogue';
 
                              return (
                                <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
