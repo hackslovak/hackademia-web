@@ -2175,10 +2175,8 @@ const InlineFlashcardViewer = ({ task, theme, isDarkMode, onComplete }) => {
         .filter(l => l.includes('-') || l.includes('—') || l.includes('='));
 
     const cards = lines.map(line => {
-        // Визначаємо, який роздільник використав викладач
         const separator = line.includes('=') ? '=' : (line.includes('—') ? '—' : '-');
         const parts = line.split(separator);
-        // Беремо першу частину як лице, а все інше зліплюємо як зворот (на випадок, якщо в перекладі теж є тире)
         return { 
             front: parts[0].trim(), 
             back: parts.slice(1).join(separator).trim() 
@@ -2215,14 +2213,45 @@ const InlineFlashcardViewer = ({ task, theme, isDarkMode, onComplete }) => {
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '15px', marginBottom: '20px', width: '100%' }}>
            <div className="card-3d-container" style={{ maxWidth: '450px', width: '100%' }} onClick={() => { setIsFlipped(!isFlipped); if(typeof window.hackPlaySound === 'function') window.hackPlaySound('whoosh'); }}>
               <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`} style={{ minHeight: '220px' }}>
+                
+                {/* ЛИЦЕВА СТОРОНА З ОЗВУЧКОЮ */}
                 <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}>
-                  <span className="flip-hint" style={{ fontSize: '11px', marginBottom: '15px' }}>👆 Натисніть</span>
-                  <span style={{ fontSize: '28px', fontWeight: '900', padding: '0 15px' }}>{currentCard.front}</span>
+                  <span className="flip-hint" style={{ fontSize: '11px', marginBottom: '15px' }}>👆 Натисніть для перевороту</span>
+                  <span style={{ fontSize: '28px', fontWeight: '900', padding: '0 15px', textAlign: 'center' }}>{currentCard.front}</span>
+                  
+                  {/* КНОПКА ПРОСЛУХОВУВАННЯ */}
+                  <button 
+                    onClick={(e) => { 
+                      e.stopPropagation(); // Блокуємо переворот картки при кліку на кнопку
+                      if (typeof speakSlovak === 'function') speakSlovak(currentCard.front); 
+                    }} 
+                    className="hover-card" 
+                    title="Прослухати вимову"
+                    style={{ 
+                      background: theme.inputBg, 
+                      border: `1px solid ${theme.inputBorder}`, 
+                      fontSize: '20px', 
+                      width: '46px', 
+                      height: '46px', 
+                      borderRadius: '50%', 
+                      marginTop: '25px', 
+                      cursor: 'pointer', 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      justifyContent: 'center',
+                      boxShadow: '0 4px 10px rgba(0,0,0,0.05)'
+                    }}
+                  >
+                    🔊
+                  </button>
                 </div>
+
+                {/* ЗВОРОТНА СТОРОНА */}
                 <div className="card-face card-back" style={{ ...getCardStyle(currentIndex, isDarkMode, true), boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
                   <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
-                  <span style={{ fontSize: '24px', fontWeight: '900', padding: '0 15px', lineHeight: '1.4' }}>{currentCard.back}</span>
+                  <span style={{ fontSize: '24px', fontWeight: '900', padding: '0 15px', lineHeight: '1.4', textAlign: 'center' }}>{currentCard.back}</span>
                 </div>
+                
               </div>
            </div>
 
