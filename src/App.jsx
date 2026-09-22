@@ -4101,7 +4101,7 @@ useEffect(() => {
 
                     <div style={{ background: theme.inputBg, borderRadius: '16px', padding: '10px 14px', display: 'flex', flexDirection: 'column' }}>
                         <FormatToolbar theme={theme} />
-                        <WYSIWYGEditor theme={theme} value={newTaskExercise} onChange={setNewTaskExercise} placeholder="Введіть текст вправи (або Діалог: Текст)..." style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '60px', lineHeight: '1.5' }} />
+                        <WYSIWYGEditor theme={theme} value={newTaskExercise} onChange={setNewTaskExercise} placeholder={newTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : "Введіть текст вправи (або Діалог: Текст)..."} style={{ width: '100%', padding: '8px 0', border: 'none', background: 'transparent', color: theme.text, fontSize: '15px', outline: 'none', minHeight: '60px', lineHeight: '1.5' }} />
                     </div>
 
                     <input type="text" placeholder="Правильна відповідь (необов'язково)..." value={newTaskCorrectAnswer} onChange={e => setNewTaskCorrectAnswer(e.target.value)} style={{ width: '100%', padding: '14px 16px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: '#38A169', fontSize: '14px', outline: 'none', fontWeight: 'bold', boxSizing: 'border-box' }} />
@@ -6327,12 +6327,12 @@ const parseToElements = (text, prefixKey) => {
                           <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', marginTop: '15px', display: 'block', fontWeight: 'bold' }}>Текст вправи (Живий редактор):</label>
                           <FormatToolbar theme={theme} />
                           <WYSIWYGEditor 
-                            theme={theme}
-                            value={editTaskExercise} 
-                            onChange={setEditTaskExercise} 
-                            placeholder="Введіть текст... (Для створення діалогу просто напишіть Ім'я: текст)" 
-                            style={{ width: '100%', padding: '16px', borderRadius: '0 0 10px 10px', border: `1px solid ${theme.inputBorder}`, borderTop: 'none', background: theme.cardBg, color: theme.text, fontSize: '16px', marginBottom: '15px', lineHeight: '1.5' }} 
-                          />
+  theme={theme}
+  value={editTaskExercise} 
+  onChange={setEditTaskExercise} 
+  placeholder={editTaskType === 'flashcard' ? "🗂 Для карток пишіть так: Слово - Переклад (кожна пара з нового рядка)" : "Введіть текст... (Для створення діалогу просто напишіть Ім'я: текст)"} 
+  style={{ width: '100%', padding: '16px', borderRadius: '0 0 10px 10px', border: `1px solid ${theme.inputBorder}`, borderTop: 'none', background: theme.cardBg, color: theme.text, fontSize: '16px', marginBottom: '15px', lineHeight: '1.5' }} 
+/>
 
                           <div style={{ background: theme.cardBg, padding: '24px', borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, marginTop: '15px', marginBottom: '20px', boxShadow: '0 10px 30px rgba(0,0,0,0.05)' }}>
                             <div style={{ fontSize: '13.5px', color: theme.text, fontWeight: 'bold', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
