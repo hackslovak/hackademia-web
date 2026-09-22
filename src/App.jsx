@@ -2151,6 +2151,76 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   );
 };
 
+// --- ВБУДОВАНИЙ ПЛЕЄР ФЛЕШКАРТОК ДЛЯ ЗАВДАНЬ ---
+const InlineFlashcardViewer = ({ task, theme, isDarkMode, onComplete }) => {
+    const [currentIndex, setCurrentIndex] = React.useState(0);
+    const [isFlipped, setIsFlipped] = React.useState(false);
+
+    // Витягуємо текст із редактора (де адмін пише "Слово - Переклад")
+    const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || '') : '';
+    // Чистимо від HTML-тегів та порожніх пробілів
+    const plainText = rawText.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+    // Шукаємо рядки, де є тире або дорівнює
+    const lines = plainText.split('\n').filter(l => l.includes('-') || l.includes('—') || l.includes('='));
+
+    const cards = lines.map(line => {
+        const separator = line.includes('=') ? '=' : (line.includes('—') ? '—' : '-');
+        const parts = line.split(separator);
+        return { front: parts[0].trim(), back: parts.slice(1).join(separator).trim() };
+    });
+
+    if (cards.length === 0) {
+        return (
+            <div style={{ background: 'rgba(229, 62, 62, 0.1)', color: '#E53E3E', padding: '15px', borderRadius: '12px', textAlign: 'center', fontWeight: 'bold', border: '1px dashed #E53E3E', marginTop: '15px' }}>
+                ⚠️ Адмін: Додайте картки у "Живий редактор" у форматі<br/>Слово - Переклад
+            </div>
+        );
+    }
+
+    const currentCard = cards[currentIndex];
+
+    const handleNext = () => {
+        if (typeof window.hackPlaySound === 'function') window.hackPlaySound('whoosh');
+        setIsFlipped(false);
+        if (currentIndex < cards.length - 1) {
+            setCurrentIndex(prev => prev + 1);
+        } else {
+            onComplete(task);
+        }
+    };
+
+    const handlePrev = () => {
+        if (typeof window.hackPlaySound === 'function') window.hackPlaySound('whoosh');
+        setIsFlipped(false);
+        if (currentIndex > 0) setCurrentIndex(prev => prev - 1);
+    };
+
+    return (
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px', marginTop: '15px', marginBottom: '20px', width: '100%' }}>
+           <div className="card-3d-container" style={{ maxWidth: '450px', width: '100%' }} onClick={() => { setIsFlipped(!isFlipped); if(typeof window.hackPlaySound === 'function') window.hackPlaySound('whoosh'); }}>
+              <div className={`card-3d-inner ${isFlipped ? 'flipped' : ''}`} style={{ minHeight: '220px' }}>
+                <div className="card-face card-front" style={{ background: isDarkMode ? theme.cardBg : '#ffffff', color: theme.text, border: `1px solid ${theme.inputBorder}`, boxShadow: '0 10px 30px rgba(0,0,0,0.08)' }}>
+                  <span className="flip-hint" style={{ fontSize: '11px', marginBottom: '15px' }}>👆 Натисніть</span>
+                  <span style={{ fontSize: '28px', fontWeight: '900', padding: '0 15px' }}>{currentCard.front}</span>
+                </div>
+                <div className="card-face card-back" style={{ ...getCardStyle(currentIndex, isDarkMode, true), boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
+                  <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
+                  <span style={{ fontSize: '24px', fontWeight: '900', padding: '0 15px' }}>{currentCard.back}</span>
+                </div>
+              </div>
+           </div>
+
+           <div style={{ display: 'flex', gap: '15px', alignItems: 'center', width: '100%', maxWidth: '450px' }}>
+              <button onClick={handlePrev} disabled={currentIndex === 0} className="hover-card" style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: currentIndex === 0 ? 'not-allowed' : 'pointer', opacity: currentIndex === 0 ? 0.5 : 1 }}>←</button>
+              <span style={{ flex: 1, textAlign: 'center', fontWeight: 'bold', color: theme.textSecondary }}>{currentIndex + 1} / {cards.length}</span>
+              <button onClick={handleNext} className="hover-card" style={{ background: currentIndex === cards.length - 1 ? '#38A169' : '#E0A345', color: '#fff', border: 'none', padding: '12px 20px', borderRadius: '12px', fontWeight: 'bold', cursor: 'pointer', flex: 2, boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }}>
+                  {currentIndex === cards.length - 1 ? '✅ Завершити' : 'Далі →'}
+              </button>
+           </div>
+        </div>
+    );
+};
+
 const SmartTheoryAction = ({ task, theme, onComplete }) => {
   const [status, setStatus] = React.useState('waiting');
   const [mediaType, setMediaType] = React.useState('none');
@@ -6168,9 +6238,12 @@ const parseToElements = (text, prefixKey) => {
                             <span style={{ fontSize: '16px' }}>{catData.icon}</span> {catData.title}
                           </span>
                           
-                          <span style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', borderLeft: `2px solid ${theme.inputBorder}`, paddingLeft: '15px' }}>
+                          {/* Показуємо тип завдання ТІЛЬКИ адміну */}
+						  {effectiveIsAdmin && (
+						  <span style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', borderLeft: `2px solid ${theme.inputBorder}`, paddingLeft: '15px' }}>
                             {task.type === 'flashcard' ? '🗂 Флешкартка' : task.type === 'quiz' ? '✅ Тест' : '📝 Матеріал'}
                           </span>
+						  )}
                         </div>
                         
                         {/* КНОПКИ АДМІНА (СКИНУТИ / РЕДАГУВАТИ / ВИДАЛИТИ) */}
@@ -6471,16 +6544,30 @@ const parseToElements = (text, prefixKey) => {
                          </div>
                       ) : (
                          <div>
-                           {/* САМ КОНТЕНТ ЗАВДАННЯ */}
-                           {/* Текст завдання показуємо окремо ТІЛЬКИ якщо це не квіз */}
-{task.type !== 'quiz' && (
-    <div
-        style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
-        onInput={(e) => handleInlineInput(e, task)}
-    >
-        {renderContent(task.content, task)}
-    </div>
-)}
+                           
+						{/* САМ КОНТЕНТ ЗАВДАННЯ */}
+                           {task.type !== 'quiz' && (
+                               <div
+                                   style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
+                                   onInput={(e) => handleInlineInput(e, task)}
+                               >
+                                   {/* Якщо це флешкартка, показуємо опис/відео, але текст вправи сховаємо, бо його перехопить плеєр */}
+                                   {task.type === 'flashcard' 
+                                      ? renderContent(typeof task.content === 'object' ? (task.content[lang] || task.content.uk || '') : task.content, task) 
+                                      : renderContent(task.content, task)
+                                   }
+                               </div>
+                           )}
+
+                           {/* НОВИЙ ПЛЕЄР ФЛЕШКАРТОК */}
+                           {task.type === 'flashcard' && (
+                               <InlineFlashcardViewer 
+                                   task={task} 
+                                   theme={theme} 
+                                   isDarkMode={themeMode === 'dark'} 
+                                   onComplete={handleTheoryComplete} 
+                               />
+                           )}
 
 {/* КВІЗ ЗАВЖДИ ВИДНО ВСІМ (АДМІНУ І УЧНЮ) */}
 {task.type === 'quiz' && task.content?.quizData && (
@@ -6512,8 +6599,8 @@ const parseToElements = (text, prefixKey) => {
                              return (
                                <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                                  
-                                 {/* ЛОГІКА 1: Старий текстовий формат з ручним введенням */}
-        {task.type !== 'quiz' && task.correct_answer ? (
+        {/* ЛОГІКА 1: Старий текстовий формат з ручним введенням */}
+		{task.type !== 'quiz' && task.type !== 'flashcard' && task.correct_answer ? (
             <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
                 <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} className="hover-card" style={{ flex: 1, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px', outline: 'none' }} />
                 <button onClick={() => handleAnswersSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
