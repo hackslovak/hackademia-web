@@ -2352,6 +2352,13 @@ function Platform() {
     localStorage.setItem('hack_lang', newLang);
     if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.impactOccurred('light');
   };
+  
+  // --- ДОДАТИ ЦЕЙ БЛОК ---
+  const [showLangPrompt, setShowLangPrompt] = useState(() => {
+    // Показуємо вікно, якщо в пам'яті ще немає позначки про вибір
+    return !localStorage.getItem('hack_lang_selected');
+  });
+  // ------------------------
 
   const t = (key) => translations[lang]?.[key] || translations['uk'][key] || key;
   
@@ -2829,6 +2836,122 @@ function Platform() {
   const [completedTasks, setCompletedTasks] = useState([]);
 
   const [fullscreenTaskImg, setFullscreenTaskImg] = useState(null);
+  
+  // === СТАНИ ДЛЯ МАЛЮВАННЯ В РЕДАКТОРІ ===
+  const [isDrawingMode, setIsDrawingMode] = useState(false);
+  const [drawTool, setDrawTool] = useState('pen');
+  const [drawColor, setDrawColor] = useState('#FF3B30');
+  const [drawSize, setDrawSize] = useState(4);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isSavingCanvas, setIsSavingCanvas] = useState(false);
+  const [drawHistory, setDrawHistory] = useState([]);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [savedImageData, setSavedImageData] = useState(null);
+  const [startCoords, setStartCoords] = useState({ x: 0, y: 0 });
+  const canvasRef = React.useRef(null);
+
+  // === ЛОГІКА МАЛЮВАННЯ ===
+  React.useEffect(() => {
+    if (isDrawingMode && fullscreenTaskImg && canvasRef.current) {
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      const img = new Image();
+      img.crossOrigin = "anonymous";
+      img.onload = () => {
+        const maxWidth = window.innerWidth * 0.85;
+        const maxHeight = window.innerHeight * 0.75;
+        const ratio = Math.min(maxWidth / img.width, maxHeight / img.height, 1);
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        setDrawHistory([canvas.toDataURL()]);
+        setHasUnsavedChanges(false);
+      };
+      img.src = fullscreenTaskImg.replace(/#split\d|#slice/g, ''); 
+    }
+  }, [isDrawingMode, fullscreenTaskImg]);
+
+  const getCanvasCoordinates = (e) => {
+    const canvas = canvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    if (e.touches && e.touches.length > 0) return { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+    return { x: e.clientX - rect.left, y: e.clientY - rect.top };
+  };
+
+  const startDrawing = (e) => {
+    if (!isDrawingMode) return;
+    const { x, y } = getCanvasCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    setStartCoords({ x, y });
+    setSavedImageData(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
+    setIsDrawing(true);
+    if (drawTool === 'pen') { ctx.beginPath(); ctx.moveTo(x, y); }
+  };
+
+  const draw = (e) => {
+    if (!isDrawing || !isDrawingMode) return;
+    e.preventDefault();
+    const { x, y } = getCanvasCoordinates(e);
+    const ctx = canvasRef.current.getContext('2d');
+    ctx.strokeStyle = drawColor; ctx.lineWidth = drawSize;
+    ctx.lineCap = drawTool === 'pen' ? 'round' : 'square'; ctx.lineJoin = 'round';
+    if (drawTool === 'pen') { ctx.lineTo(x, y); ctx.stroke(); } 
+    else if (drawTool === 'rect') {
+      if (savedImageData) ctx.putImageData(savedImageData, 0, 0);
+      ctx.beginPath(); ctx.rect(startCoords.x, startCoords.y, x - startCoords.x, y - startCoords.y); ctx.stroke();
+    }
+  };
+
+  const stopDrawing = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    setHasUnsavedChanges(true);
+    setDrawHistory(prev => [...prev, canvasRef.current.toDataURL()]);
+  };
+
+  const handleUndo = () => {
+    if (drawHistory.length <= 1) return;
+    const newHistory = [...drawHistory]; newHistory.pop();
+    const previousState = newHistory[newHistory.length - 1];
+    const ctx = canvasRef.current.getContext('2d');
+    const img = new Image();
+    img.onload = () => { ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height); ctx.drawImage(img, 0, 0); };
+    img.src = previousState;
+    setDrawHistory(newHistory);
+    if (newHistory.length === 1) setHasUnsavedChanges(false);
+  };
+
+  const handleCloseDrawingMode = () => {
+    if (hasUnsavedChanges && !window.confirm("У вас є незбережені малюнки. Скасувати і вийти?")) return;
+    setIsDrawingMode(false); setHasUnsavedChanges(false); setDrawHistory([]);
+  };
+
+  const saveAndReplaceCanvas = async () => {
+    if (!canvasRef.current) return;
+    setIsSavingCanvas(true);
+    try {
+      const dataUrl = canvasRef.current.toDataURL('image/png');
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const fileName = `drawn_task_${Date.now()}.png`;
+      const { error } = await supabase.storage.from('images').upload(fileName, blob);
+      if (error) throw error;
+      const { data: { publicUrl } } = supabase.storage.from('images').getPublicUrl(fileName);
+
+      // Магічна авто-заміна у редакторі (і для нового, і для старого завдання)
+      const oldUrl = fullscreenTaskImg;
+      const replaceInText = (text) => text ? text.replace(oldUrl, publicUrl) : text;
+      
+      setNewTaskContentMulti(prev => ({ uk: replaceInText(prev.uk), ru: replaceInText(prev.ru), en: replaceInText(prev.en), sk: replaceInText(prev.sk) }));
+      setEditContentMulti(prev => ({ uk: replaceInText(prev.uk), ru: replaceInText(prev.ru), en: replaceInText(prev.en), sk: replaceInText(prev.sk) }));
+
+      setFullscreenTaskImg(null); setIsDrawingMode(false); setHasUnsavedChanges(false); setDrawHistory([]);
+      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    } catch (err) { alert("❌ Помилка збереження: " + err.message); } 
+    finally { setIsSavingCanvas(false); }
+  };
+  
   // --- ДВИЖОК НАРІЗКИ ФОТО (КРОПЕР) ---
   const [cropState, setCropState] = useState(null);
   const [isSavingCrop, setIsSavingCrop] = useState(false);
@@ -3205,6 +3328,45 @@ function Platform() {
     }
     loadInitialProfile();
   }, []);
+  
+  // ==========================================
+  // ГЛОБАЛЬНИЙ ОБРОБНИК КЛАВІАТУРИ (Escape + Стрілки)
+  // ==========================================
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      // 1. Закриття по Escape
+      if (e.key === 'Escape') {
+        if (isDrawingMode) { handleCloseDrawingMode(); return; }
+        if (isFilterMenuOpen) setIsFilterMenuOpen(false);
+        if (fullscreenTaskImg) setFullscreenTaskImg(null);
+        if (showCatboxModal) setShowCatboxModal(false);
+        if (cropState) setCropState(null);
+      }
+
+      // 2. Гортання картинок стрілками вліво/вправо
+      if (fullscreenTaskImg && !isDrawingMode) {
+        if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+          // Шукаємо картинки (ігноруємо іконки, аватарки та зображення кропера)
+          const images = Array.from(document.querySelectorAll('img')).filter(img => 
+            !img.src.includes('icon') && !img.src.includes('avatar') && !img.src.includes('logo') && img.id !== 'crop-source-img'
+          );
+          
+          if (images.length > 1) {
+            const currentIndex = images.findIndex(img => img.src === fullscreenTaskImg);
+            if (currentIndex !== -1) {
+              let nextIndex = e.key === 'ArrowRight' ? currentIndex + 1 : currentIndex - 1;
+              if (nextIndex >= images.length) nextIndex = 0;
+              if (nextIndex < 0) nextIndex = images.length - 1;
+              setFullscreenTaskImg(images[nextIndex].src);
+            }
+          }
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFilterMenuOpen, fullscreenTaskImg, showCatboxModal, cropState, isDrawingMode]);
   
 useEffect(() => {
     async function initUser() {
@@ -4420,7 +4582,7 @@ async function handleImageUpload(e) {
     
     let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
     const contentToSave = { ...baseContent, exercise: editTaskExercise, requiresVoice: editRequiresVoice };
-	if (editTaskType === 'quiz' || (task && task.type === 'quiz')) contentToSave.quizData = editTaskQuiz;
+	if (editTaskType === 'quiz' || (taskToEdit && taskToEdit.type === 'quiz')) contentToSave.quizData = editTaskQuiz;
 
     // ДОДАНО ЗБЕРЕЖЕННЯ КАТЕГОРІЇ (category: editCategory) В БАЗУ ДАНИХ
     const { error } = await supabase.from('tasks').update({ 
@@ -5712,96 +5874,85 @@ const parseToElements = (text, prefixKey) => {
 )}
 			  
 			  {/* ПЛАВАЮЧІ КНОПКИ (Завжди в правому верхньому куті) */}
-<div className={taskViewMode === 'carousel' ? "floating-controls carousel-mini" : "floating-controls"} style={{ position: 'fixed', top: '25px', right: '30px', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
-    <style>{`
-    /* Робимо кнопки круглими і плаваючими */
-    .floating-controls > button, .floating-controls > div > button {
-            background: rgba(150, 150, 150, 0.15) !important;
-            backdrop-filter: blur(8px);
-            border: none !important;
-            border-radius: 50% !important;
-            width: 48px !important;
-            height: 48px !important;
-            display: flex !important;
-            justify-content: center !important;
-            align-items: center !important;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
-            transition: all 0.2s ease !important;
-            padding: 0 !important;
-            color: transparent !important; /* Ховаємо текст */
-            cursor: pointer;
-        }
-        .floating-controls > button:hover, .floating-controls > div > button:hover {
-            background: rgba(150, 150, 150, 0.3) !important;
-            transform: scale(1.05);
-        }
-        .floating-controls span { display: none !important; }
-        
-        /* ФІКС ІКОНКИ ФІЛЬТРУ (Повертаємо їй колір!) */
-        .floating-controls svg { 
-            width: 22px !important; 
-            height: 22px !important; 
-            stroke: #888 !important; /* Ось ця магія повертає іконку */
-        }
-        
-        /* В каруселі робимо кнопки меншими */
-        .floating-controls.carousel-mini > button, .floating-controls.carousel-mini > div > button {
-            width: 38px !important; height: 38px !important;
-        }
-        .floating-controls.carousel-mini svg { width: 18px !important; height: 18px !important; }
+        <div className={taskViewMode === 'carousel' ? "floating-controls carousel-mini" : "floating-controls"} style={{ position: 'fixed', top: '25px', right: '30px', zIndex: 9999, display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <style>{`
+                .floating-controls > button, .floating-controls > div > button {
+                    background: rgba(150, 150, 150, 0.15) !important;
+                    backdrop-filter: blur(8px);
+                    border: none !important;
+                    border-radius: 50% !important;
+                    width: 48px !important;
+                    height: 48px !important;
+                    display: flex !important;
+                    justify-content: center !important;
+                    align-items: center !important;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+                    transition: all 0.2s ease !important;
+                    padding: 0 !important;
+                    font-size: 0 !important; 
+                    cursor: pointer;
+                }
+                .floating-controls > button:hover, .floating-controls > div > button:hover {
+                    background: rgba(150, 150, 150, 0.3) !important;
+                    transform: scale(1.05);
+                }
+                .floating-controls span { display: none !important; }
+                
+                /* Прибираємо жорсткий колір з CSS, щоб React міг його фарбувати */
+                .floating-controls svg { 
+                    width: 22px !important; 
+                    height: 22px !important; 
+                }
+                
+                .floating-controls.carousel-mini > button, .floating-controls.carousel-mini > div > button {
+                    width: 38px !important; height: 38px !important;
+                }
+                .floating-controls.carousel-mini svg { width: 18px !important; height: 18px !important; }
 
-        /* ========================================= */
-        /* МІНІМАЛІЗМ ДЛЯ ОБОХ РЕЖИМІВ (Список і Карусель) */
-        
-        /* 1. Зрізаємо величезний порожній відступ (було 100px) */
-        div[style*="padding: 100px 60px"] {
-            padding-top: 30px !important; 
-        }
-        
-        /* 2. Налаштування компактної шапки */
-        .dynamic-header {
-            display: flex !important;
-            justify-content: center !important;
-            margin-bottom: 25px !important;
-            margin-top: -15px !important;
-        }
-        .dynamic-header > span, .dynamic-header > div > span { display: none !important; } 
-        .dynamic-header h2 { font-size: 20px !important; opacity: 0.3 !important; margin: 0 !important; }
-        
-        /* 3. Анімація для підказки скролу */
-        @keyframes bounceScroll {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(6px); }
-        }
-    `}</style>
+                div[style*="padding: 100px 60px"] { padding-top: 30px !important; }
+                .dynamic-header { display: flex !important; justify-content: center !important; margin-bottom: 25px !important; margin-top: -15px !important; }
+                .dynamic-header > span, .dynamic-header > div > span { display: none !important; } 
+                .dynamic-header h2 { font-size: 20px !important; opacity: 0.3 !important; margin: 0 !important; }
+                @keyframes bounceScroll { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
+            `}</style>
 
-    {/* КНОПКА ПЕРЕМИКАННЯ РЕЖИМУ (Тепер зі справжніми SVG) */}
-    <button 
-        onClick={() => {
-            setTaskViewMode(prev => prev === 'list' ? 'carousel' : 'list');
-            setCarouselIndex(0);
-        }}
-        title="Змінити вигляд"
-    >
-        {taskViewMode === 'list' ? (
-            /* Іконка "Карусель" (Сітка) */
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
-        ) : (
-            /* Іконка "Список" (Рядки) */
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
-        )}
-    </button>
+            {/* 1. КНОПКА ПЕРЕМИКАННЯ РЕЖИМУ */}
+            <button 
+                onClick={() => {
+                    setTaskViewMode(prev => prev === 'list' ? 'carousel' : 'list');
+                    setCarouselIndex(0);
+                }}
+                title="Змінити вигляд"
+            >
+                {taskViewMode === 'list' ? (
+                    /* Іконка каруселі (Сіра, бо активний звичайний список) */
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#888" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>
+                ) : (
+                    /* Іконка списку (ТЕПЛА, бо зараз активна карусель!) */
+                    <svg viewBox="0 0 24 24" fill="none" stroke="#E0A345" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg>
+                )}
+            </button>
+
+            {/* 2. КНОПКА ФІЛЬТРУ */}
+            <div style={{ position: 'relative' }}>
                 <button 
-                  onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
-                  className="hover-card"
-                  style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, color: theme.text, padding: '10px 16px', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontWeight: 'bold', fontSize: '14px', boxShadow: '0 4px 15px rgba(0,0,0,0.03)' }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
-                  Фільтр
-                  {(taskFilterCategory !== 'all' || taskFilterStatus !== 'all') && <span style={{ background: '#E0A345', width: '10px', height: '10px', borderRadius: '50%', display: 'inline-block' }}></span>}
+                    onClick={() => setIsFilterMenuOpen(!isFilterMenuOpen)}
+                    className="hover-card"
+                >
+                    {/* SVG напряму стає теплим, якщо обрано хоч один фільтр */}
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={(taskFilterCategory !== 'all' || taskFilterStatus !== 'all') ? '#E0A345' : '#888'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"></polygon></svg>
+                    фільтр
                 </button>
                 
                 {isFilterMenuOpen && (
-                  <div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', width: '240px', boxShadow: '0 15px 40px rgba(0,0,0,0.1)', zIndex: 100 }}>
+    <>
+        {/* НЕВИДИМИЙ ФОН ДЛЯ ЗАКРИТТЯ КЛІКОМ ПОВЗ */}
+        <div 
+            style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9998, cursor: 'default' }}
+            onClick={(e) => { e.stopPropagation(); setIsFilterMenuOpen(false); }}
+        />
+        {/* САМЕ ВІКНО ФІЛЬТРІВ */}
+<div style={{ position: 'absolute', top: '115%', right: 0, background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, borderRadius: '20px', padding: '20px', zIndex: 9999, minWidth: '240px' }}>
                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
                        <h4 style={{ margin: 0, fontSize: '15px', color: theme.text, fontWeight: '900' }}>Фільтри</h4>
                        <button onClick={() => { setTaskFilterCategory('all'); setTaskFilterStatus('all'); setIsFilterMenuOpen(false); }} style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '12px', fontWeight: 'bold' }}>Скинути</button>
@@ -5824,10 +5975,12 @@ const parseToElements = (text, prefixKey) => {
                         <option value="uncompleted">⏳ Невиконані</option>
                      </select>
                   </div>
-                )}
+          </>
+        )}
               </div>
             </div>
           </div>
+    </div>
 		  
 
           <div style={{ maxWidth: taskViewMode === 'carousel' ? '1200px' : '900px', width: '100%', margin: '0 auto' }}>
@@ -6254,7 +6407,7 @@ const parseToElements = (text, prefixKey) => {
                            </div>
 
                            <div style={{ display: 'flex', gap: '10px' }}>
-                             <button onClick={() => handleSaveEdit(task.id)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '14px 24px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Зберегти зміни</button>
+                             <button onClick={() => handleSaveEdit(editingTaskId)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '14px 24px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Зберегти зміни</button>
                              <button onClick={() => setEditingTaskId(null)} className="hover-card" style={{ background: theme.cardBg, color: theme.text, padding: '14px 24px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
                            </div>
                          </div>
@@ -6337,7 +6490,7 @@ const parseToElements = (text, prefixKey) => {
                            })()}
 
                            {/* СТАТУС ВИКОНАННЯ */}
-                           {completedTasks.includes(task.id) && task.type !== 'quiz' && (
+                           {!effectiveIsAdmin && completedTasks.includes(task.id) && task.type !== 'quiz' && (
                              <div style={{ marginTop: '20px', color: '#38A169', fontWeight: '900', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(56, 161, 105, 0.1)', padding: '12px 20px', borderRadius: '12px', display: 'inline-flex' }}>
                                ✅ Завдання успішно виконано
                              </div>
@@ -6401,7 +6554,40 @@ const parseToElements = (text, prefixKey) => {
         {/* МОДАЛКИ ДЛЯ ЕКРАНУ МОДУЛЯ (ЗУМ, КРОПЕР, СПОВІЩЕННЯ) */}
         {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
         
-		{/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
+		{/* --- СТАРТОВЕ ВІКНО ВИБОРУ МОВИ --- */}
+        {showLangPrompt && (
+          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: theme?.cardBg || '#fff', padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '400px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', animation: 'fadeInDown 0.4s ease' }}>
+              <div style={{ fontSize: '50px', marginBottom: '20px' }}>🌍</div>
+              <h2 style={{ margin: '0 0 15px 0', color: theme?.text || '#333', fontSize: '24px', fontWeight: '900' }}>Оберіть мову навчання</h2>
+              <p style={{ color: theme?.textSecondary || '#666', marginBottom: '30px', fontSize: '15px' }}>Якою мовою ви бажаєте відображати інтерфейс платформи?</p>
+              
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                {[
+                  { code: 'uk', label: 'Українська' },
+                  { code: 'sk', label: 'Slovenčina' },
+                  { code: 'en', label: 'English' },
+                  { code: 'ru', label: 'Русский' }
+                ].map(l => (
+                  <button 
+                    key={l.code} 
+                    onClick={() => {
+                      changeLang(l.code);
+                      localStorage.setItem('hack_lang_selected', 'true');
+                      setShowLangPrompt(false);
+                    }} 
+                    className="hover-card" 
+                    style={{ padding: '15px', background: theme?.inputBg || '#f0f0f0', border: `2px solid ${theme?.inputBorder || '#ccc'}`, borderRadius: '16px', color: theme?.text || '#333', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+			
+			/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
         {showCatboxModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }} onClick={() => setShowCatboxModal(false)}>
             <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', width: '90%', maxWidth: '420px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: `1px solid ${theme.inputBorder}`, position: 'relative', animation: 'fadeInDown 0.3s ease' }} onClick={e => e.stopPropagation()}>
@@ -6434,10 +6620,55 @@ const parseToElements = (text, prefixKey) => {
           </div>
         )}
 		
+        {/* ФУЛСКРІН ЗУМ + МАЛЮВАННЯ (РЕДАКТОР) */}
         {fullscreenTaskImg && (
           <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.95)', zIndex: 99999, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-            <button onClick={() => setFullscreenTaskImg(null)} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
-            <img src={fullscreenTaskImg} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="Zoomed Task" style={{ maxWidth: '95%', maxHeight: '95vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
+            <button onClick={() => { isDrawingMode ? handleCloseDrawingMode() : setFullscreenTaskImg(null); }} style={{ position: 'absolute', top: '25px', right: '35px', background: 'rgba(255,255,255,0.2)', border: 'none', color: '#fff', fontSize: '24px', width: '50px', height: '50px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100000 }}>✕</button>
+
+            {!isDrawingMode ? (
+              <>
+                <img src={fullscreenTaskImg} draggable="false" onContextMenu={(e) => e.preventDefault()} alt="Zoomed Task" style={{ maxWidth: '90%', maxHeight: '85vh', objectFit: 'contain', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', userSelect: 'none', WebkitUserDrag: 'none', WebkitTouchCallout: 'none' }} />
+                {effectiveIsAdmin && (
+                  <button onClick={() => setIsDrawingMode(true)} style={{ marginTop: '20px', background: '#E0A345', color: '#fff', border: 'none', padding: '12px 24px', borderRadius: '12px', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer', boxShadow: '0 4px 15px rgba(224,163,69,0.3)' }}>
+                    ✏️ Малювати на фото
+                  </button>
+                )}
+              </>
+            ) : (
+              <>
+                {/* ПАНЕЛЬ ІНСТРУМЕНТІВ МАЛЮВАННЯ */}
+                <div style={{ display: 'flex', gap: '15px', background: theme.cardBg, padding: '10px 20px', borderRadius: '16px', marginBottom: '15px', alignItems: 'center', boxShadow: '0 10px 30px rgba(0,0,0,0.5)', flexWrap: 'wrap', justifyContent: 'center' }}>
+                   <div style={{ display: 'flex', gap: '5px', background: theme.inputBg, padding: '4px', borderRadius: '10px' }}>
+                      <button onClick={() => setDrawTool('pen')} title="Вільне малювання" style={{ background: drawTool === 'pen' ? theme.cardBg : 'transparent', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', boxShadow: drawTool === 'pen' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none' }}>✏️</button>
+                      <button onClick={() => setDrawTool('rect')} title="Прямокутник" style={{ background: drawTool === 'rect' ? theme.cardBg : 'transparent', border: 'none', padding: '6px 10px', borderRadius: '8px', cursor: 'pointer', fontSize: '16px', boxShadow: drawTool === 'rect' ? '0 2px 5px rgba(0,0,0,0.1)' : 'none' }}>⬜️</button>
+                   </div>
+                   <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                   <div style={{ display: 'flex', gap: '8px' }}>
+                      {['#FF3B30', '#34C759', '#007AFF', '#FFCC00', '#FFFFFF', '#000000'].map(color => (
+                         <div key={color} onClick={() => setDrawColor(color)} style={{ width: '28px', height: '28px', borderRadius: '50%', background: color, cursor: 'pointer', border: drawColor === color ? '3px solid #E0A345' : '1px solid rgba(0,0,0,0.2)' }} />
+                      ))}
+                   </div>
+                   <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                   <input type="range" min="1" max="15" value={drawSize} onChange={(e) => setDrawSize(e.target.value)} style={{ width: '80px' }} />
+                   <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                   <button onClick={handleUndo} disabled={drawHistory.length <= 1} title="Крок назад" style={{ background: 'transparent', border: 'none', fontSize: '20px', cursor: drawHistory.length <= 1 ? 'not-allowed' : 'pointer', opacity: drawHistory.length <= 1 ? 0.3 : 1 }}>↩️</button>
+                   <div style={{ width: '1px', height: '24px', background: theme.inputBorder }} />
+                   <button onClick={handleCloseDrawingMode} style={{ background: 'transparent', color: theme.textSecondary, border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>Скасувати</button>
+                   <button onClick={saveAndReplaceCanvas} disabled={isSavingCanvas || !hasUnsavedChanges} style={{ background: '#38A169', color: '#fff', border: 'none', padding: '8px 16px', borderRadius: '8px', fontWeight: 'bold', cursor: (!hasUnsavedChanges || isSavingCanvas) ? 'not-allowed' : 'pointer', opacity: (!hasUnsavedChanges || isSavingCanvas) ? 0.5 : 1 }}>
+                     {isSavingCanvas ? '⏳ Збереження...' : '✅ Зберегти в завдання'}
+                   </button>
+                </div>
+                {/* ПОЛОТНО */}
+                <div style={{ position: 'relative', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', borderRadius: '12px', overflow: 'hidden' }}>
+                  <canvas 
+                     ref={canvasRef}
+                     onMouseDown={startDrawing} onMouseMove={draw} onMouseUp={stopDrawing} onMouseLeave={stopDrawing}
+                     onTouchStart={startDrawing} onTouchMove={draw} onTouchEnd={stopDrawing}
+                     style={{ display: 'block', cursor: 'crosshair', touchAction: 'none' }}
+                  />
+                </div>
+              </>
+            )}
           </div>
         )}
 
@@ -6495,8 +6726,36 @@ const parseToElements = (text, prefixKey) => {
           
           {/* Верхня міні-панель */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', marginBottom: '15px', gap: '15px' }}>
-          <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
-            {['uk', 'sk', 'en', 'ru'].map((l) => (
+          
+          {/* ХОВАЄМО ПЕРЕМИКАЧ МОВИ ВІД УЧНІВ */}
+          {effectiveIsAdmin && (
+            <div style={{ display: 'flex', gap: '4px', background: theme.cardBg, padding: '4px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}` }}>
+              {['uk', 'sk', 'en', 'ru'].map((l) => (
+                <button 
+                  key={l} 
+                  onClick={() => changeLang(l)} 
+                  className="hover-card"
+                  style={{ 
+                    background: lang === l ? '#E0A345' : 'transparent', 
+                    color: lang === l ? '#fff' : theme.text, 
+                    border: 'none', 
+                    padding: '6px 12px', 
+                    borderRadius: '8px', 
+                    fontSize: '12px', 
+                    fontWeight: 'bold', 
+                    cursor: 'pointer', 
+                    transition: '0.2s' 
+                  }}
+                >
+                  {l.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          )}
+
+          <button onClick={toggleSound} className="hover-card" style={{ background: theme.cardBg, border: `1px solid ${theme.inputBorder}`, width: '38px', height: '38px', borderRadius: '50%', fontSize: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{isSoundEnabled ? '🔊' : '🔇'}</button>
+          
+		  
               <button 
                 key={l} 
                 onClick={() => changeLang(l)} 
@@ -6778,7 +7037,40 @@ const parseToElements = (text, prefixKey) => {
       }
     };
 
-    // ОНОВЛЕНА ФУНКЦІЯ ЗМІНИ ПАРОЛЯ З ПЕРЕВІРКОЮ
+    {/* БЛОК ВИБОРУ МОВИ В ПРОФІЛІ */}
+<div style={{ marginBottom: '25px', background: theme.cardBg, padding: '20px', borderRadius: '20px', border: `1px solid ${theme.inputBorder}` }}>
+  <h4 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '16px', fontWeight: '900' }}>🌍 Мова інтерфейсу</h4>
+  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+    {[
+      { code: 'uk', label: 'Українська' },
+      { code: 'sk', label: 'Slovenčina' },
+      { code: 'en', label: 'English' },
+      { code: 'ru', label: 'Русский' }
+    ].map(l => (
+      <button 
+        key={l.code} 
+        onClick={() => changeLang(l.code)} 
+        className="hover-card"
+        style={{ 
+          background: lang === l.code ? '#E0A345' : theme.inputBg, 
+          color: lang === l.code ? '#fff' : theme.text, 
+          border: `2px solid ${lang === l.code ? '#E0A345' : theme.inputBorder}`, 
+          padding: '12px 20px', 
+          borderRadius: '14px', 
+          fontWeight: 'bold', 
+          cursor: 'pointer', 
+          transition: '0.2s',
+          flex: 1,
+          minWidth: '130px'
+        }}
+      >
+        {l.label}
+      </button>
+    ))}
+  </div>
+</div>
+	
+	// ОНОВЛЕНА ФУНКЦІЯ ЗМІНИ ПАРОЛЯ З ПЕРЕВІРКОЮ
     const handleChangePassword = async (e) => {
       e.preventDefault();
       
