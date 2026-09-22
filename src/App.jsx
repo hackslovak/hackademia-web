@@ -5484,11 +5484,20 @@ const parseToElements = (text, prefixKey) => {
     return (
       <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif' }}>
         {renderGlobalStyles()} <FloatingBackgrounds theme={theme} themeMode={themeMode} />
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '400px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', animation: 'fadeInDown 0.4s ease' }}>
-            <div style={{ fontSize: '50px', marginBottom: '20px' }}>🌍</div>
-            <h2 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '24px', fontWeight: '900' }}>Оберіть мову навчання</h2>
-            <p style={{ color: theme.textSecondary, marginBottom: '30px', fontSize: '15px' }}>Якою мовою ви бажаєте відображати інтерфейс платформи?</p>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          
+          <div style={{ background: theme.cardBg, padding: '45px 30px', borderRadius: '32px', textAlign: 'center', maxWidth: '420px', width: '90%', boxShadow: '0 25px 60px rgba(224,163,69,0.15)', border: '1px solid rgba(224,163,69,0.3)', animation: 'fadeInDown 0.4s cubic-bezier(0.4, 0, 0.2, 1)', position: 'relative', overflow: 'hidden' }}>
+            
+            {/* Теплий відблиск зверху */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: 'linear-gradient(90deg, #F6AD55, #E0A345, #D69E2E)' }}></div>
+            
+            {/* Іконка з теплим фоном */}
+            <div style={{ width: '80px', height: '80px', background: 'linear-gradient(135deg, #FF7B54 0%, #FFB26B 100%)', borderRadius: '50%', margin: '0 auto 25px auto', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px', boxShadow: '0 10px 25px rgba(255,123,84,0.4)' }}>
+              🌍
+            </div>
+            
+            <h2 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '26px', fontWeight: '900', letterSpacing: '-0.5px' }}>Оберіть мову</h2>
+            <p style={{ color: theme.textSecondary, marginBottom: '35px', fontSize: '15px', lineHeight: '1.5' }}>Якою мовою ви бажаєте відображати інтерфейс Hackademia?</p>
             
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
               {[
@@ -5505,13 +5514,25 @@ const parseToElements = (text, prefixKey) => {
                     setShowLangPrompt(false);
                   }} 
                   className="hover-card" 
-                  style={{ padding: '15px', background: theme.inputBg, border: `2px solid ${theme.inputBorder}`, borderRadius: '16px', color: theme.text, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
+                  style={{ 
+                    padding: '16px', 
+                    background: 'rgba(224, 163, 69, 0.08)', 
+                    border: '2px solid #E0A345', 
+                    borderRadius: '16px', 
+                    color: themeMode === 'dark' ? '#fff' : '#5C4033', 
+                    fontWeight: '900', 
+                    cursor: 'pointer', 
+                    fontSize: '14px', 
+                    transition: 'all 0.2s ease',
+                    boxShadow: '0 4px 15px rgba(224,163,69,0.1)'
+                  }}
                 >
                   {l.label}
                 </button>
               ))}
             </div>
           </div>
+
         </div>
       </div>
     );
