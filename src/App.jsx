@@ -5920,7 +5920,7 @@ const parseToElements = (text, prefixKey) => {
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
         {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#FF007F', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
+          <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#E0A345', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
           </button>
           <span style={{ fontWeight: 'bold', color: theme.text }}>🏆 Бали: {ffScore}</span>
@@ -5932,7 +5932,7 @@ const parseToElements = (text, prefixKey) => {
           <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '16px', maxWidth: '400px', margin: '40px auto', border: `1px solid ${theme.inputBorder}` }}>
             <h3>🏁 Гра завершена!</h3>
             <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій результат: <b>{ffScore} балів</b></p>
-            <button onClick={() => setGlobalView(null)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
+            <button onClick={() => setGlobalView(null)} style={{ background: '#E0A345', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
           </div>
         ) : currentCard && (
           <div style={{
@@ -5973,11 +5973,11 @@ const parseToElements = (text, prefixKey) => {
 }}>
               <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
               {currentCard.trap_word === "Комбо-пастка!" ? (
-                <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#FF007F'}}><br/>(🔥 Комбо-пастка!)</span></span>
+                <span style={{fontSize: '14px', color: '#E0A345'}}><br/>(🔥 Комбо-пастка!)</span>
               ) : (
                 currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word})`, 'gi')).map((part, i) => 
                   part.toLowerCase() === currentCard.trap_word.toLowerCase() 
-                    ? <span key={i} style={{ color: '#FF007F', textDecoration: 'underline', padding: '0 2px' }}>{part}</span> 
+                    ? <span key={i} style={{ color: '#E0A345', textDecoration: 'underline', padding: '0 2px', fontWeight: '900' }}>{part}</span> 
                     : part
                 )
               )}
