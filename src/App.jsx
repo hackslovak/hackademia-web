@@ -5929,7 +5929,6 @@ const parseToElements = (text, prefixKey) => {
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
         {renderGlobalStyles()} <FloatingBackgrounds theme={theme} themeMode={themeMode}/>
         
-        {/* ВЕРХНЯ ПАНЕЛЬ (яка випадково зникла) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#E0A345', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -5945,7 +5944,7 @@ const parseToElements = (text, prefixKey) => {
             <p style={{ fontSize: '20px', margin: '20px 0', color: theme.text }}>Твій результат: <b>{ffScore} балів</b></p>
             <button onClick={() => setGlobalView(null)} style={{ background: '#E0A345', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
           </div>
-        ) : currentCard && (
+        ) : currentCard ? (
           <div style={{
             background: theme.cardBg,
             padding: '50px 40px',
@@ -6094,6 +6093,14 @@ const parseToElements = (text, prefixKey) => {
                 <button onClick={handleFfNext} style={{ width: '100%', background: '#E0A345', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', marginTop: '15px', cursor: 'pointer' }}>Далі →</button>
               </div>
             )}
+          </div>
+        ) : (
+          <div style={{ marginTop: '60px' }}>
+            <div style={{ fontSize: '50px', marginBottom: '15px' }}>🪄</div>
+            <p style={{ color: theme.textSecondary, fontSize: '18px', marginBottom: '25px', fontWeight: 'bold' }}>Сесію було оновлено. Натисніть кнопку, щоб згенерувати нові картки!</p>
+            <button onClick={startFalseFriends} className="hover-card" style={{ background: '#E0A345', color: 'white', padding: '18px 36px', borderRadius: '16px', border: 'none', fontWeight: '900', fontSize: '20px', cursor: 'pointer', boxShadow: '0 10px 30px rgba(224,163,69,0.3)' }}>
+              Почати гру 🚀
+            </button>
           </div>
         )}
       </div>
