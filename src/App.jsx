@@ -5327,6 +5327,13 @@ const parseToElements = (text, prefixKey) => {
       body { background-color: ${theme.bg}; color: ${theme.text}; transition: all 0.3s ease; }
       input, textarea, select { background-color: ${theme.inputBg}; color: ${theme.text}; border: 1px solid ${theme.inputBorder}; }
       input::placeholder, textarea::placeholder { color: ${theme.textSecondary}; }
+	  .wysiwyg-content[data-placeholder]:empty::before,
+      .wysiwyg-content[data-placeholder]:has(br:only-child)::before {
+          content: attr(data-placeholder);
+          color: ${theme.textSecondary};
+          opacity: 0.6;
+          pointer-events: none;
+      }
 
       /* 3D Flip Card Styles */
       .card-3d-container { perspective: 1000px; width: 100%; cursor: pointer; }
