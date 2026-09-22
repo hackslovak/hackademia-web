@@ -4656,6 +4656,7 @@ async function handleImageUpload(e) {
 
     // ДОДАНО ЗБЕРЕЖЕННЯ КАТЕГОРІЇ (category: editCategory) В БАЗУ ДАНИХ
     const { error } = await supabase.from('tasks').update({ 
+      type: editTaskType, /* <--- ДОДАЛИ ЗБЕРЕЖЕННЯ ТИПУ */
       content: contentToSave, 
       correct_answer: parsedAnswer, 
       difficulty: editDifficulty,
@@ -4667,6 +4668,7 @@ async function handleImageUpload(e) {
     // ДОДАНО ОНОВЛЕННЯ КАТЕГОРІЇ НА ЕКРАНІ БЕЗ ПЕРЕЗАВАНТАЖЕННЯ
     setTasks(tasks.map(t => t.id === taskId ? { 
       ...t, 
+      type: editTaskType, /* <--- ОНОВЛЕННЯ ТИПУ НА ЕКРАНІ */
       content: contentToSave, 
       correct_answer: parsedAnswer, 
       difficulty: editDifficulty,
@@ -6499,9 +6501,20 @@ const parseToElements = (text, prefixKey) => {
                            <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Правильна відповідь:</label>
                            <input type="text" value={editAnswer} onChange={e => setEditAnswer(e.target.value)} placeholder="Правильна відповідь" style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.cardBg, color: theme.text, marginBottom: '20px', boxSizing: 'border-box' }} />
                            
-                           {/* ВИБІР КАТЕГОРІЇ ДЛЯ РЕДАГУВАННЯ */}
-                           <div style={{ display: 'flex', gap: '15px', marginBottom: '20px' }}>
-                             <div style={{ flex: 1 }}>
+                           {/* ВИБІР КАТЕГОРІЇ ТА ТИПУ ДЛЯ РЕДАГУВАННЯ */}
+                           <div style={{ display: 'flex', gap: '15px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                             
+                             {/* ДОДАНО: Вибір типу завдання */}
+                             <div style={{ flex: 1, minWidth: '150px' }}>
+                               <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Тип завдання:</label>
+                               <select value={editTaskType} onChange={e => setEditTaskType(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text, fontWeight: 'bold' }}>
+                                  <option value="text">📝 Текст / Відео (Ознайомлення)</option>
+                                  <option value="flashcard">🗂 Флешкартки</option>
+                                  <option value="quiz">✅ Квіз / Тест</option>
+                               </select>
+                             </div>
+
+                             <div style={{ flex: 1, minWidth: '150px' }}>
                                <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Складність:</label>
                                <select value={editDifficulty} onChange={e => setEditDifficulty(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text }}>
                                   <option value="easy">🟢 Легко (10 балів)</option>
@@ -6509,14 +6522,15 @@ const parseToElements = (text, prefixKey) => {
                                   <option value="hard">🔴 Складно (30 балів)</option>
                                </select>
                              </div>
-                             <div style={{ flex: 1 }}>
+
+                             <div style={{ flex: 1, minWidth: '150px' }}>
                                <label style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '8px', display: 'block', fontWeight: 'bold' }}>Категорія:</label>
                                <select value={editCategory} onChange={e => setEditCategory(e.target.value)} style={{ width: '100%', padding: '15px', borderRadius: '14px', border: 'none', background: theme.inputBg, color: theme.text }}>
                                   <option value="grammar">📚 Граматика</option>
                                   <option value="vocabulary">📝 Лексика</option>
                                   <option value="reading">📖 Читання</option>
                                   <option value="listening">🎧 Аудіювання</option>
-                                  <option value="bonus">🎁 Бонус / Додатково</option>
+                                  <option value="bonus">🎁 Додатково</option>
                                </select>
                              </div>
                            </div>
