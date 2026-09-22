@@ -87,22 +87,30 @@ function playUiSound(type, isEnabled) {
       audio.play().catch(e => console.log("Помилка аудіо:", e));
       
     } else if (type === 'whoosh') {
-      // Залишаємо легкий синтезований звук для перегортання карток (щоб не шукати для нього mp3)
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === 'suspended') audioCtx.resume();
-      const now = audioCtx.currentTime;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = 'triangle'; 
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.frequency.setValueAtTime(120, now);
-      osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(0.05, now + 0.05);
-      gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
-      osc.start(now);
-      osc.stop(now + 0.15);
+      // Спершу пробуємо відтворити новий mp3 файл
+      const audio = new Audio('/whoosh.mp3');
+      audio.volume = 0.5; // Робимо трохи тихішим, щоб було комфортно
+      
+      audio.play().catch(e => {
+        // Якщо mp3 недоступний, використовуємо ваш оригінальний синтезатор як надійний бекап
+        console.log("Відтворюємо синтезований звук (mp3 недоступний):", e);
+        
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const now = audioCtx.currentTime;
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'triangle'; 
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.frequency.setValueAtTime(120, now);
+        osc.frequency.exponentialRampToValueAtTime(60, now + 0.15);
+        gain.gain.setValueAtTime(0, now);
+        gain.gain.linearRampToValueAtTime(0.05, now + 0.05);
+        gain.gain.linearRampToValueAtTime(0.001, now + 0.15);
+        osc.start(now);
+        osc.stop(now + 0.15);
+      });
     }
   } catch (e) { 
     console.error(e); 
@@ -5772,7 +5780,22 @@ const parseToElements = (text, prefixKey) => {
 </span>
                     <span style={{ fontSize: '48px', fontWeight: '900', margin: '20px 0' }}>{currentCard.content}</span>
                     {/* КНОПКА ОЗВУЧКИ */}
-                    <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.content); }} className="hover-card" style={{ background: theme.inputBg, border: 'none', fontSize: '24px', width: '60px', height: '60px', borderRadius: '50%', marginTop: '30px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>🔊</button>
+                    <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ 
+  background: 'rgba(224, 163, 69, 0.1)', 
+  color: '#E0A345', 
+  border: '2px solid #E0A345', 
+  width: '56px', 
+  height: '56px', 
+  borderRadius: '50%', 
+  fontSize: '26px', 
+  cursor: 'pointer', 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  flexShrink: 0, 
+  transition: '0.2s',
+  boxShadow: '0 4px 10px rgba(224,163,69,0.1)'
+}}>
                   </div>
                   <div className="card-face card-back" style={{ ...getCardStyle(spacedIndex, isDarkMode, true), boxShadow: '0 15px 40px rgba(0,0,0,0.15)' }}>
                     <span style={{ fontSize: '14px', opacity: 0.8, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
@@ -5910,15 +5933,42 @@ const parseToElements = (text, prefixKey) => {
             <button onClick={() => setGlobalView(null)} style={{ background: '#FF007F', color: 'white', padding: '12px 25px', borderRadius: '8px', border: 'none', fontWeight: 'bold', cursor: 'pointer' }}>На головну</button>
           </div>
         ) : currentCard && (
-          <div style={{ maxWidth: '400px', margin: '30px auto', background: theme.cardBg, padding: '25px', borderRadius: '16px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.05)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
-              <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
-            </div>
+          <div style={{
+          background: theme.cardBg,
+          padding: '50px 40px',
+          borderRadius: '24px',
+          maxWidth: '700px', // Розширили для ноута
+          width: '90%',
+          margin: '0 auto',
+          boxShadow: '0 20px 50px rgba(224,163,69,0.15)', // Тепла тінь
+          border: '1px solid rgba(224,163,69,0.3)', // Тепла рамка
+          position: 'relative',
+          overflow: 'hidden'
+        }}>
+          {/* Тепла смужка зверху */}
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: 'linear-gradient(90deg, #F6AD55, #E0A345, #D69E2E)' }}></div>
+
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
+            <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
+          </div>
 
             <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як перекласти виділене слово?</p>
             
             {/* 1. ВИДІЛЕННЯ СЛОВА-ПАСТКИ КОЛЬОРОМ ТА ПІДКРЕСЛЕННЯМ + ОЗВУЧКА */}
-            <h3 style={{ fontSize: '22px', color: theme.text, marginBottom: '25px', lineHeight: '1.4' }}>
+            <h3 style={{ 
+  display: 'flex', 
+  alignItems: 'center', 
+  justifyContent: 'center', 
+  gap: '20px', 
+  margin: '30px 0 40px 0', 
+  padding: '25px', 
+  background: theme.inputBg, 
+  borderRadius: '20px', 
+  border: `1px solid ${theme.inputBorder}`,
+  lineHeight: '1.5',
+  fontSize: '26px',
+  color: theme.text 
+}}>
               <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
               {currentCard.trap_word === "Комбо-пастка!" ? (
                 <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#FF007F'}}><br/>(🔥 Комбо-пастка!)</span></span>
@@ -5957,7 +6007,21 @@ const parseToElements = (text, prefixKey) => {
                     key={idx}
                     onClick={() => handleFfAnswer(opt, isCorrectOption)}
                     disabled={ffSelected !== null}
-                    style={{ padding: '15px', borderRadius: '10px', fontSize: '15px', fontWeight: 'bold', cursor: ffSelected === null ? 'pointer' : 'default', border: `2px solid ${borderColor}`, background: bg, color: color, transition: '0.2s', opacity: (ffSelected !== null && !isCorrectOption && !isSelected) ? 0.6 : 1 }}
+                    style={{ 
+                      width: '100%',
+                      padding: '20px',
+                      fontSize: '18px',
+                      fontWeight: '900',
+                      color: ffSelected !== null ? color : (themeMode === 'dark' ? '#fff' : '#5C4033'),
+                      background: ffSelected !== null ? bg : 'rgba(224, 163, 69, 0.08)',
+                      border: `2px solid ${ffSelected !== null ? borderColor : '#E0A345'}`,
+                      borderRadius: '16px',
+                      cursor: ffSelected === null ? 'pointer' : 'default',
+                      transition: 'all 0.2s ease',
+                      marginBottom: '15px',
+                      boxShadow: ffSelected === null ? '0 4px 15px rgba(224,163,69,0.05)' : 'none',
+                      opacity: (ffSelected !== null && !isCorrectOption && !isSelected) ? 0.6 : 1 
+                    }}
                   >
                     {opt}
                   </button>
