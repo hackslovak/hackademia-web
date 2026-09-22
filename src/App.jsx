@@ -2156,17 +2156,33 @@ const InlineFlashcardViewer = ({ task, theme, isDarkMode, onComplete }) => {
     const [currentIndex, setCurrentIndex] = React.useState(0);
     const [isFlipped, setIsFlipped] = React.useState(false);
 
-    // Витягуємо текст із редактора (де адмін пише "Слово - Переклад")
+    // Витягуємо текст із редактора
     const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || '') : '';
-    // Чистимо від HTML-тегів та порожніх пробілів
-    const plainText = rawText.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
-    // Шукаємо рядки, де є тире або дорівнює
-    const lines = plainText.split('\n').filter(l => l.includes('-') || l.includes('—') || l.includes('='));
+    
+    // 1. РОЗУМНИЙ ПАРСИНГ: Замінюємо HTML-перенесення рядків на справжні \n
+    let textWithNewlines = rawText
+        .replace(/<br\s*[\/]?>/gi, '\n')
+        .replace(/<\/div>/gi, '\n')
+        .replace(/<\/p>/gi, '\n');
+        
+    // 2. Чистимо від залишків HTML-тегів
+    const plainText = textWithNewlines.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, ' ');
+    
+    // 3. Розбиваємо на рядки та фільтруємо тільки ті, де є роздільник
+    const lines = plainText
+        .split('\n')
+        .map(l => l.trim())
+        .filter(l => l.includes('-') || l.includes('—') || l.includes('='));
 
     const cards = lines.map(line => {
+        // Визначаємо, який роздільник використав викладач
         const separator = line.includes('=') ? '=' : (line.includes('—') ? '—' : '-');
         const parts = line.split(separator);
-        return { front: parts[0].trim(), back: parts.slice(1).join(separator).trim() };
+        // Беремо першу частину як лице, а все інше зліплюємо як зворот (на випадок, якщо в перекладі теж є тире)
+        return { 
+            front: parts[0].trim(), 
+            back: parts.slice(1).join(separator).trim() 
+        };
     });
 
     if (cards.length === 0) {
@@ -2205,7 +2221,7 @@ const InlineFlashcardViewer = ({ task, theme, isDarkMode, onComplete }) => {
                 </div>
                 <div className="card-face card-back" style={{ ...getCardStyle(currentIndex, isDarkMode, true), boxShadow: '0 10px 30px rgba(0,0,0,0.15)' }}>
                   <span style={{ fontSize: '11px', opacity: 0.8, marginBottom: '15px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
-                  <span style={{ fontSize: '24px', fontWeight: '900', padding: '0 15px' }}>{currentCard.back}</span>
+                  <span style={{ fontSize: '24px', fontWeight: '900', padding: '0 15px', lineHeight: '1.4' }}>{currentCard.back}</span>
                 </div>
               </div>
            </div>
