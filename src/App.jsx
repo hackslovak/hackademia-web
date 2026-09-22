@@ -5796,7 +5796,9 @@ const parseToElements = (text, prefixKey) => {
   transition: '0.2s',
   boxShadow: '0 4px 10px rgba(224,163,69,0.1)'
 }}>
-                  </div>
+  🔊
+</button>
+                </div>
                   <div className="card-face card-back" style={{ ...getCardStyle(spacedIndex, isDarkMode, true), boxShadow: '0 15px 40px rgba(0,0,0,0.15)' }}>
                     <span style={{ fontSize: '14px', opacity: 0.8, marginBottom: '20px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 'bold' }}>Переклад</span>
                     <span style={{ fontSize: '42px', fontWeight: '900' }}>{currentCard.correct_answer}</span>
