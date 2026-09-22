@@ -344,7 +344,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_13", 
     slovak_phrase: "Polícia chytila vraha.", 
-    trap_word: "vrah", 
+    trap_word: "vraha", 
     option_correct: "вбивця", 
     option_wrong: "ворог", 
     explanation: "«Vrah» означає «вбивця». Ворог буде «nepriateľ»[cite: 5].",
@@ -425,7 +425,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_22", 
     slovak_phrase: "Dostal som pokutu za rýchlosť.", 
-    trap_word: "pokuta", 
+    trap_word: "pokutu", 
     option_correct: "штраф", 
     option_wrong: "покута", 
     explanation: "«Pokuta» — це «штраф»[cite: 5].",
@@ -470,7 +470,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_27", 
     slovak_phrase: "Napísal ponosu na riaditeľa.", 
-    trap_word: "ponosa", 
+    trap_word: "ponosu", 
     option_correct: "скарга", 
     option_wrong: "понос", 
     explanation: "«Ponosa» означає «скарга»[cite: 5].",
@@ -488,7 +488,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_29", 
     slovak_phrase: "Má dobré vedomosti z histórie.", 
-    trap_word: "vedomosť", 
+    trap_word: "vedomosti", 
     option_correct: "знання", 
     option_wrong: "відомість", 
     explanation: "«Vedomosť» означає «знання»[cite: 5].",
@@ -515,7 +515,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_32", 
     slovak_phrase: "Konečne sme sa dohádali.", 
-    trap_word: "dohádať sa", 
+    trap_word: "dohádali", 
     option_correct: "закінчити суперечку", 
     option_wrong: "догадатися", 
     explanation: "«Dohádať sa» означає «закінчити суперечку». Догадатися буде «domyslieť si»[cite: 5].",
@@ -560,7 +560,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_37", 
     slovak_phrase: "Dnes mám naozaj smolu.", 
-    trap_word: "smola", 
+    trap_word: "smolu", 
     option_correct: "невезіння", 
     option_wrong: "смола", 
     explanation: "«Smola» в цьому контексті означає «невезіння»[cite: 5].",
@@ -569,7 +569,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_38", 
     slovak_phrase: "Do kávy si dávam smotanu.", 
-    trap_word: "smotana", 
+    trap_word: "smotanu", 
     option_correct: "вершки", 
     option_wrong: "сметана", 
     explanation: "«Smotana» (sladká) — це «вершки». Кисла сметана буде «kyslá smotana»[cite: 5].",
@@ -578,7 +578,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_39", 
     slovak_phrase: "Idem si vložiť peniaze do banky.", 
-    trap_word: "banka", 
+    trap_word: "banky", 
     option_correct: "банк", 
     option_wrong: "банка (скляна)", 
     explanation: "«Banka» — це фінансова установа («банк»). Скляна банка буде «pohár»[cite: 4].",
@@ -587,7 +587,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_40", 
     slovak_phrase: "Kúpil som dcére novú bábku.", 
-    trap_word: "bábka", 
+    trap_word: "bábku", 
     option_correct: "лялька", 
     option_wrong: "бабка", 
     explanation: "«Bábka» означає «лялька» або «маріонетка»[cite: 4].",
@@ -632,7 +632,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_45", 
     slovak_phrase: "Hľadám za neho dobrú náhradu.", 
-    trap_word: "náhrada", 
+    trap_word: "náhradu", 
     option_correct: "заміна", 
     option_wrong: "нагорода", 
     explanation: "«Náhrada» означає «заміна» або «відшкодування». Нагорода буде «odmena»[cite: 4].",
@@ -668,7 +668,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_49", 
     slovak_phrase: "Za svoju prácu dostal veľkú odmenu.", 
-    trap_word: "odmena", 
+    trap_word: "odmenu", 
     option_correct: "нагорода", 
     option_wrong: "відміна", 
     explanation: "«Odmena» означає «нагорода»[cite: 4].",
@@ -695,7 +695,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_52", 
     slovak_phrase: "Vzdali mu veľkú poctu.", 
-    trap_word: "pocta", 
+    trap_word: "poctu", 
     option_correct: "пошана", 
     option_wrong: "пошта", 
     explanation: "«Pocta» — це «пошана» або «почесть». Пошта буде «pošta»[cite: 4].",
@@ -794,7 +794,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_63", 
     slovak_phrase: "Našiel som v lese veľkú hubu.", 
-    trap_word: "huba", 
+    trap_word: "hubu", 
     option_correct: "гриб", 
     option_wrong: "губа", 
     explanation: "«Huba» — це «гриб». Губа словацькою буде «pera»[cite: 3].",
@@ -5927,7 +5927,9 @@ const parseToElements = (text, prefixKey) => {
     const currentCard = ffCards[ffIndex];
     return (
       <div style={{ padding: '20px', fontFamily: 'sans-serif', minHeight: '100vh', textAlign: 'center' }}>
-        {renderGlobalStyles()} <FloatingBackgrounds theme="{theme}" themeMode="{themeMode}"/>
+        {renderGlobalStyles()} <FloatingBackgrounds theme={theme} themeMode={themeMode}/>
+        
+        {/* ВЕРХНЯ ПАНЕЛЬ (яка випадково зникла) */}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
           <button onClick={() => setGlobalView(null)} style={{ background: 'transparent', border: 'none', color: '#E0A345', fontSize: '16px', fontWeight: 'bold', cursor: 'pointer' }}>
             ← Назад на головну
@@ -5945,48 +5947,63 @@ const parseToElements = (text, prefixKey) => {
           </div>
         ) : currentCard && (
           <div style={{
-          background: theme.cardBg,
-          padding: '50px 40px',
-          borderRadius: '24px',
-          maxWidth: '700px', // Розширили для ноута
-          width: '90%',
-          margin: '0 auto',
-          boxShadow: '0 20px 50px rgba(224,163,69,0.15)', // Тепла тінь
-          border: '1px solid rgba(224,163,69,0.3)', // Тепла рамка
-          position: 'relative',
-          overflow: 'hidden'
-        }}>
-          {/* Тепла смужка зверху */}
-          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: 'linear-gradient(90deg, #F6AD55, #E0A345, #D69E2E)' }}></div>
+            background: theme.cardBg,
+            padding: '50px 40px',
+            borderRadius: '24px',
+            maxWidth: '700px',
+            width: '90%',
+            margin: '0 auto',
+            boxShadow: '0 20px 50px rgba(224,163,69,0.15)',
+            border: '1px solid rgba(224,163,69,0.3)',
+            position: 'relative',
+            overflow: 'hidden'
+          }}>
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '6px', background: 'linear-gradient(90deg, #F6AD55, #E0A345, #D69E2E)' }}></div>
 
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
-            <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', fontSize: '14px', color: theme.textSecondary }}>
+              <span>Фраза {ffIndex + 1} з {ffCards.length}</span>
+            </div>
 
             <p style={{ fontSize: '13px', color: theme.textSecondary, marginBottom: '10px' }}>Як перекласти виділене слово?</p>
             
-            {/* 1. ВИДІЛЕННЯ СЛОВА-ПАСТКИ КОЛЬОРОМ ТА ПІДКРЕСЛЕННЯМ + ОЗВУЧКА */}
             <h3 style={{ 
-  display: 'flex', 
-  alignItems: 'center', 
-  justifyContent: 'center', 
-  gap: '20px', 
-  margin: '30px 0 40px 0', 
-  padding: '25px', 
-  background: theme.inputBg, 
-  borderRadius: '20px', 
-  border: `1px solid ${theme.inputBorder}`,
-  lineHeight: '1.5',
-  fontSize: '26px',
-  color: theme.text 
-}}>
-              <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              gap: '20px', 
+              margin: '30px 0 40px 0', 
+              padding: '25px', 
+              background: theme.inputBg, 
+              borderRadius: '20px', 
+              border: `1px solid ${theme.inputBorder}`,
+              lineHeight: '1.5',
+              fontSize: '26px',
+              color: theme.text 
+            }}>
+              <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ 
+                background: 'rgba(224, 163, 69, 0.1)', 
+                color: '#E0A345', 
+                border: '2px solid #E0A345', 
+                width: '56px', 
+                height: '56px', 
+                borderRadius: '50%', 
+                fontSize: '26px', 
+                cursor: 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                justifyContent: 'center', 
+                flexShrink: 0, 
+                transition: '0.2s',
+                boxShadow: '0 4px 10px rgba(224,163,69,0.1)'
+              }}>
+                🔊
+              </button>
               {currentCard.trap_word === "Комбо-пастка!" ? (
                 <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#E0A345'}}><br/>(🔥 Комбо-пастка!)</span></span>
               ) : (
                 <span>
-                  {currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word})`, 'gi')).map((part, i) => 
-                    part.toLowerCase() === currentCard.trap_word.toLowerCase() 
+                  {currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word || ''})`, 'gi')).map((part, i) => 
+                    part.toLowerCase() === (currentCard.trap_word || '').toLowerCase() 
                       ? <span key={i} style={{ color: '#E0A345', textDecoration: 'underline', fontWeight: '900' }}>{part}</span> 
                       : part
                   )}
@@ -5999,9 +6016,9 @@ const parseToElements = (text, prefixKey) => {
                 const isCorrectOption = opt === currentCard.option_correct;
                 const isSelected = ffSelected === opt;
                 
-                let bg = theme.inputBg;
-                let borderColor = theme.inputBorder;
-                let color = theme.text;
+                let bg = 'rgba(224, 163, 69, 0.08)';
+                let borderColor = '#E0A345';
+                let color = themeMode === 'dark' ? '#fff' : '#5C4033';
                 
                 if (ffSelected !== null) {
                   if (isCorrectOption) {
@@ -6025,13 +6042,12 @@ const parseToElements = (text, prefixKey) => {
                       padding: '20px',
                       fontSize: '18px',
                       fontWeight: '900',
-                      color: ffSelected !== null ? color : (themeMode === 'dark' ? '#fff' : '#5C4033'),
-                      background: ffSelected !== null ? bg : 'rgba(224, 163, 69, 0.08)',
-                      border: `2px solid ${ffSelected !== null ? borderColor : '#E0A345'}`,
+                      color: color,
+                      background: bg,
+                      border: `2px solid ${borderColor}`,
                       borderRadius: '16px',
                       cursor: ffSelected === null ? 'pointer' : 'default',
                       transition: 'all 0.2s ease',
-                      marginBottom: '15px',
                       boxShadow: ffSelected === null ? '0 4px 15px rgba(224,163,69,0.05)' : 'none',
                       opacity: (ffSelected !== null && !isCorrectOption && !isSelected) ? 0.6 : 1 
                     }}
@@ -6051,7 +6067,6 @@ const parseToElements = (text, prefixKey) => {
                   {currentCard.explanation}
                 </p>
 
-                {/* 2. КНОПКА-СПОЙЛЕР (НАТИСНИ І ТРИМАЙ) */}
                 <div 
                   onPointerDown={() => setFfShowTranslation(true)}
                   onPointerUp={() => setFfShowTranslation(false)}
@@ -6076,7 +6091,7 @@ const parseToElements = (text, prefixKey) => {
                   }
                 </div>
 
-                <button onClick={handleFfNext} style={{ width: '100%', background: '#3182ce', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', marginTop: '15px', cursor: 'pointer' }}>Далі →</button>
+                <button onClick={handleFfNext} style={{ width: '100%', background: '#E0A345', color: 'white', padding: '12px', borderRadius: '8px', border: 'none', fontWeight: 'bold', marginTop: '15px', cursor: 'pointer' }}>Далі →</button>
               </div>
             )}
           </div>
