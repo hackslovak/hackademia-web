@@ -254,7 +254,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_3", 
     slovak_phrase: "Idem do lekárne kúpiť lieky.", 
-    trap_word: "lekáreň", 
+    trap_word: "lekárne", 
     option_correct: "аптека", 
     option_wrong: "лікарня", 
     explanation: "«Lekáreň» — це аптека. Лікарня словацькою буде «nemocnica»[cite: 5].",
@@ -371,7 +371,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_16", 
     slovak_phrase: "Pacient mal tvrdú stolicu.", 
-    trap_word: "stolica", 
+    trap_word: "stolicu", 
     option_correct: "стілець (медичний)", 
     option_wrong: "столиця", 
     explanation: "«Stolica» в цьому контексті — це медичний «стілець». Столиця буде «hlavné mesto»[cite: 5].",
@@ -551,7 +551,7 @@ function getCardStyle(index, isDark, isBack = false) {
   { 
     id: "ff_36", 
     slovak_phrase: "Kúpil som sladké jahody.", 
-    trap_word: "jahoda", 
+    trap_word: "jahody", 
     option_correct: "полуниця", 
     option_wrong: "ягода (будь-яка)", 
     explanation: "«Jahoda» означає саме «полуниця» або «суниця»[cite: 5].",
@@ -3893,18 +3893,27 @@ useEffect(() => {
   }
 
   function handleFfAnswer(selectedOption, isCorrectOption) {
-    if (ffSelected !== null) return; 
-    setFfSelected(selectedOption);
+  if (ffSelected !== null) return;
+  setFfSelected(selectedOption);
+
+  if (isCorrectOption) {
+    // 1. ОДРАЗУ додаємо бали, щоб ніяка помилка звуку це не перебила!
+    setFfScore(prev => prev + 10);
     
-    if (isCorrectOption) {
-      showMotivation(); playUiSound('ding', isSoundEnabled);
-      setFfScore(prev => prev + 10);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-    } else {
-      playUiSound('buzz', isSoundEnabled);
-      if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-    }
+    // 2. Безпечно викликаємо звук успіху
+    if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+    
+    // 3. Вібрація Telegram
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+    
+    // 4. Мотивація (обгорнута в try/catch для безпеки)
+    try { showMotivation(); } catch (e) { console.log(e); }
+  } else {
+    // Безпечно викликаємо звук помилки
+    if (typeof window.hackPlaySound === 'function') window.hackPlaySound('buzz');
+    if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
   }
+}
 
   function handleFfNext() {
     setFfShowTranslation(false); // ХОВАЄМО ПЕРЕКЛАД НА НОВОМУ РЕЧЕННІ
