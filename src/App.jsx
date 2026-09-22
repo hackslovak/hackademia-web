@@ -6587,7 +6587,7 @@ const parseToElements = (text, prefixKey) => {
           </div>
         )}
 			
-			/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
+			{/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
         {showCatboxModal && (
           <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(5px)', zIndex: 99999, display: 'flex', alignItems: 'center', justifyContent: 'center', animation: 'fadeIn 0.2s ease' }} onClick={() => setShowCatboxModal(false)}>
             <div style={{ background: theme.cardBg, padding: '30px', borderRadius: '24px', width: '90%', maxWidth: '420px', boxShadow: '0 20px 50px rgba(0,0,0,0.2)', border: `1px solid ${theme.inputBorder}`, position: 'relative', animation: 'fadeInDown 0.3s ease' }} onClick={e => e.stopPropagation()}>
