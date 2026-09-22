@@ -7206,38 +7206,7 @@ const parseToElements = (text, prefixKey) => {
       }
     };
 
-    {/* БЛОК ВИБОРУ МОВИ В ПРОФІЛІ */}
-<div style={{ marginBottom: '25px', background: theme.cardBg, padding: '20px', borderRadius: '20px', border: `1px solid ${theme.inputBorder}` }}>
-  <h4 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '16px', fontWeight: '900' }}>🌍 Мова інтерфейсу</h4>
-  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-    {[
-      { code: 'uk', label: 'Українська' },
-      { code: 'sk', label: 'Slovenčina' },
-      { code: 'en', label: 'English' },
-      { code: 'ru', label: 'Русский' }
-    ].map(l => (
-      <button 
-        key={l.code} 
-        onClick={() => changeLang(l.code)} 
-        className="hover-card"
-        style={{ 
-          background: lang === l.code ? '#E0A345' : theme.inputBg, 
-          color: lang === l.code ? '#fff' : theme.text, 
-          border: `2px solid ${lang === l.code ? '#E0A345' : theme.inputBorder}`, 
-          padding: '12px 20px', 
-          borderRadius: '14px', 
-          fontWeight: 'bold', 
-          cursor: 'pointer', 
-          transition: '0.2s',
-          flex: 1,
-          minWidth: '130px'
-        }}
-      >
-        {l.label}
-      </button>
-    ))}
-  </div>
-</div>
+
 	
 	// ОНОВЛЕНА ФУНКЦІЯ ЗМІНИ ПАРОЛЯ З ПЕРЕВІРКОЮ
     const handleChangePassword = async (e) => {
@@ -7369,7 +7338,41 @@ const parseToElements = (text, prefixKey) => {
               {/* ПРАВА КОЛОНКА */}
               <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '30px' }}>
                   
-                  {/* БЛОК ПАРОЛЯ З ПРИХОВАНОЮ ФОРМОЮ */}
+                  {/* БЛОК ВИБОРУ МОВИ В ПРОФІЛІ */}
+              <div style={{ marginBottom: '25px', background: theme.cardBg, padding: '20px', borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, boxShadow: '0 4px 15px rgba(0,0,0,0.02)' }}>
+                <h4 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '16px', fontWeight: '900' }}>🌍 Мова інтерфейсу</h4>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  {[
+                    { code: 'uk', label: 'Українська' },
+                    { code: 'sk', label: 'Slovenčina' },
+                    { code: 'en', label: 'English' },
+                    { code: 'ru', label: 'Русский' }
+                  ].map(l => (
+                    <button 
+                      key={l.code} 
+                      onClick={(e) => { e.preventDefault(); changeLang(l.code); }} 
+                      className="hover-card"
+                      style={{ 
+                        background: lang === l.code ? '#E0A345' : theme.inputBg, 
+                        color: lang === l.code ? '#fff' : theme.text, 
+                        border: `2px solid ${lang === l.code ? '#E0A345' : theme.inputBorder}`, 
+                        padding: '12px', 
+                        borderRadius: '14px', 
+                        fontWeight: 'bold', 
+                        cursor: 'pointer', 
+                        transition: '0.2s',
+                        flex: '1 1 calc(50% - 10px)',
+                        textAlign: 'center',
+                        fontSize: '13px'
+                      }}
+                    >
+                      {l.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+				  
+				  {/* БЛОК ПАРОЛЯ З ПРИХОВАНОЮ ФОРМОЮ */}
                   <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '32px', boxShadow: '0 10px 40px rgba(0,0,0,0.03)' }}>
                       <h3 style={{ margin: '0 0 15px 0', fontSize: '20px', color: theme.text, fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <span style={{ color: '#E0A345' }}>🔐</span> Доступ / Пароль
