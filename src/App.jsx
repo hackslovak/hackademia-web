@@ -5479,6 +5479,43 @@ const parseToElements = (text, prefixKey) => {
   );
 
 
+// --- СТАРТОВЕ ВІКНО ВИБОРУ МОВИ ---
+  if (showLangPrompt) {
+    return (
+      <div style={{ minHeight: '100vh', background: theme.bg, fontFamily: 'sans-serif' }}>
+        {renderGlobalStyles()} <FloatingBackgrounds theme={theme} themeMode={themeMode} />
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ background: theme.cardBg, padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '400px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', animation: 'fadeInDown 0.4s ease' }}>
+            <div style={{ fontSize: '50px', marginBottom: '20px' }}>🌍</div>
+            <h2 style={{ margin: '0 0 15px 0', color: theme.text, fontSize: '24px', fontWeight: '900' }}>Оберіть мову навчання</h2>
+            <p style={{ color: theme.textSecondary, marginBottom: '30px', fontSize: '15px' }}>Якою мовою ви бажаєте відображати інтерфейс платформи?</p>
+            
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+              {[
+                { code: 'uk', label: 'Українська' },
+                { code: 'sk', label: 'Slovenčina' },
+                { code: 'en', label: 'English' },
+                { code: 'ru', label: 'Русский' }
+              ].map(l => (
+                <button 
+                  key={l.code} 
+                  onClick={() => {
+                    changeLang(l.code);
+                    localStorage.setItem('hack_lang_selected', 'true');
+                    setShowLangPrompt(false);
+                  }} 
+                  className="hover-card" 
+                  style={{ padding: '15px', background: theme.inputBg, border: `2px solid ${theme.inputBorder}`, borderRadius: '16px', color: theme.text, fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
+                >
+                  {l.label}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
   
   // --- ЕКРАН АДМІН-ПАНЕЛІ (НОВІ ЗАЯВКИ) ---
   if (globalView === 'admin_panel') {
@@ -6554,38 +6591,6 @@ const parseToElements = (text, prefixKey) => {
         {/* МОДАЛКИ ДЛЯ ЕКРАНУ МОДУЛЯ (ЗУМ, КРОПЕР, СПОВІЩЕННЯ) */}
         {toast && <div style={{ position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(135deg, #FFD3B6 0%, #FDE68A 100%)', color: '#2C3E50', padding: '14px 30px', borderRadius: '24px', fontWeight: '900', fontSize: '17px', boxShadow: '0 10px 25px rgba(0,0,0,0.1)', zIndex: 9999, animation: 'ffPulse 1.5s infinite', border: '2px solid #fff' }}>{toast}</div>}
         
-		{/* --- СТАРТОВЕ ВІКНО ВИБОРУ МОВИ --- */}
-        {showLangPrompt && (
-          <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 999999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <div style={{ background: theme?.cardBg || '#fff', padding: '40px', borderRadius: '24px', textAlign: 'center', maxWidth: '400px', width: '90%', boxShadow: '0 20px 50px rgba(0,0,0,0.3)', animation: 'fadeInDown 0.4s ease' }}>
-              <div style={{ fontSize: '50px', marginBottom: '20px' }}>🌍</div>
-              <h2 style={{ margin: '0 0 15px 0', color: theme?.text || '#333', fontSize: '24px', fontWeight: '900' }}>Оберіть мову навчання</h2>
-              <p style={{ color: theme?.textSecondary || '#666', marginBottom: '30px', fontSize: '15px' }}>Якою мовою ви бажаєте відображати інтерфейс платформи?</p>
-              
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                {[
-                  { code: 'uk', label: 'Українська' },
-                  { code: 'sk', label: 'Slovenčina' },
-                  { code: 'en', label: 'English' },
-                  { code: 'ru', label: 'Русский' }
-                ].map(l => (
-                  <button 
-                    key={l.code} 
-                    onClick={() => {
-                      changeLang(l.code);
-                      localStorage.setItem('hack_lang_selected', 'true');
-                      setShowLangPrompt(false);
-                    }} 
-                    className="hover-card" 
-                    style={{ padding: '15px', background: theme?.inputBg || '#f0f0f0', border: `2px solid ${theme?.inputBorder || '#ccc'}`, borderRadius: '16px', color: theme?.text || '#333', fontWeight: 'bold', cursor: 'pointer', fontSize: '14px', transition: '0.2s' }}
-                  >
-                    {l.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
 			
 			{/* === МОДАЛКА CATBOX ДЛЯ ВЕЛИКИХ ФАЙЛІВ (TELEGRAM STYLE) === */}
         {showCatboxModal && (
