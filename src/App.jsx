@@ -5973,13 +5973,15 @@ const parseToElements = (text, prefixKey) => {
 }}>
               <button onClick={(e) => { e.stopPropagation(); speakSlovak(currentCard.slovak_phrase); }} style={{ background: 'transparent', border: 'none', fontSize: '24px', cursor: 'pointer', verticalAlign: 'middle', marginRight: '10px' }}>🔊</button>
               {currentCard.trap_word === "Комбо-пастка!" ? (
-                <span style={{fontSize: '14px', color: '#E0A345'}}><br/>(🔥 Комбо-пастка!)</span>
+                <span>{currentCard.slovak_phrase} <span style={{fontSize: '14px', color: '#E0A345'}}><br/>(🔥 Комбо-пастка!)</span></span>
               ) : (
-                currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word})`, 'gi')).map((part, i) => 
-                  part.toLowerCase() === currentCard.trap_word.toLowerCase() 
-                    ? <span key={i} style={{ color: '#E0A345', textDecoration: 'underline', padding: '0 2px', fontWeight: '900' }}>{part}</span> 
-                    : part
-                )
+                <span>
+                  {currentCard.slovak_phrase.split(new RegExp(`(${currentCard.trap_word})`, 'gi')).map((part, i) => 
+                    part.toLowerCase() === currentCard.trap_word.toLowerCase() 
+                      ? <span key={i} style={{ color: '#E0A345', textDecoration: 'underline', fontWeight: '900' }}>{part}</span> 
+                      : part
+                  )}
+                </span>
               )}
             </h3>
 
