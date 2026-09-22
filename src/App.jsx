@@ -6310,7 +6310,11 @@ const parseToElements = (text, prefixKey) => {
                         {/* КНОПКИ АДМІНА (СКИНУТИ / РЕДАГУВАТИ / ВИДАЛИТИ) */}
                         {effectiveIsAdmin && (
                           <div style={{ display: 'flex', gap: '10px' }}>
-                            <button onClick={() => handleResetTaskAnswers(task)} className="hover-card" title="Скинути введені тестові відповіді" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', padding: '10px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>🔄 Скинути</button>
+                            
+                            {/* Показуємо кнопку "Скинути" ТІЛЬКИ для тестів або завдань з пропусками */}
+                            {(task.type === 'quiz' || ((task.type === 'text' || task.type === 'dialogue') && task.correct_answer)) && (
+                               <button onClick={() => handleResetTaskAnswers(task)} className="hover-card" title="Скинути введені тестові відповіді" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', padding: '10px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>🔄 Скинути</button>
+                            )}
                             
                             <button onClick={() => { 
                               setEditingTaskId(task.id);
