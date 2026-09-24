@@ -2436,6 +2436,110 @@ const TelegramQuizViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, 
     );
 };
 
+// --- ВБУДОВАНИЙ ПЛЕЄР PRAVDA / NEPRAVDA ---
+const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, questionNode }) => {
+    const tfData = task.content?.trueFalseData || [];
+    if (!tfData || tfData.length === 0) return null;
+
+    const [answers, setAnswers] = React.useState({});
+    const [isSubmitted, setIsSubmitted] = React.useState(false);
+    const [isShaking, setIsShaking] = React.useState(false);
+
+    const toggleAnswer = (idx, value) => {
+        if (isSubmitted || isAdmin) return;
+        setAnswers(prev => ({ ...prev, [idx]: value }));
+    };
+
+    const handleSubmit = () => {
+        let allCorrect = true;
+        tfData.forEach((item, idx) => {
+            if (answers[idx] !== item.isTrue) allCorrect = false;
+        });
+
+        setIsSubmitted(true);
+        if (allCorrect) {
+            if (typeof playUiSound === 'function') playUiSound('success', isSoundEnabled);
+        } else {
+            setIsShaking(true);
+            setTimeout(() => setIsShaking(false), 500);
+            if (typeof playUiSound === 'function') playUiSound('error', isSoundEnabled);
+        }
+        onComplete(task); 
+    };
+
+    const allAnswered = Object.keys(answers).length === tfData.length;
+
+    return (
+        <div className={isShaking ? 'shake-animation' : ''} style={{ background: theme.cardBg, borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, padding: '25px', marginTop: '20px', width: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+            
+            {questionNode && (
+                <div style={{ fontWeight: 'bold', fontSize: '16px', color: theme.text, marginBottom: '20px' }}>
+                    {questionNode}
+                </div>
+            )}
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '15px', paddingBottom: '10px', borderBottom: `2px solid ${theme.inputBg}` }}>
+                <span style={{ fontSize: '18px', fontWeight: '900', color: '#E0A345', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Pravda alebo nepravda?
+                </span>
+                <div style={{ display: 'flex', gap: '20px', paddingRight: '10px' }}>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary, width: '60px', textAlign: 'center' }}>pravda</span>
+                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary, width: '60px', textAlign: 'center' }}>nepravda</span>
+                </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {tfData.map((item, idx) => {
+                    const isCorrect = answers[idx] === item.isTrue;
+                    
+                    let rowBg = 'transparent';
+                    if (isSubmitted) {
+                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.05)' : 'rgba(229, 62, 62, 0.05)';
+                    }
+
+                    return (
+                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderRadius: '12px', background: rowBg, transition: 'all 0.2s' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
+                                <span style={{ fontWeight: 'bold', color: theme.textSecondary, minWidth: '20px' }}>{idx + 1}.</span>
+                                <span style={{ fontSize: '15px', color: theme.text, lineHeight: '1.4' }}>{item.text}</span>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '20px', paddingRight: '20px' }}>
+                                {/* Кнопка Pravda (True) */}
+                                <div onClick={() => toggleAnswer(idx, true)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '40px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
+                                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${answers[idx] === true ? '#E0A345' : theme.inputBorder}`, background: answers[idx] === true ? '#E0A345' : theme.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                        {answers[idx] === true && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%' }}></div>}
+                                    </div>
+                                </div>
+                                
+                                {/* Кнопка Nepravda (False) */}
+                                <div onClick={() => toggleAnswer(idx, false)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '40px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
+                                    <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${answers[idx] === false ? '#E0A345' : theme.inputBorder}`, background: answers[idx] === false ? '#E0A345' : theme.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
+                                        {answers[idx] === false && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%' }}></div>}
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Маркер правильно/неправильно після сабміту */}
+                            {isSubmitted && (
+                                <div style={{ width: '30px', display: 'flex', justifyContent: 'flex-end', fontWeight: 'bold', fontSize: '16px' }}>
+                                    {isCorrect ? <span style={{color: '#38A169'}}>✅</span> : <span style={{color: '#E53E3E'}}>❌</span>}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })}
+            </div>
+
+            {!isSubmitted && !isAdmin && (
+                <button onClick={handleSubmit} disabled={!allAnswered} style={{ width: '100%', padding: '14px', marginTop: '25px', borderRadius: '12px', background: allAnswered ? '#E0A345' : theme.inputBg, color: allAnswered ? '#fff' : theme.textSecondary, border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: allAnswered ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
+                    ПЕРЕВІРИТИ ВІДПОВІДІ
+                </button>
+            )}
+        </div>
+    );
+};
+
 function Platform() {
   const navigate = useNavigate();
 
@@ -2697,6 +2801,9 @@ function Platform() {
   const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
   const defaultQuizData = { options: ['', ''], correct: [], multiple: false, randomize: false, explanation: '' };
   const [newTaskQuiz, setNewTaskQuiz] = useState(defaultQuizData);
+  const defaultTrueFalseData = [{ text: '', isTrue: true }, { text: '', isTrue: false }];
+  const [newTaskTrueFalse, setNewTaskTrueFalse] = useState(defaultTrueFalseData);
+  const [editTaskTrueFalse, setEditTaskTrueFalse] = useState(defaultTrueFalseData);
   const [editTaskQuiz, setEditTaskQuiz] = useState(defaultQuizData);
   const [editRequiresVoice, setEditRequiresVoice] = useState(false);
   const [newTaskDifficulty, setNewTaskDifficulty] = useState('medium');
@@ -4195,6 +4302,7 @@ useEffect(() => {
 								<option value="dialogue">💬 Діалог</option>
                                 <option value="flashcard">🗂 Флешкартка</option>
                                 <option value="quiz">✅ Квіз</option>
+								<option value="true_false">⚖️ Pravda / Nepravda</option>
                             </select>
                             <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Складність:</label>
                             <select value={newTaskDifficulty} onChange={e=>setNewTaskDifficulty(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
@@ -4305,6 +4413,47 @@ useEffect(() => {
                     </div>
                 );
             })()}
+			
+{/* === БУДІВНИК PRAVDA / NEPRAVDA === */}
+            {(typeof editingTaskId !== 'undefined' && editingTaskId ? editTaskType : newTaskType) === 'true_false' && (() => {
+                const tfData = (typeof editingTaskId !== 'undefined' && editingTaskId) ? editTaskTrueFalse : newTaskTrueFalse;
+                const setTfData = (typeof editingTaskId !== 'undefined' && editingTaskId) ? setEditTaskTrueFalse : setNewTaskTrueFalse;
+                
+                const updateItemText = (i, val) => { const newData = [...tfData]; newData[i].text = val; setTfData(newData); };
+                const toggleItemTruth = (i, isTrueVal) => { const newData = [...tfData]; newData[i].isTrue = isTrueVal; setTfData(newData); };
+                const removeItem = (i) => setTfData(tfData.filter((_, idx) => idx !== i));
+                const addItem = () => setTfData([...tfData, { text: '', isTrue: true }]);
+
+                return (
+                    <div style={{ marginTop: '10px', background: 'rgba(0,0,0,0.03)', padding: '20px', borderRadius: '16px', border: `1px dashed ${theme.inputBorder}`, animation: 'fadeInDown 0.3s ease' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                            <h4 style={{ margin: 0, color: theme.textSecondary, fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Список тверджень</h4>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#38A169' }}>Pravda</span>
+                                <span style={{ fontSize: '11px', fontWeight: 'bold', color: '#E53E3E' }}>Nepravda</span>
+                            </div>
+                        </div>
+                        
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                            {tfData.map((item, i) => (
+                                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                    <input type="text" placeholder={`Твердження ${i + 1}`} value={item.text} onChange={e => updateItemText(i, e.target.value)} style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '14px' }} />
+                                    
+                                    <div style={{ display: 'flex', gap: '10px', background: theme.inputBg, padding: '6px', borderRadius: '10px', border: `1px solid ${theme.inputBorder}` }}>
+                                        <button onClick={(e) => { e.preventDefault(); toggleItemTruth(i, true); }} style={{ background: item.isTrue ? '#38A169' : 'transparent', color: item.isTrue ? '#fff' : theme.textSecondary, border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>P</button>
+                                        <button onClick={(e) => { e.preventDefault(); toggleItemTruth(i, false); }} style={{ background: !item.isTrue ? '#E53E3E' : 'transparent', color: !item.isTrue ? '#fff' : theme.textSecondary, border: 'none', padding: '6px 12px', borderRadius: '6px', fontWeight: 'bold', cursor: 'pointer', fontSize: '12px' }}>N</button>
+                                    </div>
+
+                                    {tfData.length > 1 && <button onClick={(e) => { e.preventDefault(); removeItem(i); }} style={{ background: 'none', border: 'none', color: '#E53E3E', cursor: 'pointer', padding: '5px', fontSize: '16px', fontWeight: 'bold' }}>✕</button>}
+                                </div>
+                            ))}
+                        </div>
+                        <button onClick={(e) => { e.preventDefault(); addItem(); }} className="hover-card" style={{ marginTop: '15px', display: 'flex', alignItems: 'center', gap: '8px', background: 'none', border: 'none', color: '#E0A345', fontWeight: 'bold', cursor: 'pointer', padding: '8px 0' }}>
+                            <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: 'rgba(224, 163, 69, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>+</div> Додати твердження
+                        </button>
+                    </div>
+                );
+            })()}
 
         </div>
       </div>
@@ -4319,6 +4468,7 @@ async function handleAddTask() {
     let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
     const contentToSave = { ...baseContent, exercise: newTaskExercise, requiresVoice: newTaskRequiresVoice }; // <--- ДОДАЛИ requiresVoice
 	if (newTaskType === 'quiz') contentToSave.quizData = newTaskQuiz;
+	if (newTaskType === 'true_false') contentToSave.trueFalseData = newTaskTrueFalse;
 
     const { data, error } = await supabase.from('tasks').insert({ 
       module_id: activeModule.id, type: newTaskType, content: contentToSave, difficulty: newTaskDifficulty, correct_answer: finalCorrectAnswer, category: newTaskCategory
@@ -4343,6 +4493,7 @@ async function handleAddTask() {
             setNewTaskCorrectAnswer('');
             setIsSingleLang(false);
             setNewTaskCategory('grammar');
+			setNewTaskTrueFalse(defaultTrueFalseData)
             
             // ЗГОРТАННЯ РЕДАКТОРІВ
             setIsComposerExpanded(false); 
@@ -4722,6 +4873,7 @@ async function handleImageUpload(e) {
     let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
     const contentToSave = { ...baseContent, exercise: editTaskExercise, requiresVoice: editRequiresVoice };
 	if (editTaskType === 'quiz' || (taskToEdit && taskToEdit.type === 'quiz')) contentToSave.quizData = editTaskQuiz;
+	if (editTaskType === 'true_false' || (taskToEdit && taskToEdit.type === 'true_false')) contentToSave.trueFalseData = editTaskTrueFalse;
 
     // ДОДАНО ЗБЕРЕЖЕННЯ КАТЕГОРІЇ (category: editCategory) В БАЗУ ДАНИХ
     const { error } = await supabase.from('tasks').update({ 
@@ -6419,7 +6571,7 @@ const parseToElements = (text, prefixKey) => {
                           {/* Показуємо тип завдання ТІЛЬКИ адміну */}
 						  {effectiveIsAdmin && (
 						  <span style={{ fontSize: '14px', color: theme.textSecondary, fontWeight: 'bold', borderLeft: `2px solid ${theme.inputBorder}`, paddingLeft: '15px' }}>
-                            {task.type === 'flashcard' ? '🗂 Флешкартка' : task.type === 'quiz' ? '✅ Тест' : task.type === 'dialogue' ? '💬 Діалог' : '📝 Матеріал'}
+                            {task.type === 'flashcard' ? '🗂 Флешкартка' : task.type === 'quiz' ? '✅ Тест' : task.type === 'true_false' ? '⚖️ Pravda/Nepravda' : task.type === 'dialogue' ? '💬 Діалог' : '📝 Матеріал'}
                           </span>
 						  )}
                         </div>
@@ -6429,7 +6581,7 @@ const parseToElements = (text, prefixKey) => {
                           <div style={{ display: 'flex', gap: '10px' }}>
                             
                             {/* Показуємо кнопку "Скинути" ТІЛЬКИ для тестів або завдань з пропусками */}
-                            {(task.type === 'quiz' || ((task.type === 'text' || task.type === 'dialogue') && task.correct_answer)) && (
+                            {(task.type === 'quiz' || task.type === 'true_false' || ((task.type === 'text' || task.type === 'dialogue') && task.correct_answer)) && (
                                <button onClick={() => handleResetTaskAnswers(task)} className="hover-card" title="Скинути введені тестові відповіді" style={{ background: theme.inputBg, color: theme.textSecondary, border: `1px solid ${theme.inputBorder}`, borderRadius: '12px', padding: '10px 14px', cursor: 'pointer', fontSize: '13px', fontWeight: 'bold' }}>🔄 Скинути</button>
                             )}
                             
@@ -6454,6 +6606,7 @@ const parseToElements = (text, prefixKey) => {
                               setEditLang('uk');
 							  setEditRequiresVoice(task.content?.requiresVoice || false);
 							  setEditTaskQuiz(task.content?.quizData || task.quizData || { options: ['', ''], correct: [], multiple: false, explanation: '' });
+							  setEditTaskTrueFalse(task.content?.trueFalseData || task.trueFalseData || [{ text: '', isTrue: true }]);
                             }} className="hover-card" title="Редагувати завдання" style={{ background: theme.inputBg, color: theme.text, border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>✏️</button>
                             
                             <button onClick={() => handleDeleteTask(task.id)} className="hover-card" title="Видалити завдання" style={{ background: '#ffebee', color: '#c62828', border: 'none', borderRadius: '12px', padding: '10px', cursor: 'pointer' }}>🗑</button>
@@ -6538,6 +6691,7 @@ const parseToElements = (text, prefixKey) => {
                                                    <option value="dialogue">💬 Діалог</option>
                                                    <option value="flashcard">🗂 Флешкартка</option>
                                                    <option value="quiz">✅ Квіз</option>
+												   <option value="true_false">⚖️ Pravda / Nepravda</option>
                                                </select>
                                                <label style={{ fontSize: '11px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Складність:</label>
                                                <select value={editDifficulty} onChange={e=>setEditDifficulty(e.target.value)} style={{ padding: '10px', borderRadius: '8px', border: 'none', background: theme.inputBg, color: theme.text, fontSize: '13px', fontWeight: 'bold', outline: 'none', cursor: 'pointer' }}>
@@ -6795,6 +6949,24 @@ const parseToElements = (text, prefixKey) => {
     </div>
 )}
 
+{/* ПЛЕЄР PRAVDA / NEPRAVDA */}
+                           {task.type === 'true_false' && task.content?.trueFalseData && (
+                               <div style={{ flex: '1 1 100%', marginBottom: '15px' }}>
+                                   <TrueFalseViewer 
+                                       task={task} 
+                                       theme={theme} 
+                                       onComplete={handleTheoryComplete} 
+                                       isSoundEnabled={isSoundEnabled} 
+                                       isAdmin={effectiveIsAdmin}
+                                       questionNode={
+                                           <div style={{ whiteSpace: 'pre-wrap' }}>
+                                               {renderContent(task.content, task)}
+                                           </div>
+                                       }
+                                   />
+                               </div>
+                           )}
+
 
 
 {/* === ЛОГІКА ДЛЯ УЧНЯ (ВВЕДЕННЯ, ПРОПУСКИ, АУДІО) === */}
@@ -6803,11 +6975,11 @@ const parseToElements = (text, prefixKey) => {
                              const hasInlineBlanks = rawText.includes('....');
                              const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
                              
-                             const isQuizOrFlashcard = task.type === 'quiz' || task.type === 'flashcard';
+                             const isInteractiveModule = task.type === 'quiz' || task.type === 'flashcard' || task.type === 'true_false';
                              const isPureTheory = !isQuizOrFlashcard && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
                              const isStandardTextInput = !isQuizOrFlashcard && !hasInlineBlanks && !!task.correct_answer && task.type !== 'dialogue';
 
-                             if (isQuizOrFlashcard) return null;
+                             if (isInteractiveModule) return null;
 
                              return (
                                <div style={{ marginTop: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
