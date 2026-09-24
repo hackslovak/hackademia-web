@@ -6976,8 +6976,8 @@ const parseToElements = (text, prefixKey) => {
                              const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
                              
                              const isInteractiveModule = task.type === 'quiz' || task.type === 'flashcard' || task.type === 'true_false';
-                             const isPureTheory = !isQuizOrFlashcard && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
-                             const isStandardTextInput = !isQuizOrFlashcard && !hasInlineBlanks && !!task.correct_answer && task.type !== 'dialogue';
+                             const isPureTheory = !isInteractiveModule && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
+                             const isStandardTextInput = !isInteractiveModule && !hasInlineBlanks && !!task.correct_answer && task.type !== 'dialogue';
 
                              if (isInteractiveModule) return null;
 
