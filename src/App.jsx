@@ -6666,8 +6666,11 @@ const parseToElements = (text, prefixKey) => {
                                                    {isVideoFile && <video controls src={cleanUrl} style={{ width: '100%', maxHeight: '200px', borderRadius: '8px', background: '#000' }} />}
                                                    
                                                    {isImage && (
-                                                       <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+                                                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px', justifyContent: 'center' }}>
                                                            <button onClick={(e) => { e.preventDefault(); startCrop(mediaUrl, editLang, true); }} className="hover-card" style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid #00C853`, background: 'rgba(0,200,83,0.1)', color: '#00C853', fontSize: '13px', fontWeight: 'bold', cursor: 'pointer' }}>✂️ Нарізати</button>
+                                                           <button onClick={(e) => { e.preventDefault(); handleOcrFromUrl(cleanUrl, true); }} disabled={isOcrRunning} className="hover-card" style={{ flex: 1, padding: '10px', borderRadius: '8px', border: `1px solid #E0A345`, background: 'rgba(224,163,69,0.1)', color: '#E0A345', fontSize: '13px', fontWeight: 'bold', cursor: isOcrRunning ? 'wait' : 'pointer', transition: '0.2s' }}>
+                                                               {isOcrRunning ? `⏳ ${ocrProgress}%` : '👁️ Зчитати текст'}
+                                                           </button>
                                                        </div>
                                                    )}
                                                </div>
