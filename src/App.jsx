@@ -6393,8 +6393,28 @@ const parseToElements = (text, prefixKey) => {
                             {taskViewMode === 'carousel' ? carouselIndex + 1 : idx + 1}
                           </div>
                           
-                          {/* ІНДИВІДУАЛЬНИЙ БЕЙДЖ КАТЕГОРІЇ ДЛЯ КОЖНОГО ЗАВДАННЯ */}
-                          <span style={{ display: 'flex', alignItems: 'center', gap: '6px', background: catData.bg, color: catData.color, padding: '6px 12px', borderRadius: '10px', fontSize: '13px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                          {/* ІНДИВІДУАЛЬНИЙ БЕЙДЖ КАТЕГОРІЇ ДЛЯ КОЖНОГО ЗАВДАННЯ (ПАСХАЛКА АДМІНА) */}
+                          <span 
+                            onClick={isAdmin ? handleBadgeClick : undefined}
+                            onDoubleClick={isAdmin ? handleBadgeDoubleClick : undefined}
+                            className={isAdmin ? "hover-card" : ""}
+                            title={isAdmin ? "Пасхалка: подвійний клік для режиму учня" : undefined}
+                            style={{ 
+                              cursor: isAdmin ? 'pointer' : 'default', 
+                              userSelect: 'none', /* Щоб текст не виділявся синім при швидкому кліку */
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '6px', 
+                              background: catData.bg, 
+                              color: catData.color, 
+                              padding: '6px 12px', 
+                              borderRadius: '10px', 
+                              fontSize: '13px', 
+                              fontWeight: '900', 
+                              textTransform: 'uppercase', 
+                              letterSpacing: '0.5px' 
+                            }}
+                          >
                             <span style={{ fontSize: '16px' }}>{catData.icon}</span> {catData.title}
                           </span>
                           
