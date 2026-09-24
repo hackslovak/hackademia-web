@@ -6565,8 +6565,8 @@ const parseToElements = (text, prefixKey) => {
 
                                        {/* Кнопка "Око" (OCR Scanner) */}
                                        <label className="hover-card" title="Зчитати текст з фото (OCR)" style={{ background: isOcrRunning ? '#E0A345' : 'transparent', border: 'none', cursor: isOcrRunning ? 'wait' : 'pointer', color: isOcrRunning ? '#fff' : theme.textSecondary, width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                           {isOcrRunning ? '⏳' : <svg width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>}
-                                           <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, true)} style={{ display: 'none' }} disabled={isOcrRunning} />
+                                           {isOcrRunning ? '⏳' : <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>}
+                                           <input type="file" accept="image/*" onChange={e => handleOcrUpload(e, false)} style={{ display: 'none' }} disabled={isOcrRunning} />
                                        </label>
                                    </div>
 
