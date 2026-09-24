@@ -6451,7 +6451,7 @@ const parseToElements = (text, prefixKey) => {
                            <div style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: '0 15px 40px rgba(224,163,69,0.15)', border: `2px solid #E0A345`, display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
                                
                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '10px', borderBottom: `1px dashed ${theme.inputBorder}`, position: 'relative' }}>
-                                   <button onClick={(e) => { e.stopPropagation(); setEditingTaskId(null); }} title="Скасувати редагування" style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '18px', zIndex: 10, padding: '4px' }}>✕</button>
+                                   {/* Хрестик прибрано, тепер кнопка скасування внизу */}
 
                                    {/* 1. ПОЛЕ УМОВИ (editContentMulti) */}
                                    {(() => {
@@ -6466,10 +6466,18 @@ const parseToElements = (text, prefixKey) => {
                                                onChange={e => {
                                                    const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
                                                    setEditContentMulti({...editContentMulti, [editLang]: combined});
+                                                   // Автоматичне розтягування по висоті
+                                                   e.target.style.height = 'auto'; 
+                                                   e.target.style.height = (e.target.scrollHeight) + 'px';
                                                }} 
-                                               rows="1" autoFocus
-                                               style={{ width: '100%', padding: '14px 35px 14px 14px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: theme.text, fontSize: '14px', outline: 'none', resize: 'none', minHeight: '45px', fontWeight: 'bold', boxSizing: 'border-box' }}
-                                               onInput={(e) => { e.target.style.height = 'auto'; e.target.style.height = (e.target.scrollHeight) + 'px'; }}
+                                               /* Динамічний реф для встановлення правильної висоти при завантаженні */
+                                               ref={(textarea) => {
+                                                   if (textarea) {
+                                                       textarea.style.height = 'auto';
+                                                       textarea.style.height = (textarea.scrollHeight) + 'px';
+                                                   }
+                                               }}
+                                               style={{ width: '100%', padding: '14px', border: 'none', background: theme.inputBg, borderRadius: '16px', color: theme.text, fontSize: '14px', outline: 'none', resize: 'none', minHeight: '50px', fontWeight: 'bold', boxSizing: 'border-box', overflow: 'hidden' }}
                                            />
                                        );
                                    })()}
@@ -6491,7 +6499,7 @@ const parseToElements = (text, prefixKey) => {
                                </div>
 
                                {/* НИЖНЯ ЧАСТИНА: ПАНЕЛЬ ІНСТРУМЕНТІВ */}
-                               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                                    <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                                        
                                        {/* Кнопка "Скріпка" для медіа */}
@@ -6562,18 +6570,24 @@ const parseToElements = (text, prefixKey) => {
                                        </label>
                                    </div>
 
-                                   <div style={{ flex: 1, padding: '0 16px', borderRadius: '16px', background: theme.inputBg, color: theme.textSecondary, fontSize: '15px', fontWeight: 'bold', userSelect: 'none', display: 'flex', alignItems: 'center', height: '40px', boxSizing: 'border-box' }}>
-                                       ✍️ Редагування завдання...
-                                   </div>
+                                   {/* КНОПКИ ЗБЕРЕЖЕННЯ ТА СКАСУВАННЯ */}
+                                   <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                       <button onClick={(e) => { 
+                                           e.stopPropagation(); 
+                                           if(window.confirm("⚠️ Ви точно хочете скасувати редагування? Всі незбережені зміни будуть втрачені.")) {
+                                               setEditingTaskId(null); 
+                                           }
+                                       }} className="hover-card" title="Скасувати редагування" style={{ background: theme.inputBg, color: theme.text, border: `1px solid ${theme.inputBorder}`, cursor: 'pointer', padding: '0 15px', height: '42px', borderRadius: '21px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s', fontWeight: 'bold', fontSize: '14px' }}>
+                                           Скасувати
+                                       </button>
 
-                                   {/* КНОПКА ЗБЕРЕЖЕННЯ */}
-                                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                                        <button onClick={() => handleSaveEdit(editingTaskId)} className="hover-card" title="Зберегти зміни" style={{ background: '#38A169', color: '#fff', border: 'none', cursor: 'pointer', padding: '0 15px', height: '42px', borderRadius: '21px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)', transition: '0.2s', fontWeight: 'bold', fontSize: '14px' }}>
                                            ✅ Зберегти
                                        </button>
                                    </div>
                                </div>
                            </div>
+
 
                            {/* 4. БЛОК ТЕЛЕГРАМ-КВІЗУ (Якщо обрано тип "Квіз") */}
                            {editTaskType === 'quiz' && (() => {
