@@ -6397,11 +6397,9 @@ const parseToElements = (text, prefixKey) => {
                           <span 
                             onClick={isAdmin ? handleBadgeClick : undefined}
                             onDoubleClick={isAdmin ? handleBadgeDoubleClick : undefined}
-                            className={isAdmin ? "hover-card" : ""}
-                            title={isAdmin ? "Пасхалка: подвійний клік для режиму учня" : undefined}
                             style={{ 
-                              cursor: isAdmin ? 'pointer' : 'default', 
-                              userSelect: 'none', /* Щоб текст не виділявся синім при швидкому кліку */
+                              cursor: 'default', /* Ніякого вказівника, повна секретність */
+                              userSelect: 'none', /* Щоб текст не виділявся синім при подвійному кліку */
                               display: 'flex', 
                               alignItems: 'center', 
                               gap: '6px', 
