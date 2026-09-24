@@ -2446,7 +2446,8 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
     const [isShaking, setIsShaking] = React.useState(false);
 
     const toggleAnswer = (idx, value) => {
-        if (isSubmitted || isAdmin) return;
+        // ПРИБРАНО ОБМЕЖЕННЯ ДЛЯ АДМІНА: Тепер адмін може "тицяти" для перевірки дизайну
+        if (isSubmitted) return; 
         setAnswers(prev => ({ ...prev, [idx]: value }));
     };
 
@@ -2470,7 +2471,7 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
     const allAnswered = Object.keys(answers).length === tfData.length;
 
     return (
-        <div className={isShaking ? 'shake-animation' : ''} style={{ background: theme.cardBg, borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, padding: '25px', marginTop: '20px', width: '100%', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
+        <div className={isShaking ? 'shake-animation' : ''} style={{ background: theme.cardBg, borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, padding: '20px 25px', marginTop: '20px', width: '100%', boxSizing: 'border-box', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             
             {questionNode && (
                 <div style={{ fontWeight: 'bold', fontSize: '16px', color: theme.text, marginBottom: '20px' }}>
@@ -2482,9 +2483,10 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 <span style={{ fontSize: '18px', fontWeight: '900', color: '#E0A345', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Pravda alebo nepravda?
                 </span>
-                <div style={{ display: 'flex', gap: '20px', paddingRight: '10px' }}>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary, width: '60px', textAlign: 'center' }}>pravda</span>
-                    <span style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary, width: '60px', textAlign: 'center' }}>nepravda</span>
+                {/* Ідеально вирівняний заголовок: задаємо фіксовану ширину колонок */}
+                <div style={{ display: 'flex', gap: '15px' }}>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, width: '50px', textAlign: 'center' }}>pravda</span>
+                    <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, width: '50px', textAlign: 'center' }}>nepravda</span>
                 </div>
             </div>
 
@@ -2498,31 +2500,30 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                     }
 
                     return (
-                        <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderRadius: '12px', background: rowBg, transition: 'all 0.2s' }}>
-                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1 }}>
+                        <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderRadius: '12px', background: rowBg, transition: 'all 0.2s' }}>
+                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, paddingRight: '15px' }}>
                                 <span style={{ fontWeight: 'bold', color: theme.textSecondary, minWidth: '20px' }}>{idx + 1}.</span>
                                 <span style={{ fontSize: '15px', color: theme.text, lineHeight: '1.4' }}>{item.text}</span>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '20px', paddingRight: '20px' }}>
-                                {/* Кнопка Pravda (True) */}
-                                <div onClick={() => toggleAnswer(idx, true)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '40px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
+                            {/* Ідеально вирівняні кнопки: та сама ширина (50px) і відступ (15px), що й у заголовку */}
+                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                <div onClick={() => toggleAnswer(idx, true)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '50px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
                                     <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${answers[idx] === true ? '#E0A345' : theme.inputBorder}`, background: answers[idx] === true ? '#E0A345' : theme.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                         {answers[idx] === true && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%' }}></div>}
                                     </div>
                                 </div>
                                 
-                                {/* Кнопка Nepravda (False) */}
-                                <div onClick={() => toggleAnswer(idx, false)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '40px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
+                                <div onClick={() => toggleAnswer(idx, false)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '50px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
                                     <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${answers[idx] === false ? '#E0A345' : theme.inputBorder}`, background: answers[idx] === false ? '#E0A345' : theme.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
                                         {answers[idx] === false && <div style={{ width: '10px', height: '10px', background: '#fff', borderRadius: '50%' }}></div>}
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Маркер правильно/неправильно після сабміту */}
+                            {/* Маркер правильно/неправильно винесено за межі сітки, щоб не зсував кружечки */}
                             {isSubmitted && (
-                                <div style={{ width: '30px', display: 'flex', justifyContent: 'flex-end', fontWeight: 'bold', fontSize: '16px' }}>
+                                <div style={{ position: 'absolute', right: '-25px', fontWeight: 'bold', fontSize: '16px' }}>
                                     {isCorrect ? <span style={{color: '#38A169'}}>✅</span> : <span style={{color: '#E53E3E'}}>❌</span>}
                                 </div>
                             )}
