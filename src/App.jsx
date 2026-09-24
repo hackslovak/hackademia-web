@@ -2490,23 +2490,26 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 {tfData.map((item, idx) => {
                     const isCorrect = answers[idx] === item.isTrue;
                     
-                    let rowBg = 'transparent';
+                    // Смугастий фон (зебра) для табличного вигляду
+                    let rowBg = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.05)' : 'transparent';
+                    let rowBorder = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.1)' : 'transparent';
+
                     if (isSubmitted) {
-                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.05)' : 'rgba(229, 62, 62, 0.05)';
+                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.08)' : 'rgba(229, 62, 62, 0.08)';
+                        rowBorder = isCorrect ? 'rgba(56, 161, 105, 0.2)' : 'rgba(229, 62, 62, 0.2)';
                     }
 
                     return (
-                        <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px', borderRadius: '12px', background: rowBg, transition: 'all 0.2s' }}>
+                        <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', borderRadius: '12px', background: rowBg, border: `1px solid ${rowBorder}`, transition: 'all 0.2s' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, paddingRight: '15px' }}>
                                 <span style={{ fontWeight: 'bold', color: theme.textSecondary, minWidth: '20px' }}>{idx + 1}.</span>
                                 <span style={{ fontSize: '15px', color: theme.text, lineHeight: '1.4' }}>{item.text}</span>
                             </div>
 
-                            {/* Ідеально вирівняні кнопки: та сама ширина (50px) і відступ (15px), що й у заголовку */}
                             <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                 <div onClick={() => toggleAnswer(idx, true)} className={!isSubmitted ? "hover-card" : ""} style={{ width: '50px', display: 'flex', justifyContent: 'center', cursor: isSubmitted ? 'default' : 'pointer' }}>
                                     <div style={{ width: '22px', height: '22px', borderRadius: '50%', border: `2px solid ${answers[idx] === true ? '#E0A345' : theme.inputBorder}`, background: answers[idx] === true ? '#E0A345' : theme.inputBg, display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}>
@@ -2521,7 +2524,6 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                                 </div>
                             </div>
 
-                            {/* Маркер правильно/неправильно винесено за межі сітки, щоб не зсував кружечки */}
                             {isSubmitted && (
                                 <div style={{ position: 'absolute', right: '-25px', fontWeight: 'bold', fontSize: '16px' }}>
                                     {isCorrect ? <span style={{color: '#38A169'}}>✅</span> : <span style={{color: '#E53E3E'}}>❌</span>}
@@ -6909,7 +6911,7 @@ const parseToElements = (text, prefixKey) => {
                          <div>
                            
 						{/* САМ КОНТЕНТ ЗАВДАННЯ */}
-                           {task.type !== 'quiz' && (
+                           {task.type !== 'quiz' && task.type !== 'true_false' && (
                                <div
                                    style={{ fontSize: '18px', lineHeight: '1.6', color: theme.text, marginBottom: '25px', whiteSpace: 'pre-wrap' }}
                                    onInput={(e) => handleInlineInput(e, task)}
