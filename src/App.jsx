@@ -2313,12 +2313,12 @@ const SmartTheoryAction = ({ task, theme, onComplete }) => {
   }, [task.id]);
 
   if (status === 'auto-completed' || mediaType === 'none') {
-     return <div style={{ marginTop: '20px', fontSize: '13px', color: '#38A169', fontWeight: 'bold', textAlign: 'center' }}>✨ Матеріал зараховано автоматично (+1 бал)</div>;
+     return <div style={{ fontSize: '13px', color: '#38A169', fontWeight: 'bold', textAlign: 'center' }}>✨ Матеріал зараховано автоматично (+1 бал)</div>;
   }
 
   if (status === 'waiting') {
      return (
-       <div style={{ marginTop: '20px', padding: '16px', borderRadius: '14px', background: theme.inputBg, color: theme.textSecondary, textAlign: 'center', fontSize: '14px', border: `1px dashed ${theme.inputBorder}`, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
+       <div style={{ padding: '16px', borderRadius: '14px', background: theme.inputBg, color: theme.textSecondary, textAlign: 'center', fontSize: '14px', border: `1px dashed ${theme.inputBorder}`, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}>
           <span style={{ animation: 'ffPulse 1.5s infinite' }}>⏳</span> 
           {mediaType === 'video' ? 'Перегляньте відео (мінімум 1 хв), щоб підтвердити...' : 'Прослухайте аудіо до кінця, щоб підтвердити...'}
        </div>
@@ -2326,7 +2326,7 @@ const SmartTheoryAction = ({ task, theme, onComplete }) => {
   }
 
   return (
-    <button onClick={() => onComplete(task)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', marginTop: '20px', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)' }}>
+    <button onClick={() => onComplete(task)} className="hover-card" style={{ background: '#38A169', color: '#fff', padding: '16px 30px', borderRadius: '14px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', boxShadow: '0 4px 15px rgba(56, 161, 105, 0.3)' }}>
       ✅ Ознайомився (+1 бал)
     </button>
   );
@@ -6810,7 +6810,7 @@ const parseToElements = (text, prefixKey) => {
                              if (isQuizOrFlashcard) return null;
 
                              return (
-                               <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+                               <div style={{ marginTop: '15px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                                  
                                  {/* 1. Текстовий інпут (НЕ показуємо, якщо є пропуски або це діалог) */}
                                  {isStandardTextInput && (
