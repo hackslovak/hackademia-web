@@ -6797,89 +6797,43 @@ const parseToElements = (text, prefixKey) => {
 
 
 
-{!effectiveIsAdmin && (!completedTasks.includes(task.id) || task.type === 'quiz') && (() => {
-                             // Аналізуємо завдання, щоб дати учню правильний інтерфейс
-                             const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
-                             const hasInlineBlanks = rawText.includes('....');
-                             const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
-                             const isTheory = task.type === 'text' || task.type === 'material' || task.type === 'dialogue';
-
-                             return (
-                               <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
-                                 
-        {/* ЛОГІКА 1: Старий текстовий формат з ручним введенням */}
-		{task.type !== 'quiz' && task.type !== 'flashcard' && task.correct_answer ? (
-            <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
-                <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} className="hover-card" style={{ flex: 1, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px', outline: 'none' }} />
-                <button onClick={() => handleAnswersSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    Відповісти
-                </button>
-            </div>
-        ) : null}
-
-                                 {/* ЛОГІКА 2: Теорія / Матеріал (Просто кнопка ознайомлення) */}
-                                 {isTheory && !requiresVoice && !hasInlineBlanks && (
-                                   <div style={{ flex: '1 1 100%' }}>
-                                     <SmartTheoryAction task={task} theme={theme} onComplete={handleTheoryComplete} />
-                                   </div>
-                                 )}
-
-                                 {/* ЛОГІКА 3: Аудіо-відповідь (Тільки якщо адмін увімкнув галочку) */}
-                                 {requiresVoice && (
-                                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: isTheory || hasInlineBlanks ? '1 1 100%' : 'auto' }}>
-                                     <button 
-                                       onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}
-                                       className="hover-card"
-                                       style={{ background: recordingTaskId === task.id ? '#E53E3E' : theme.inputBg, color: recordingTaskId === task.id ? '#fff' : theme.text, padding: '16px 24px', borderRadius: '14px', border: `1px solid ${recordingTaskId === task.id ? '#E53E3E' : theme.inputBorder}`, fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s', animation: recordingTaskId === task.id ? 'ffPulse 1.5s infinite' : 'none', flex: 1 }}
-                                     >
-                                       {recordingTaskId === task.id ? '⏹ Відправити аудіо' : '🎤 Натисніть, щоб відповісти голосом'}
-                                     </button>
-                                     {recordingTaskId === task.id && <span style={{ color: '#E53E3E', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>🔴 Запис...</span>}
-                                   </div>
-                                 )}
-
-                               </div>
-                             );
-                           })()}
-
-                           {/* СТАТУС ВИКОНАННЯ */}
+{/* === ЛОГІКА ДЛЯ УЧНЯ (ВВЕДЕННЯ, ПРОПУСКИ, АУДІО) === */}
                            {!effectiveIsAdmin && (!completedTasks.includes(task.id) || task.type === 'quiz') && (() => {
-                             // Аналізуємо завдання, щоб дати учню правильний інтерфейс
                              const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
                              const hasInlineBlanks = rawText.includes('....');
                              const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
-                             const isTheory = task.type === 'text' || task.type === 'material' || task.type === 'dialogue';
+                             
+                             // Чіткий розподіл типів завдань, щоб інтерфейси НІКОЛИ не перетиналися:
+                             const isQuizOrFlashcard = task.type === 'quiz' || task.type === 'flashcard';
+                             const isPureTheory = !isQuizOrFlashcard && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
+                             const isStandardTextInput = !isQuizOrFlashcard && !hasInlineBlanks && !!task.correct_answer;
+
+                             // Якщо це квіз або флешкартка - їхні плеєри малюються вище, тут додаткові кнопки не потрібні
+                             if (isQuizOrFlashcard) return null;
 
                              return (
                                <div style={{ marginTop: '25px', borderTop: `1px solid ${theme.inputBorder}`, paddingTop: '25px', display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
                                  
-                                 {/* ЛОГІКА 1: Старий текстовий формат (ТІЛЬКИ якщо немає пропусків і це НЕ діалог) */}
-                                 {task.type !== 'quiz' && task.type !== 'flashcard' && task.correct_answer && !hasInlineBlanks && task.type !== 'dialogue' ? (
+                                 {/* 1. Звичайний текстовий ввід (ТІЛЬКИ якщо є правильна відповідь і НЕМАЄ пропусків) */}
+                                 {isStandardTextInput && (
                                    <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px' }}>
                                      <input type="text" placeholder="Ваша текстова відповідь..." value={userAnswers[task.id] || ''} onChange={e => setUserAnswers({...userAnswers, [task.id]: e.target.value})} className="hover-card" style={{ flex: 1, padding: '12px 20px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '15px', outline: 'none' }} />
                                      <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '0 25px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                        Відповісти
                                      </button>
                                    </div>
-                                 ) : null}
+                                 )}
 
-                                 {/* ЛОГІКА 1.5: Кнопка перевірки інлайн-пропусків (Для діалогів і текстів з ....) */}
+                                 {/* 2. Кнопка перевірки пропусків (ТІЛЬКИ якщо в тексті є "....") */}
                                  {hasInlineBlanks && (
                                    <button onClick={() => handleAnswerSubmit(task)} className="hover-card" style={{ background: '#E0A345', color: '#fff', padding: '14px 25px', borderRadius: '12px', border: 'none', fontWeight: 'bold', cursor: 'pointer', fontSize: '15px', width: '100%', display: 'flex', justifyContent: 'center' }}>
                                       🔍 Перевірити пропуски
                                    </button>
                                  )}
 
-                                 {/* ЛОГІКА 2: Теорія / Матеріал (Просто кнопка ознайомлення, якщо немає пропусків і правильних відповідей) */}
-                                 {isTheory && !requiresVoice && !hasInlineBlanks && !task.correct_answer && (
-                                   <div style={{ flex: '1 1 100%' }}>
-                                     <SmartTheoryAction task={task} theme={theme} onComplete={handleTheoryComplete} />
-                                   </div>
-                                 )}
-
-                                 {/* ЛОГІКА 3: Аудіо-відповідь (Тільки якщо адмін увімкнув галочку) */}
+                                 {/* 3. Голосова відповідь (ТІЛЬКИ якщо стоїть галочка "Запит аудіо") */}
                                  {requiresVoice && (
-                                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: isTheory || hasInlineBlanks ? '1 1 100%' : 'auto' }}>
+                                   <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: '1 1 100%' }}>
                                      <button 
                                        onClick={() => recordingTaskId === task.id ? stopStudentRecording() : startStudentRecording(task.id)}
                                        className="hover-card"
@@ -6888,6 +6842,13 @@ const parseToElements = (text, prefixKey) => {
                                        {recordingTaskId === task.id ? '⏹ Відправити аудіо' : '🎤 Натисніть, щоб відповісти голосом'}
                                      </button>
                                      {recordingTaskId === task.id && <span style={{ color: '#E53E3E', fontWeight: 'bold', fontSize: '14px', whiteSpace: 'nowrap' }}>🔴 Запис...</span>}
+                                   </div>
+                                 )}
+
+                                 {/* 4. Теорія / Відео (ТІЛЬКИ якщо немає правильної відповіді, немає пропусків і немає запиту аудіо) */}
+                                 {isPureTheory && (
+                                   <div style={{ flex: '1 1 100%' }}>
+                                     <SmartTheoryAction task={task} theme={theme} onComplete={handleTheoryComplete} />
                                    </div>
                                  )}
 
@@ -6897,13 +6858,12 @@ const parseToElements = (text, prefixKey) => {
 
                            {/* СТАТУС ВИКОНАННЯ */}
                            {!effectiveIsAdmin && completedTasks.includes(task.id) && task.type !== 'quiz' && (() => {
-                               // Перевіряємо, чи це проста теорія без жодного інтерактиву
                                const rawText = typeof task.content === 'object' && task.content !== null ? (task.content.exercise || task.content[lang] || task.content.uk || '') : (task.content || '');
                                const hasInlineBlanks = rawText.includes('....');
                                const requiresVoice = typeof task.content === 'object' && task.content !== null && task.content.requiresVoice === true;
-                               const isPureTheory = (task.type === 'text' || task.type === 'material' || task.type === 'dialogue') && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
+                               const isPureTheory = task.type !== 'flashcard' && !requiresVoice && !hasInlineBlanks && !task.correct_answer;
 
-                               // Якщо це просто матеріал для перегляду — ховаємо зелену плашку
+                               // Якщо це проста теорія - плашка виконання не потрібна (щоб не засмічувати екран)
                                if (isPureTheory) return null; 
 
                                return (
@@ -6912,9 +6872,6 @@ const parseToElements = (text, prefixKey) => {
                                  </div>
                                );
                            })()}
-                         </div>
-                      )}
-                    </div>
 
     {/* 2. ІНТЕРАКТИВНА ЛІНІЯ ТА ІНЛАЙН-РЕДАКТОР (Тільки МІЖ завданнями, не після останнього) */}
             {effectiveIsAdmin && idx < filteredTasks.length - 1 && (
