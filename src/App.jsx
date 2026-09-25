@@ -5635,24 +5635,29 @@ function renderContent(taskContent, currentTask = null) {
             const safeTask = currentTask || { id: 'gen', correct_answer: '' };
             const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
+            // === ПОЧАТОК БЛОКУ ПРОПУСКІВ ===
+            // ВАЖЛИВО: Локальний лічильник гарантує, що HTML-рядок буде ідентичним при кожному рендері!
+            let localBlankCounter = -1;
+            
             html = html.replace(/\.{4,}/g, () => {
-              inlineCounter++;
-              const safeTask = currentTask || { id: 'gen', correct_answer: '' };
+              localBlankCounter++;
+              // Беремо task з аргументів renderContent
+              const safeTask = task || { id: 'gen', correct_answer: '' };
               const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
-              const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
+              const correctVal = correctAnswersRaw[localBlankCounter] ? correctAnswersRaw[localBlankCounter].trim() : '';
               
               const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
               const cleanCorrect = normalize(correctVal);
 
-              // ВАЖЛИВО: Робимо рядок статичним (не читаємо localStorage при генерації HTML)
-              let extraAttrs = `data-index="${inlineCounter}" data-task-id="${safeTask.id}" data-correct="${cleanCorrect.replace(/"/g, '&quot;')}"`;
+              // Рядок абсолютно статичний: жодних localStorage всередині!
+              let extraAttrs = `data-index="${localBlankCounter}" data-task-id="${safeTask.id}" data-correct="${cleanCorrect.replace(/"/g, '&quot;')}"`;
               let inlineStyle = `width: 1.1em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
 
               const stopReact = "event.stopPropagation();";
               const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
               
               const updateLogic = `
-                  localStorage.setItem('task_${safeTask.id}_${inlineCounter}', this.value); 
+                  localStorage.setItem('task_${safeTask.id}_${localBlankCounter}', this.value); 
                   this.setAttribute('value', this.value); 
                   this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
                   this.classList.remove('error-flash', 'success-flash', 'solved'); 
@@ -5665,26 +5670,16 @@ function renderContent(taskContent, currentTask = null) {
                           this.classList.add('solved', 'success-flash');
                           this.style.width = 'auto'; 
                           if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
-                          this.blur(); // АВТОМАТИЧНО ЗНІМАЄ ФОКУС ПРИ ПРАВИЛЬНІЙ ВІДПОВІДІ
+                          this.blur(); 
                       }
                   }
               `.replace(/\n/g, ' ');
 
-              // Завжди повертаємо value="" щоб React не перемальовував DOM
               return `<input type="text" class="inline-blank-input" placeholder="..." value="" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
             });
+            // === КІНЕЦЬ БЛОКУ ПРОПУСКІВ ===
 
-            const palettes = [
-              'linear-gradient(135deg, #E0A345 0%, #D69E2E 100%)', 
-              'linear-gradient(135deg, #48BB78 0%, #38A169 100%)', 
-              'linear-gradient(135deg, #4299E1 0%, #3182ce 100%)', 
-              'linear-gradient(135deg, #9F7AEA 0%, #805AD5 100%)'  
-            ];
-            let speakers = [];
-            let currentPaletteIndex = 0;
-            let normalizedText = html.replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/p>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<p[^>]*>/gi, '').replace(/<div[^>]*>/gi, '').replace(/&nbsp;/g, ' ');
-            let lines = normalizedText.split('\n');
-            
+            // Таймер для безпечного відновлення тексту без конфліктів із React
             setTimeout(() => {
                 document.querySelectorAll('.inline-blank-input').forEach(input => {
                     // НАЙГОЛОВНІШЕ: НЕ ЧІПАТИ ІНПУТ, В ЯКОМУ ЗАРАЗ ДРУКУЮТЬ!
