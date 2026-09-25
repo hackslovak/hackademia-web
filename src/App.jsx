@@ -2092,7 +2092,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
       const sel = window.getSelection();
       if (sel.rangeCount && sel.focusNode) {
           let textBeforeCursor = sel.focusNode.textContent.substring(0, sel.focusOffset);
-          const listMatch = textBeforeCursor.match(/^(\s*)(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)$/u);
+          const listMatch = textBeforeCursor.match(/^(\s*)(\d+[\.\)]|[-*•\+]|[\p{Emoji}\p{Extended_Pictographic}\uFE0F\u200D]+)\s+(.*)$/u);
 
           if (listMatch) {
               const indent = listMatch[1] || '';
@@ -3034,7 +3034,7 @@ function Platform() {
             const currentLine = value.substring(lineStart, start);
 
             // Шукаємо маркер списку на поточному рядку (цифри, буліти або емоджі)
-            const listMatch = currentLine.match(/^(\s*)(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)$/u);
+            const listMatch = currentLine.match(/^(\s*)(\d+[\.\)]|[-*•\+]|[\p{Emoji}\p{Extended_Pictographic}\uFE0F\u200D]+)\s+(.*)$/u);
 
             if (listMatch) {
                 const indent = listMatch[1] || '';
@@ -5722,7 +5722,7 @@ function renderContent(taskContent, currentTask = null) {
               
               // === НОВА ЛОГІКА ДЛЯ СПИСКІВ ===
               // Ловить цифри (1., 2)), буліти (-, *), емоджі (✅) та спецсимволи. Прапор 'u' важливий!
-              const listMatch = cleanLineForMatch.match(/^(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)/u);
+              const listMatch = cleanLineForMatch.match(/^(\d+[\.\)]|[-*•\+]|[\p{Emoji}\p{Extended_Pictographic}\uFE0F\u200D]+)\s+(.*)/u);
               
               if (speakerMatch) {
                 if (!inContainer) {
