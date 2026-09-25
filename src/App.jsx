@@ -1933,6 +1933,83 @@ const FormatToolbar = ({ theme }) => (
   </div>
 );
 
+// === ТЕЛЕГРАМ EMOJI ПІКЕР ===
+const TelegramEmojiPicker = ({ onSelect, theme }) => {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const pickerRef = React.useRef(null);
+    
+    const EMOJIS = [
+        "😀","😃","😄","😁","😅","😂","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","😣","😖","😫","😩","🥺","😢","😭","😤","😠","😡","🤬","🤯","😳","🥵","🥶","😱","😨","😰","😥","😓","🤔","🤭","🤫","🤥","😶","😐","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","👽","👾","🤖","🎃",
+        "👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","🖕","👇","☝️","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪",
+        "🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🐢","🐍","🦎","🦖","🦕","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🐘","🦛","🦏","🐪","🐫","🦒","🦘","🐃","🐂","🐄","🐎","🐖","🐏","🐑","🐐","🦌","🐕","🐈","🐓","🦃","🦚","🦜","🦢","🕊","🐇","🦝","🦨","🦡","🦦","🦥","🐁","🐀","🐿","🦔","🐾","🐉","🐲",
+        "🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍈","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥬","🥒","🌶","🌽","🥕","🧄","🧅","🥔","🍠","🥐","🥯","🍞","🥖","🥨","🧀","🥚","🍳","🧈","🥞","🧇","🥓","🥩","🍗","🍖","🌭","🍔","🍟","🍕","🥪","🥙","🧆","🌮","🌯","🥗","🥘","🥫","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🍤","🍙","🍚","🍘","🍥","🥠","🥮","🍢","🍡","🍧","🍨","🍦","🥧","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🌰","🥜","🍯","🥛","🍼","☕️","🍵","🧃","🥤","🧋","🍶","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧉","🍾","🧊",
+        "⚽️","🏀","🏈","⚾️","🥎","🎾","🏐","🏉","🥏","🎱","🪀","🏓","🏸","🏒","🏑","🥍","🏏","🪃","🥅","⛳️","🪁","🏹","🎣","🤿","🥊","🥋","🎽","🛹","🛼","🛷","⛸","🥌","🎿","⛷","🏂","🪂","🏋️","🤼","🤸","⛹️","🤺","🤾","🏌️","🏇","🧘","🏄","🏊","🤽","🚣","🧗","🚵","🚴","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎫","🎟","🎪","🤹","🎭","🩰","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🪕","🎻","🎲","♟","🎯","🎳","🎮","🎰","🧩",
+        "🚗","🚕","🚙","🚌","🚎","🏎","🚓","🚑","🚒","🚐","🛻","🚚","🚛","🚜","🛴","🚲","🛵","🏍","🚨","🚔","🚍","🚘","🚖","✈️","🛫","🛬","🛩","🚀","🛸","🚁","🛶","⛵️","🚤","🛥","🛳","⛴","🚢","⚓️","⛽️","🚧","🚦","🚥","🗺","🗿","🗽","🗼","🏰","🏯","🏟","🎡","🎢","🎠","⛲️","⛱","🏖","🏝","🏜","🌋","⛰","🏔","🗻","🏕","⛺️","🛖","🏠","🏡","🏘","🏚","🏗","🏭","🏢","🏬","🏣","🏤","🏥","🏦","🏨","🏪","🏫","🏩","💒","🏛","⛪️","🕌","🕍","🛕","🕋","⛩",
+        "⌚️","📱","📲","💻","⌨️","🖥","🖨","🖱","🖲","🕹","💽","💾","💿","📀","📼","📷","📸","📹","🎥","📽","🎞","📞","☎️","📟","📠","📺","📻","🎙","🎚","🎛","🧭","⏱","⏲","⏰","🕰","⌛️","⏳","📡","🔋","🔌","💡","🔦","🕯","🪔","🧯","🛢","💸","💵","💴","💶","💷","🪙","💰","💳","💎","⚖️","🪜","🧰","🪛","🔧","🔨","⚒","🛠","⛏","🪚","🔩","⚙️","🧱","⛓","🧲","🔫","💣","🧨","🪓","🔪","🗡","⚔️","🛡","🚬","⚰️","🪦","⚱️","🏺","🔮","📿","🧿","💈","⚗️","🔭","🔬","🕳","🩹","🩺","💊","💉","🩸","🧬","🦠","🧫","🧪","🌡","🧹","🪠","🧺","🧻","🚽","🚰","🚿","🛁","🛀","🧼","🪥","🪒","🧽","🪣","🧴","🛎","🔑","🗝","🚪","🪑","🛋","🛏","🛌","🧸","🖼","🪞","🪟","🛍","🛒","🎁","🎈","🎏","🎀","🪄","🪅","🎊","🎉","🎎","🏮","🎐","🧧","✉️","📩","📨","📧","💌","📥","📤","📦","🏷","🪧","📪","📫","📬","📭","📮","📯","📜","📃","📄","📑","🧾","📊","📈","📉","🗒","🗓","📆","📅","🗑","📇","🗃","🗳","🗄","📋","📁","📂","🗂","🗞","📰","📓","📔","📒","📕","📗","📘","📙","📚","📖","🔖","🧷","🔗","📎","🖇","📐","📏","🧮","📌","📍","✂️","🖊","🖋","✒️","🖌","🖍","📝","✏️","🔍","🔎","🔏","🔐","🔒","🔓",
+        "❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❣️","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☸️","✡️","🔯","🕎","☯️","☦️","🛐","⛎","♈️","♉️","♊️","♋️","♌️","♍️","♎️","♏️","♐️","♑️","♒️","♓️","🆔","⚛️","🉑","☢️","☣️","📴","📳","🈶","🈚️","🈸","🈺","🈷️","✴️","🆚","💮","🉐","㊙️","㊗️","🈴","🈵","🈹","🈲","🅰️","🅱️","🆎","🆑","🅾️","🆘","❌","⭕️","🛑","⛔️","📛","🚫","💯","💢","♨️","🚷","🚯","🚳","🚱","🔞","📵","🚭","❗️","❕","❓","❔","‼️","⁉️","🔅","🔆","〽️","⚠️","🚸","🔱","⚜️","🔰","♻️","✅","🈯️","💹","❇️","✳️","❎","🌐","💠","Ⓜ️","🌀","💤","🏧","🚾","♿️","🅿️","🛗","🈳","🈂️","🛂","🛃","🛄","🛅","🚹","🚺","🚼","⚧","🚻","🚮","🎦","📶","🈁","🔣","ℹ️","🔤","🔡","🔠","🆖","🆗","🆙","🆒","🆕","🆓","0️⃣","1️⃣","2️⃣","3️⃣","4️⃣","5️⃣","6️⃣","7️⃣","8️⃣","9️⃣","🔟","🔢","#️⃣","*️⃣","⏏️","▶️","⏸","⏯","⏹","⏺","⏭","⏮","⏩","⏪","⏫","⏬","◀️","🔼","🔽","➡️","⬅️","⬆️","⬇️","↗️","↘️","↙️","↖️","↕️","↔️","↪️","↩️","⤴️","⤵️","🔀","🔁","🔂","🔄","🔃","🎵","🎶","➕","➖","➗","✖️","♾","💲","💱","™️","©️","®️","〰️","➰","➿","🔚","🔙","🔛","🔝","🔜","✔️","☑️","🔘","🔴","🟠","🟡","🟢","🔵","🟣","⚫️","⚪️","🟤","🔺","🔻","🔸","🔹","🔶","🟦","🟫","⬛️","⬜️","◼️","◻️","◾️","◽️","▪️","▫️",
+        "🟢","🟡","🔴","🔵","✅","❌","⚠️","💡","🔥","⭐️","📌","📍","✏️","📝","📖","🎓","🏆","🎯","💰","⚙️","🛠","🔍","📢"
+    ];
+
+    React.useEffect(() => {
+        const handleClickOutside = (e) => {
+            if (pickerRef.current && !pickerRef.current.contains(e.target)) setIsOpen(false);
+        };
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    return (
+        <div ref={pickerRef} style={{ position: 'absolute', top: '10px', right: '10px', zIndex: 100 }}>
+            <button
+                onMouseDown={(e) => { e.preventDefault(); setIsOpen(!isOpen); }}
+                onClick={(e) => e.preventDefault()}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '22px', padding: '4px', opacity: isOpen ? 1 : 0.4, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                onMouseEnter={e => e.currentTarget.style.opacity = 1}
+                onMouseLeave={e => !isOpen && (e.currentTarget.style.opacity = 0.4)}
+                title="Емодзі"
+            >
+                🙂
+            </button>
+            
+            {isOpen && (
+                <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    width: '280px',
+                    height: '240px',
+                    background: theme?.cardBg || '#fff',
+                    border: `1px solid ${theme?.inputBorder || '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.15)',
+                    padding: '10px',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(8, 1fr)',
+                    gridAutoRows: 'max-content',
+                    gap: '6px',
+                    overflowY: 'auto',
+                    marginTop: '8px',
+                    animation: 'fadeInDown 0.15s ease'
+                }}>
+                    {EMOJIS.map((emoji, i) => (
+                        <button
+                            key={i}
+                            onMouseDown={(e) => { e.preventDefault(); onSelect(emoji); setIsOpen(false); }}
+                            onClick={(e) => e.preventDefault()}
+                            style={{ background: 'transparent', border: 'none', cursor: 'pointer', fontSize: '20px', padding: '4px 0', borderRadius: '6px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.1s' }}
+                            onMouseEnter={e => e.currentTarget.style.background = 'rgba(0,0,0,0.06)'}
+                            onMouseLeave={e => e.currentTarget.style.background = 'transparent'}
+                        >
+                            {emoji}
+                        </button>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+// === ВАШ ОНОВЛЕНИЙ WYSIWYGEditor ===
 const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const editorRef = React.useRef(null);
   const isInternalChange = React.useRef(false);
@@ -1954,7 +2031,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (!isInternalChange.current && editorRef.current && document.activeElement !== editorRef.current) {
         let cleanVal = value || '';
         
-        // МАГІЯ: Перетворюємо збережені текстові теги [cols] на красиві візуальні колонки всередині редактора
         cleanVal = cleanVal.replace(/\[cols(?:[:=](\d+))?\](?:<br\s*\/?>|\n)*([\s\S]*?)(?:<br\s*\/?>|\n)*\[\/cols\]/gi, (match, cols, content) => {
             const count = cols ? cols : 2;
             return `<div class="editor-columns" data-cols="${count}" style="column-count: ${count}; column-gap: 20px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${content}</div>`;
@@ -1983,7 +2059,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const handleInput = () => {
     isInternalChange.current = true;
     
-    // МАГІЯ: Перетворюємо візуальні колонки назад на теги для безпечного збереження в базу
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = editorRef.current.innerHTML;
     
@@ -1992,7 +2067,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         const cols = div.getAttribute('data-cols') || '2';
         const colTag = cols === '2' ? '[cols]' : `[cols:${cols}]`;
         let inner = div.innerHTML;
-        // Зачищаємо зайві <br> на початку та в кінці колонок
         inner = inner.replace(/^(?:<br\s*\/?>\s*)+/, '').replace(/(?:<br\s*\/?>\s*)+$/, '');
         div.outerHTML = `${colTag}<br>${inner}<br>[/cols]`;
     });
@@ -2182,6 +2256,13 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   return (
     <div style={{ position: 'relative' }}>
       
+      {/* КНОПКА ЕМОДЗІ (ТЕЛЕГРАМ СТИЛЬ) */}
+      <TelegramEmojiPicker theme={theme} onSelect={(emoji) => {
+          editorRef.current.focus();
+          document.execCommand('insertText', false, emoji);
+          handleInput();
+      }} />
+
       {isEditorEmpty() && (
           <div style={{
               position: 'absolute',
@@ -2255,7 +2336,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                 </div>
             </div>
 
-            {/* МЕНЮ: КОЛОНКИ ТА ЇХ ВИДАЛЕННЯ */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>◫</span> Розбити на колонки</span><span className="tg-menu-hotkey">▶</span>
                 <div className="tg-submenu" style={{ minWidth: '180px', ...submenuStyle }}>
