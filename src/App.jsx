@@ -5711,6 +5711,11 @@ function renderContent(taskContent, currentTask = null) {
             
             // ВІДНОВЛЕНО: Розбиваємо текст на рядки, щоб цикл міг їх прочитати
             const lines = String(html).split('\n');
+            
+            // ВІДНОВЛЕНО: Змінні для збереження імен спікерів та кольорів діалогів
+            let speakers = [];
+            let currentPaletteIndex = 0;
+            const palettes = ['#E0A345', '#4A5568', '#38A169', '#3182ce', '#805AD5', '#E53E3E'];
 
             for (let j = 0; j < lines.length; j++) {
               let line = lines[j].trim();
