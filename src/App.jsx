@@ -5636,46 +5636,59 @@ function renderContent(taskContent, currentTask = null) {
             const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
 
             // === ПОЧАТОК БЛОКУ ПРОПУСКІВ ===
-            // ВАЖЛИВО: Локальний лічильник гарантує, що HTML-рядок буде ідентичним при кожному рендері!
             let localBlankCounter = -1;
-            
             html = html.replace(/\.{4,}/g, () => {
-              localBlankCounter++;
-              // Беремо task з аргументів renderContent
-              const safeTask = currentTask || { id: 'gen', correct_answer: '' };
-              const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
-              const correctVal = correctAnswersRaw[localBlankCounter] ? correctAnswersRaw[localBlankCounter].trim() : '';
-              
-              const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
-              const cleanCorrect = normalize(correctVal);
+                localBlankCounter++;
+                const safeTask = currentTask || { id: 'gen', correct_answer: '' };
+                const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
+                const correctVal = correctAnswersRaw[localBlankCounter] ? correctAnswersRaw[localBlankCounter].trim() : '';
+                
+                const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
+                const cleanCorrect = normalize(correctVal);
 
-              // Рядок абсолютно статичний: жодних localStorage всередині!
-              let extraAttrs = `data-index="${localBlankCounter}" data-task-id="${safeTask.id}" data-correct="${cleanCorrect.replace(/"/g, '&quot;')}"`;
-              let inlineStyle = `width: 1.1em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
+                // МАГІЯ: Читаємо збережене значення. 
+                // Воно НЕ оновлюється під час друку, тому React не бачить змін і не збиває фокус!
+                const savedVal = typeof localStorage !== 'undefined' ? (localStorage.getItem(`task_${safeTask.id}_${localBlankCounter}`) || '') : '';
+                
+                let extraClasses = 'inline-blank-input';
+                let finalWidth = ((Math.max(savedVal.length, 1) * 0.6) + 0.5) + 'em';
 
-              const stopReact = "event.stopPropagation();";
-              const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
-              
-              const updateLogic = `
-                  localStorage.setItem('task_${safeTask.id}_${localBlankCounter}', this.value); 
-                  this.setAttribute('value', this.value); 
-                  this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
-                  this.classList.remove('error-flash', 'success-flash', 'solved'); 
-                  
-                  if ('${safeCorrect}' !== '') {
-                      const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
-                      const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
-                      
-                      if (studentText !== '' && studentText === correctText) {
-                          this.classList.add('solved', 'success-flash');
-                          this.style.width = 'auto'; 
-                          if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
-                          this.blur(); 
-                      }
-                  }
-              `.replace(/\n/g, ' ');
+                // Якщо значення правильне, одразу малюємо його зеленим і без рамок (Жодних затримок!)
+                if (savedVal && cleanCorrect !== '' && normalize(savedVal) === cleanCorrect) {
+                    extraClasses += ' solved';
+                    finalWidth = 'auto';
+                }
 
-              return `<input type="text" class="inline-blank-input" placeholder="..." value="" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
+                let inlineStyle = `width: ${finalWidth}; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
+                let extraAttrs = `data-index="${localBlankCounter}" data-task-id="${safeTask.id}" data-correct="${cleanCorrect.replace(/"/g, '&quot;')}"`;
+
+                const stopReact = "event.stopPropagation();";
+                const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
+                
+                // onInput: міняє розмір і перевіряє правильність, але НЕ зберігає в пам'ять фоном
+                const updateLogic = `
+                    this.setAttribute('value', this.value); 
+                    this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
+                    this.classList.remove('error-flash', 'success-flash', 'solved'); 
+                    
+                    if ('${safeCorrect}' !== '') {
+                        const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+                        const correctText = '${safeCorrect}'.toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
+                        
+                        if (studentText !== '' && studentText === correctText) {
+                            this.classList.add('solved', 'success-flash');
+                            this.style.width = 'auto'; 
+                            if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+                            localStorage.setItem('task_${safeTask.id}_${localBlankCounter}', this.value);
+                            this.blur(); 
+                        }
+                    }
+                `.replace(/\n/g, ' ');
+
+                // onBlur: зберігає значення при кліку поза полем. Наступний рендер підхопить його ідеально.
+                const blurLogic = `localStorage.setItem('task_${safeTask.id}_${localBlankCounter}', this.value);`;
+
+                return `<input type="text" class="${extraClasses}" placeholder="..." value="${savedVal.replace(/"/g, '&quot;')}" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onblur="${blurLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
             });
             // === КІНЕЦЬ БЛОКУ ПРОПУСКІВ ===
 
