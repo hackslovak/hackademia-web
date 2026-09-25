@@ -2828,7 +2828,57 @@ function Platform() {
         }
     };
 
-    const applyColumns = (cols) => {
+    const handleTextareaKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            const target = e.target;
+            const start = target.selectionStart;
+            
+            const value = target.value;
+            const lineStart = value.lastIndexOf('\n', start - 1) + 1;
+            const currentLine = value.substring(lineStart, start);
+
+            // Шукаємо маркер списку на поточному рядку (цифри, буліти або емоджі)
+            const listMatch = currentLine.match(/^(\s*)(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)$/u);
+
+            if (listMatch) {
+                const indent = listMatch[1] || '';
+                const marker = listMatch[2];
+                const textAfterMarker = listMatch[3];
+
+                // Якщо текст після маркера порожній (користувач двічі натиснув Enter), стираємо маркер (вихід зі списку)
+                if (textAfterMarker.trim() === '') {
+                    e.preventDefault();
+                    // Заміняємо весь порожній рядок з маркером на просто новий рядок
+                    target.setRangeText('\n', lineStart, start, 'end');
+                    const event = new Event('input', { bubbles: true });
+                    target.dispatchEvent(event);
+                    return;
+                }
+
+                // Якщо текст є, продовжуємо список
+                e.preventDefault();
+                let nextMarker = marker;
+
+                // Якщо це нумерація (наприклад 1. або 2)), збільшуємо цифру на 1
+                const numMatch = marker.match(/^(\d+)([\.\)])$/);
+                if (numMatch) {
+                    const nextNum = parseInt(numMatch[1], 10) + 1;
+                    nextMarker = nextNum + numMatch[2];
+                }
+
+                const insertText = `\n${indent}${nextMarker} `;
+                
+                // Використовуємо setRangeText, щоб зберегти можливість скасувати дію (Undo/Ctrl+Z)
+                target.setRangeText(insertText, start, target.selectionEnd, 'end');
+                
+                // Тригеримо оновлення React-стану
+                const event = new Event('input', { bubbles: true });
+                target.dispatchEvent(event);
+            }
+        }
+    };
+	
+	const applyColumns = (cols) => {
         const { target, start, end } = colMenu;
         if (!target) return;
         
@@ -4347,7 +4397,8 @@ useEffect(() => {
                                 placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
                                 value={cleanText}
 								onContextMenu={handleTextareaContextMenu} 
-                                onChange={e => {
+                                onKeyDown={handleTextareaKeyDown}
+								onChange={e => {
                                     const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
                                     setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
                                 }} 
@@ -6757,7 +6808,8 @@ function renderContent(taskContent, currentTask = null) {
                                                placeholder={`Умова завдання (${editLang.toUpperCase()})...`} 
                                                value={cleanText}
 											   onContextMenu={handleTextareaContextMenu} 
-                                               onChange={e => {
+                                               onKeyDown={handleTextareaKeyDown}
+											   onChange={e => {
                                                    const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
                                                    setEditContentMulti({...editContentMulti, [editLang]: combined});
                                                    // Автоматичне розтягування по висоті
