@@ -5642,7 +5642,7 @@ function renderContent(taskContent, currentTask = null) {
             html = html.replace(/\.{4,}/g, () => {
               localBlankCounter++;
               // Беремо task з аргументів renderContent
-              const safeTask = task || { id: 'gen', correct_answer: '' };
+              const safeTask = currentTask || { id: 'gen', correct_answer: '' };
               const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
               const correctVal = correctAnswersRaw[localBlankCounter] ? correctAnswersRaw[localBlankCounter].trim() : '';
               
