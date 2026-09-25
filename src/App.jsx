@@ -5630,35 +5630,25 @@ function renderContent(taskContent, currentTask = null) {
 
             html = html.replace(/\.{4,}/g, () => {
               inlineCounter++;
-              const cacheKey = `task_${safeTask.id}_${inlineCounter}`;
-              const savedVal = localStorage.getItem(cacheKey) || '';
+              const safeTask = currentTask || { id: 'gen', correct_answer: '' };
+              const correctAnswersRaw = (safeTask.correct_answer || '').split(/[,;]/).map(s => s.trim());
               const correctVal = correctAnswersRaw[inlineCounter] ? correctAnswersRaw[inlineCounter].trim() : '';
               
               const normalize = (str) => typeof normalizeSlovak === 'function' ? normalizeSlovak(str.toLowerCase().trim()) : str.toLowerCase().trim();
-              const cleanSaved = normalize(savedVal);
               const cleanCorrect = normalize(correctVal);
 
-              let extraClasses = '';
-              let extraAttrs = `data-index="${inlineCounter}" data-task-id="${safeTask.id}"`;
-              const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
-              
-              // ДОДАНО: pointer-events та user-select для гарантованого активного фокусу
-              let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
+              // ВАЖЛИВО: Робимо рядок статичним (не читаємо localStorage при генерації HTML)
+              let extraAttrs = `data-index="${inlineCounter}" data-task-id="${safeTask.id}" data-correct="${cleanCorrect.replace(/"/g, '&quot;')}"`;
+              let inlineStyle = `width: 1.1em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
 
-              if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
-                  extraClasses = 'solved';
-              }
-
-              // ДОДАНО: Щит від перемальовки React-ом при кліку
               const stopReact = "event.stopPropagation();";
               const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
               
               const updateLogic = `
-                  localStorage.setItem('${cacheKey}', this.value); 
+                  localStorage.setItem('task_${safeTask.id}_${inlineCounter}', this.value); 
                   this.setAttribute('value', this.value); 
                   this.style.width = ((Math.max(this.value.length, 1) * 0.6) + 0.5) + 'em'; 
                   this.classList.remove('error-flash', 'success-flash', 'solved'); 
-                  void this.offsetWidth;
                   
                   if ('${safeCorrect}' !== '') {
                       const studentText = this.value.trim().toLowerCase().replace(/[áäàâãå]/g,'a').replace(/[čç]/g,'c').replace(/[ď]/g,'d').replace(/[éěëêè]/g,'e').replace(/[íîïì]/g,'i').replace(/[ĺľ]/g,'l').replace(/[ňń]/g,'n').replace(/[óôöõòø]/g,'o').replace(/[ŕ]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůüûù]/g,'u').replace(/[ýÿ]/g,'y').replace(/[žźż]/g,'z');
@@ -5668,12 +5658,13 @@ function renderContent(taskContent, currentTask = null) {
                           this.classList.add('solved', 'success-flash');
                           this.style.width = 'auto'; 
                           if (typeof window.hackPlaySound === 'function') window.hackPlaySound('ding');
+                          this.blur(); // АВТОМАТИЧНО ЗНІМАЄ ФОКУС ПРИ ПРАВИЛЬНІЙ ВІДПОВІДІ
                       }
                   }
               `.replace(/\n/g, ' ');
 
-              // ДОДАНО: onclick, onmousedown, onmouseup з викликом stopReact
-              return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
+              // Завжди повертаємо value="" щоб React не перемальовував DOM
+              return `<input type="text" class="inline-blank-input" placeholder="..." value="" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
             });
 
             const palettes = [
@@ -5689,6 +5680,9 @@ function renderContent(taskContent, currentTask = null) {
             
             setTimeout(() => {
                 document.querySelectorAll('.inline-blank-input').forEach(input => {
+                    // НАЙГОЛОВНІШЕ: НЕ ЧІПАТИ ІНПУТ, В ЯКОМУ ЗАРАЗ ДРУКУЮТЬ!
+                    if (document.activeElement === input) return; 
+
                     const tId = input.getAttribute('data-task-id');
                     const idx = input.getAttribute('data-index');
                     const cleanCorrect = input.getAttribute('data-correct');
