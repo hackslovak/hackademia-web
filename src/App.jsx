@@ -5751,13 +5751,17 @@ function renderContent(taskContent, currentTask = null) {
                 }
 
                 const speakerIndex = speakers.indexOf(name);
-                const isRight = speakerIndex % 2 !== 0; // Кожен другий спікер буде праворуч
+                const isRight = speakerIndex % 2 !== 0; 
                 
-                // Інлайн-стилі для красивих бульбашок (як у Telegram)
-                const color = isRight ? '#E0A345' : '#4A5568';
-                const bg = isRight ? 'rgba(224, 163, 69, 0.12)' : 'rgba(74, 85, 104, 0.06)';
+                // Відновлюємо яскраві кольори з палітри
+                const paletteColor = palettes[currentPaletteIndex];
                 
-                resultHtml += `<div style="display: flex; flex-direction: ${isRight ? 'row-reverse' : 'row'}; margin-bottom: 12px; width: 100%;"><div style="background: ${bg}; padding: 10px 16px; border-radius: 16px; border-bottom-${isRight ? 'right' : 'left'}-radius: 4px; font-size: 16px; color: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.02); max-width: 85%; position: relative; line-height: 1.5;"><div style="font-weight: bold; font-size: 11px; color: ${color}; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 4px;">${name}</div>${textAfterColon}`;
+                // Якщо правий - беремо колір з палітри, якщо лівий - стандартний
+                const textColor = isRight ? '#fff' : 'inherit';
+                const bg = isRight ? paletteColor : 'rgba(74, 85, 104, 0.06)';
+                const nameColor = isRight ? 'rgba(255, 255, 255, 0.8)' : '#4A5568';
+                
+                resultHtml += `<div style="display: flex; flex-direction: ${isRight ? 'row-reverse' : 'row'}; margin-bottom: 12px; width: 100%;"><div style="background: ${bg}; padding: 10px 16px; border-radius: 16px; border-bottom-${isRight ? 'right' : 'left'}-radius: 4px; font-size: 16px; color: ${textColor}; box-shadow: 0 2px 10px rgba(0,0,0,0.02); max-width: 85%; position: relative; line-height: 1.5;"><div style="font-weight: bold; font-size: 11px; color: ${nameColor}; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 4px;">${name}</div>${textAfterColon}`;
                 inBubble = true;
               } 
               // === НОВА ЛОГІКА ДЛЯ КОЛОНОК (Підтримка будь-яких варіацій тегу) ===
