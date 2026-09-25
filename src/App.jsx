@@ -5737,7 +5737,7 @@ function renderContent(taskContent, currentTask = null) {
               
              if (speakerMatch) {
                 if (!inContainer) {
-                    resultHtml += '<div style="display: flex; flex-direction: column; width: 100%; margin: 15px 0;">';
+                    resultHtml += '<div class="chat-container">';
                     inContainer = true;
                 }
                 if (inBubble) resultHtml += '</div></div>'; 
@@ -5746,22 +5746,18 @@ function renderContent(taskContent, currentTask = null) {
                 const colonIndex = line.indexOf(':');
                 let textAfterColon = line.substring(colonIndex + 1).trim();
                 
-                if (!speakers.includes(name)) {
+                if (speakers.length === 2 && !speakers.includes(name)) {
+                   speakers = [name]; 
+                   currentPaletteIndex = (currentPaletteIndex + 1) % palettes.length; 
+                } else if (!speakers.includes(name)) {
                    speakers.push(name);
                 }
 
-                const speakerIndex = speakers.indexOf(name);
-                const isRight = speakerIndex % 2 !== 0; 
+                const isRight = speakers.length > 1 && speakers[1] === name;
+                const sideClass = isRight ? 'msg-right' : 'msg-left';
+                const bubbleStyle = isRight ? `style="background: ${palettes[currentPaletteIndex]}; color: #fff; border: none;"` : '';
                 
-                // Відновлюємо яскраві кольори з палітри
-                const paletteColor = palettes[currentPaletteIndex];
-                
-                // Якщо правий - беремо колір з палітри, якщо лівий - стандартний
-                const textColor = isRight ? '#fff' : 'inherit';
-                const bg = isRight ? paletteColor : 'rgba(74, 85, 104, 0.06)';
-                const nameColor = isRight ? 'rgba(255, 255, 255, 0.8)' : '#4A5568';
-                
-                resultHtml += `<div style="display: flex; flex-direction: ${isRight ? 'row-reverse' : 'row'}; margin-bottom: 12px; width: 100%;"><div style="background: ${bg}; padding: 10px 16px; border-radius: 16px; border-bottom-${isRight ? 'right' : 'left'}-radius: 4px; font-size: 16px; color: ${textColor}; box-shadow: 0 2px 10px rgba(0,0,0,0.02); max-width: 85%; position: relative; line-height: 1.5;"><div style="font-weight: bold; font-size: 11px; color: ${nameColor}; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 4px;">${name}</div>${textAfterColon}`;
+                resultHtml += `<div class="chat-wrapper ${sideClass}"><div class="chat-name">${name}</div><div class="chat-bubble" ${bubbleStyle}>${textAfterColon}`;
                 inBubble = true;
               } 
               // === НОВА ЛОГІКА ДЛЯ КОЛОНОК (Підтримка будь-яких варіацій тегу) ===
