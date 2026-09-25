@@ -1997,10 +1997,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
 
       const sel = window.getSelection();
       if (sel.rangeCount && sel.focusNode) {
-          // Отримуємо текст від початку рядка до курсора
           let textBeforeCursor = sel.focusNode.textContent.substring(0, sel.focusOffset);
-          
-          // Шукаємо маркер (цифри, буліти, емоджі)
           const listMatch = textBeforeCursor.match(/^(\s*)(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)$/u);
 
           if (listMatch) {
@@ -2009,15 +2006,12 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
               const textAfterMarker = listMatch[3];
 
               if (textAfterMarker.trim() === '') {
-                  // ВИХІД ЗІ СПИСКУ: користувач натиснув Enter на порожньому маркері
-                  // Видаляємо маркер по одному символу, щоб зберегти історію Undo (Ctrl+Z)
                   for(let i = 0; i < textBeforeCursor.length; i++) {
                       document.execCommand('delete');
                   }
                   document.execCommand('insertHTML', false, '<br>\u200B');
                   insertedList = true;
               } else {
-                  // ПРОДОВЖЕННЯ СПИСКУ
                   let nextMarker = marker;
                   const numMatch = marker.match(/^(\d+)([\.\)])$/);
                   if (numMatch) {
@@ -2036,7 +2030,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     }
   };
 
-  // --- ЛОГІКА ТЕЛЕГРАМ-МЕНЮ З РОЗУМНИМ ПОЗИЦІОНУВАННЯМ ---
   const handleContextMenu = (e) => {
     e.preventDefault();
     const menuWidth = 240;
@@ -2088,6 +2081,23 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         case 'strikethrough': document.execCommand('strikeThrough'); break;
         case 'quote': document.execCommand('formatBlock', false, 'blockquote'); break;
         case 'monospace': document.execCommand('fontName', false, 'monospace'); break;
+        
+        // === НОВА ЛОГІКА ДЛЯ КОЛОНОК ===
+        case 'columns':
+            const selCols = window.getSelection();
+            if (selCols.rangeCount && !selCols.isCollapsed) {
+                // Витягуємо виділений фрагмент як HTML, щоб зберегти жирність/кольори
+                const divCols = document.createElement('div');
+                divCols.appendChild(selCols.getRangeAt(0).cloneContents());
+                const innerHtml = divCols.innerHTML;
+                
+                const colTag = extraVal === 2 ? '[cols]' : `[cols:${extraVal}]`;
+                document.execCommand('insertHTML', false, `${colTag}<br>${innerHtml}<br>[/cols]`);
+            } else {
+                alert("Спочатку виділіть текст для розбиття на колонки!");
+            }
+            break;
+
         case 'spoiler':
             const sel = window.getSelection();
             if(sel.rangeCount && !sel.isCollapsed) {
@@ -2101,9 +2111,9 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                 if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url) && !/^tel:/i.test(url)) {
                     url = 'https://' + url;
                 }
-                const sel = window.getSelection();
-                if(sel.rangeCount && !sel.isCollapsed) {
-                    const text = sel.toString();
+                const selLink = window.getSelection();
+                if(selLink.rangeCount && !selLink.isCollapsed) {
+                    const text = selLink.toString();
                     document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${text}</a>`);
                 } else {
                     document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${url}</a>`);
@@ -2126,7 +2136,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
 
   const submenuStyle = contextMenu.vAlign === 'bottom' ? { top: 'auto', bottom: '-8px' } : { top: '-8px', bottom: 'auto' };
 
-  // Логіка для перевірки, чи редактор справді порожній (ігноруючи невидимі пробіли)
   const isEditorEmpty = () => {
     if (!value) return true;
     const stripped = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
@@ -2136,7 +2145,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   return (
     <div style={{ position: 'relative' }}>
       
-      {/* НОВИЙ АБСОЛЮТНИЙ ПЛЕЙСХОЛДЕР (Літає над полем і не заважає тексту) */}
       {isEditorEmpty() && (
           <div style={{
               position: 'absolute',
@@ -2155,7 +2163,6 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         ref={editorRef} contentEditable onInput={handleInput} onBlur={handleInput} onKeyDown={handleKeyDown} onContextMenu={handleContextMenu}
         style={{ ...style, outline: 'none', overflowY: 'auto', minHeight: '150px' }}
         className="wysiwyg-content"
-        // Видалено старий data-placeholder, щоб старий багнутий стиль більше не застосовувався
       />
       
       {speakers.length > 0 && (
@@ -2208,6 +2215,16 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                     <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('color', e, '#805AD5')}><span style={{color: '#805AD5', fontWeight: 'bold'}}>🟣 Фіолетовий</span></div>
                     <div className="tg-menu-divider"></div>
                     <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('clear', e)}><span>⚪ Стандартний текст</span></div>
+                </div>
+            </div>
+
+            {/* НОВИЙ ПУНКТ МЕНЮ: КОЛОНКИ */}
+            <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
+                <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>◫</span> Розбити на колонки</span><span className="tg-menu-hotkey">▶</span>
+                <div className="tg-submenu" style={{ minWidth: '150px', ...submenuStyle }}>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 2)}><span><span style={{color: '#E0A345'}}>◫</span> 2 колонки</span></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 3)}><span><span style={{color: '#E0A345'}}>◫</span> 3 колонки</span></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 4)}><span><span style={{color: '#E0A345'}}>◫</span> 4 колонки</span></div>
                 </div>
             </div>
             
