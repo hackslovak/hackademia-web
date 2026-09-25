@@ -5757,7 +5757,6 @@ function renderContent(taskContent, currentTask = null) {
                 
                 resultHtml += `<div style="display: flex; flex-direction: ${isRight ? 'row-reverse' : 'row'}; margin-bottom: 12px; width: 100%;"><div style="background: ${bg}; padding: 10px 16px; border-radius: 16px; border-bottom-${isRight ? 'right' : 'left'}-radius: 4px; font-size: 16px; color: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.02); max-width: 85%; position: relative; line-height: 1.5;"><div style="font-weight: bold; font-size: 11px; color: ${color}; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 4px;">${name}</div>${textAfterColon}`;
                 inBubble = true;
-              }
               } 
               // === НОВА ЛОГІКА ДЛЯ КОЛОНОК (Підтримка будь-яких варіацій тегу) ===
               else if (line.match(/\[\/?cols.*?\]/)) {
