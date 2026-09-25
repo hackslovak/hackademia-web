@@ -1941,7 +1941,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   // Стан для контекстного меню
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, align: 'right-side', vAlign: 'top' });
 
-  // Ховаємо меню при кліку (змінено на mousedown для сумісності)
+  // Ховаємо меню при кліку
   React.useEffect(() => {
       const hideMenu = () => setContextMenu(prev => ({ ...prev, visible: false }));
       document.addEventListener('mousedown', hideMenu);
@@ -1990,9 +1990,48 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (e.ctrlKey || e.metaKey) {
       if (e.key === 'z' || e.key === 'Z') { setTimeout(handleInput, 10); return; }
     }
+    
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      document.execCommand('insertHTML', false, '<br>\u200B'); 
+      let insertedList = false;
+
+      const sel = window.getSelection();
+      if (sel.rangeCount && sel.focusNode) {
+          // Отримуємо текст від початку рядка до курсора
+          let textBeforeCursor = sel.focusNode.textContent.substring(0, sel.focusOffset);
+          
+          // Шукаємо маркер (цифри, буліти, емоджі)
+          const listMatch = textBeforeCursor.match(/^(\s*)(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)$/u);
+
+          if (listMatch) {
+              const indent = listMatch[1] || '';
+              const marker = listMatch[2];
+              const textAfterMarker = listMatch[3];
+
+              if (textAfterMarker.trim() === '') {
+                  // ВИХІД ЗІ СПИСКУ: користувач натиснув Enter на порожньому маркері
+                  // Видаляємо маркер по одному символу, щоб зберегти історію Undo (Ctrl+Z)
+                  for(let i = 0; i < textBeforeCursor.length; i++) {
+                      document.execCommand('delete');
+                  }
+                  document.execCommand('insertHTML', false, '<br>\u200B');
+                  insertedList = true;
+              } else {
+                  // ПРОДОВЖЕННЯ СПИСКУ
+                  let nextMarker = marker;
+                  const numMatch = marker.match(/^(\d+)([\.\)])$/);
+                  if (numMatch) {
+                      nextMarker = (parseInt(numMatch[1], 10) + 1) + numMatch[2];
+                  }
+                  document.execCommand('insertHTML', false, `<br>${indent}${nextMarker} `);
+                  insertedList = true;
+              }
+          }
+      }
+
+      if (!insertedList) {
+          document.execCommand('insertHTML', false, '<br>\u200B'); 
+      }
       handleInput();
     }
   };
@@ -2002,7 +2041,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     e.preventDefault();
     const menuWidth = 240;
     const submenuWidth = 240;
-    const menuHeight = 420; // Оптимальний запас висоти
+    const menuHeight = 420; 
     
     let x = e.clientX;
     let y = e.clientY;
@@ -2014,19 +2053,18 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     }
     if (x + menuWidth > window.innerWidth) x = window.innerWidth - menuWidth - 10;
 
-    // === ЖОРСТКА ЛОГІКА ВИДИМОСТІ (Ніколи не випадає за екран) ===
     if (y + menuHeight > window.innerHeight) {
         y = Math.max(10, window.innerHeight - menuHeight - 10);
-        vAlign = 'bottom'; // Примусово відкриваємо підменю вгору
+        vAlign = 'bottom'; 
     } else if (e.clientY > window.innerHeight * 0.55) {
-        vAlign = 'bottom'; // Якщо просто клік низько - теж вгору
+        vAlign = 'bottom'; 
     }
 
     setContextMenu({ visible: true, x, y, align, vAlign });
   };
 
   const execMenuCommand = async (action, e, extraVal = null) => {
-    e.preventDefault(); // МАГІЯ ТУТ: Не даємо браузеру зняти виділення з тексту!
+    e.preventDefault(); 
     e.stopPropagation();
     
     setContextMenu({ visible: false, x: 0, y: 0, align: 'right-side', vAlign: 'top' });
@@ -2060,14 +2098,12 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         case 'link':
             let url = prompt('Введіть URL посилання (наприклад: t.me/bot):');
             if(url) {
-                // Автоматично додаємо https:// якщо його немає
                 if (!/^https?:\/\//i.test(url) && !/^mailto:/i.test(url) && !/^tel:/i.test(url)) {
                     url = 'https://' + url;
                 }
                 const sel = window.getSelection();
                 if(sel.rangeCount && !sel.isCollapsed) {
                     const text = sel.toString();
-                    // Створюємо справжнє посилання з нашим фірмовим теплим кольором
                     document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${text}</a>`);
                 } else {
                     document.execCommand('insertHTML', false, `<a href="${url}" target="_blank" rel="noopener noreferrer" style="color: #E0A345; text-decoration: underline; font-weight: bold;">${url}</a>`);
@@ -2090,12 +2126,36 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
 
   const submenuStyle = contextMenu.vAlign === 'bottom' ? { top: 'auto', bottom: '-8px' } : { top: '-8px', bottom: 'auto' };
 
+  // Логіка для перевірки, чи редактор справді порожній (ігноруючи невидимі пробіли)
+  const isEditorEmpty = () => {
+    if (!value) return true;
+    const stripped = value.replace(/<[^>]*>/g, '').replace(/&nbsp;/g, '').replace(/[\u200B-\u200D\uFEFF]/g, '').trim();
+    return stripped === '' && !value.includes('<img') && !value.includes('<iframe') && !value.includes('<audio') && !value.includes('<video');
+  };
+
   return (
     <div style={{ position: 'relative' }}>
+      
+      {/* НОВИЙ АБСОЛЮТНИЙ ПЛЕЙСХОЛДЕР (Літає над полем і не заважає тексту) */}
+      {isEditorEmpty() && (
+          <div style={{
+              position: 'absolute',
+              top: '14px', 
+              left: '14px',
+              color: theme.textSecondary || '#A0AEC0',
+              pointerEvents: 'none', 
+              userSelect: 'none',
+              fontSize: '15px'
+          }}>
+              {placeholder}
+          </div>
+      )}
+
       <div 
         ref={editorRef} contentEditable onInput={handleInput} onBlur={handleInput} onKeyDown={handleKeyDown} onContextMenu={handleContextMenu}
         style={{ ...style, outline: 'none', overflowY: 'auto', minHeight: '150px' }}
-        className="wysiwyg-content" data-placeholder={placeholder}
+        className="wysiwyg-content"
+        // Видалено старий data-placeholder, щоб старий багнутий стиль більше не застосовувався
       />
       
       {speakers.length > 0 && (
