@@ -1938,10 +1938,8 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const isInternalChange = React.useRef(false);
   const [speakers, setSpeakers] = React.useState([]);
 
-  // Стан для контекстного меню
   const [contextMenu, setContextMenu] = React.useState({ visible: false, x: 0, y: 0, align: 'right-side', vAlign: 'top' });
 
-  // Ховаємо меню при кліку
   React.useEffect(() => {
       const hideMenu = () => setContextMenu(prev => ({ ...prev, visible: false }));
       document.addEventListener('mousedown', hideMenu);
@@ -1955,6 +1953,13 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   React.useEffect(() => {
     if (!isInternalChange.current && editorRef.current && document.activeElement !== editorRef.current) {
         let cleanVal = value || '';
+        
+        // МАГІЯ 1: Перетворюємо збережені текстові теги [cols] на реальні красиві колонки для адміна
+        cleanVal = cleanVal.replace(/\[cols(?:[:=](\d+))?\]([\s\S]*?)\[\/cols\]/gi, (match, cols, content) => {
+            const count = cols ? cols : 2;
+            return `<div class="editor-columns" data-cols="${count}" style="column-count: ${count}; column-gap: 30px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${content}</div>`;
+        });
+
         if (cleanVal.includes('&lt;') || cleanVal.includes('&amp;')) {
             cleanVal = cleanVal.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ');
         }
@@ -1977,7 +1982,18 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
 
   const handleInput = () => {
     isInternalChange.current = true;
-    onChange(editorRef.current.innerHTML); 
+    
+    // МАГІЯ 2: Зберігаємо реальні колонки назад у формат тегів [cols] для безпечного збереження в базу
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = editorRef.current.innerHTML;
+    
+    const colDivs = tempDiv.querySelectorAll('.editor-columns');
+    colDivs.forEach(div => {
+        const cols = div.getAttribute('data-cols') || '2';
+        div.outerHTML = `[cols:${cols}]${div.innerHTML}[/cols]`;
+    });
+    
+    onChange(tempDiv.innerHTML); 
   };
 
   const insertSpeaker = (spk) => {
@@ -2082,17 +2098,16 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
         case 'quote': document.execCommand('formatBlock', false, 'blockquote'); break;
         case 'monospace': document.execCommand('fontName', false, 'monospace'); break;
         
-        // === НОВА ЛОГІКА ДЛЯ КОЛОНОК ===
         case 'columns':
             const selCols = window.getSelection();
             if (selCols.rangeCount && !selCols.isCollapsed) {
-                // Витягуємо виділений фрагмент як HTML, щоб зберегти жирність/кольори
                 const divCols = document.createElement('div');
                 divCols.appendChild(selCols.getRangeAt(0).cloneContents());
                 const innerHtml = divCols.innerHTML;
                 
-                const colTag = extraVal === 2 ? '[cols]' : `[cols:${extraVal}]`;
-                document.execCommand('insertHTML', false, `${colTag}<br>${innerHtml}<br>[/cols]`);
+                const colCount = extraVal || 2;
+                // Вставляємо справжній красивий блок колонок
+                document.execCommand('insertHTML', false, `<br><div class="editor-columns" data-cols="${colCount}" style="column-count: ${colCount}; column-gap: 30px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${innerHtml}</div><br>`);
             } else {
                 alert("Спочатку виділіть текст для розбиття на колонки!");
             }
@@ -2222,9 +2237,9 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>◫</span> Розбити на колонки</span><span className="tg-menu-hotkey">▶</span>
                 <div className="tg-submenu" style={{ minWidth: '150px', ...submenuStyle }}>
-                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 2)}><span><span style={{color: '#E0A345'}}>◫</span> 2 колонки</span></div>
-                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 3)}><span><span style={{color: '#E0A345'}}>◫</span> 3 колонки</span></div>
-                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 4)}><span><span style={{color: '#E0A345'}}>◫</span> 4 колонки</span></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 2)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 2 колонки</span></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 3)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 3 колонки</span></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 4)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 4 колонки</span></div>
                 </div>
             </div>
             
