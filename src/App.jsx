@@ -5733,9 +5733,9 @@ function renderContent(taskContent, currentTask = null) {
               // Ловить цифри (1., 2)), буліти (-, *), емоджі (✅) та спецсимволи. Прапор 'u' важливий!
               const listMatch = cleanLineForMatch.match(/^(\d+[\.\)]|[-*•\+]|[\p{Emoji}\p{Extended_Pictographic}\uFE0F\u200D]+)\s+(.*)/u);
               
-              if (speakerMatch) {
+             if (speakerMatch) {
                 if (!inContainer) {
-                    resultHtml += '<div class="chat-container">';
+                    resultHtml += '<div style="display: flex; flex-direction: column; width: 100%; margin: 15px 0;">';
                     inContainer = true;
                 }
                 if (inBubble) resultHtml += '</div></div>'; 
@@ -5744,19 +5744,20 @@ function renderContent(taskContent, currentTask = null) {
                 const colonIndex = line.indexOf(':');
                 let textAfterColon = line.substring(colonIndex + 1).trim();
                 
-                if (speakers.length === 2 && !speakers.includes(name)) {
-                   speakers = [name]; 
-                   currentPaletteIndex = (currentPaletteIndex + 1) % palettes.length; 
-                } else if (!speakers.includes(name)) {
+                if (!speakers.includes(name)) {
                    speakers.push(name);
                 }
 
-                const isRight = speakers.length > 1 && speakers[1] === name;
-                const sideClass = isRight ? 'msg-right' : 'msg-left';
-                const bubbleStyle = isRight ? `style="background: ${palettes[currentPaletteIndex]}; color: #fff; border: none;"` : '';
+                const speakerIndex = speakers.indexOf(name);
+                const isRight = speakerIndex % 2 !== 0; // Кожен другий спікер буде праворуч
                 
-                resultHtml += `<div class="chat-wrapper ${sideClass}"><div class="chat-name">${name}</div><div class="chat-bubble" ${bubbleStyle}>${textAfterColon}`;
+                // Інлайн-стилі для красивих бульбашок (як у Telegram)
+                const color = isRight ? '#E0A345' : '#4A5568';
+                const bg = isRight ? 'rgba(224, 163, 69, 0.12)' : 'rgba(74, 85, 104, 0.06)';
+                
+                resultHtml += `<div style="display: flex; flex-direction: ${isRight ? 'row-reverse' : 'row'}; margin-bottom: 12px; width: 100%;"><div style="background: ${bg}; padding: 10px 16px; border-radius: 16px; border-bottom-${isRight ? 'right' : 'left'}-radius: 4px; font-size: 16px; color: inherit; box-shadow: 0 2px 10px rgba(0,0,0,0.02); max-width: 85%; position: relative; line-height: 1.5;"><div style="font-weight: bold; font-size: 11px; color: ${color}; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.9; margin-bottom: 4px;">${name}</div>${textAfterColon}`;
                 inBubble = true;
+              }
               } 
               // === НОВА ЛОГІКА ДЛЯ КОЛОНОК (Підтримка будь-яких варіацій тегу) ===
               else if (line.match(/\[\/?cols.*?\]/)) {
