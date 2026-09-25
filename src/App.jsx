@@ -1954,10 +1954,10 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
     if (!isInternalChange.current && editorRef.current && document.activeElement !== editorRef.current) {
         let cleanVal = value || '';
         
-        // МАГІЯ 1: Перетворюємо збережені текстові теги [cols] на реальні красиві колонки для адміна
-        cleanVal = cleanVal.replace(/\[cols(?:[:=](\d+))?\]([\s\S]*?)\[\/cols\]/gi, (match, cols, content) => {
+        // МАГІЯ: Перетворюємо збережені текстові теги [cols] на красиві візуальні колонки всередині редактора
+        cleanVal = cleanVal.replace(/\[cols(?:[:=](\d+))?\](?:<br\s*\/?>|\n)*([\s\S]*?)(?:<br\s*\/?>|\n)*\[\/cols\]/gi, (match, cols, content) => {
             const count = cols ? cols : 2;
-            return `<div class="editor-columns" data-cols="${count}" style="column-count: ${count}; column-gap: 30px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${content}</div>`;
+            return `<div class="editor-columns" data-cols="${count}" style="column-count: ${count}; column-gap: 20px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${content}</div>`;
         });
 
         if (cleanVal.includes('&lt;') || cleanVal.includes('&amp;')) {
@@ -1983,14 +1983,18 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
   const handleInput = () => {
     isInternalChange.current = true;
     
-    // МАГІЯ 2: Зберігаємо реальні колонки назад у формат тегів [cols] для безпечного збереження в базу
+    // МАГІЯ: Перетворюємо візуальні колонки назад на теги для безпечного збереження в базу
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = editorRef.current.innerHTML;
     
     const colDivs = tempDiv.querySelectorAll('.editor-columns');
     colDivs.forEach(div => {
         const cols = div.getAttribute('data-cols') || '2';
-        div.outerHTML = `[cols:${cols}]${div.innerHTML}[/cols]`;
+        const colTag = cols === '2' ? '[cols]' : `[cols:${cols}]`;
+        let inner = div.innerHTML;
+        // Зачищаємо зайві <br> на початку та в кінці колонок
+        inner = inner.replace(/^(?:<br\s*\/?>\s*)+/, '').replace(/(?:<br\s*\/?>\s*)+$/, '');
+        div.outerHTML = `${colTag}<br>${inner}<br>[/cols]`;
     });
     
     onChange(tempDiv.innerHTML); 
@@ -2103,11 +2107,11 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             if (selCols.rangeCount && !selCols.isCollapsed) {
                 const divCols = document.createElement('div');
                 divCols.appendChild(selCols.getRangeAt(0).cloneContents());
-                const innerHtml = divCols.innerHTML;
+                let innerHtml = divCols.innerHTML;
+                innerHtml = innerHtml.replace(/^(?:<br\s*\/?>\s*)+/, '').replace(/(?:<br\s*\/?>\s*)+$/, '');
                 
                 const colCount = extraVal || 2;
-                // Вставляємо справжній красивий блок колонок
-                document.execCommand('insertHTML', false, `<br><div class="editor-columns" data-cols="${colCount}" style="column-count: ${colCount}; column-gap: 30px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${innerHtml}</div><br>`);
+                document.execCommand('insertHTML', false, `<br><div class="editor-columns" data-cols="${colCount}" style="column-count: ${colCount}; column-gap: 20px; width: 100%; box-sizing: border-box; padding: 12px; background: rgba(224, 163, 69, 0.05); border: 1px dashed #E0A345; border-radius: 12px; margin: 10px 0;">${innerHtml}</div><br>`);
             } else {
                 alert("Спочатку виділіть текст для розбиття на колонки!");
             }
@@ -2233,7 +2237,7 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                 </div>
             </div>
 
-            {/* НОВИЙ ПУНКТ МЕНЮ: КОЛОНКИ */}
+            {/* МЕНЮ: КОЛОНКИ */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>◫</span> Розбити на колонки</span><span className="tg-menu-hotkey">▶</span>
                 <div className="tg-submenu" style={{ minWidth: '150px', ...submenuStyle }}>
