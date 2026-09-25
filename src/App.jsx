@@ -5709,8 +5709,10 @@ function renderContent(taskContent, currentTask = null) {
             let inBubble = false;
             let inContainer = false;
             
-            // ВІДНОВЛЕНО: Розбиваємо текст на рядки, щоб цикл міг їх прочитати
-            const lines = String(html).split('\n');
+            // МАГІЯ: Перетворюємо HTML-перенесення (<br>) на справжні рядки (\n), 
+            // оскільки новий редактор зберігає текст через <br>!
+            let normalizedHtml = String(html).replace(/<br\s*[\/]?>/gi, '\n').replace(/<\/div>/gi, '\n').replace(/<\/p>/gi, '\n');
+            const lines = normalizedHtml.split('\n');
             
             // ВІДНОВЛЕНО: Змінні для збереження імен спікерів та кольорів діалогів
             let speakers = [];
