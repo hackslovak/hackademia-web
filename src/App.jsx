@@ -5641,12 +5641,15 @@ function renderContent(taskContent, currentTask = null) {
               let extraClasses = '';
               let extraAttrs = `data-index="${inlineCounter}" data-task-id="${safeTask.id}"`;
               const emWidth = (Math.max(savedVal.length, 1) * 0.6) + 0.5;
-              let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; `;
+              
+              // ДОДАНО: pointer-events та user-select для гарантованого активного фокусу
+              let inlineStyle = `width: ${emWidth}em; text-align: center; margin: 0 4px; padding: 2px 4px; transition: width 0.1s; box-sizing: content-box; pointer-events: auto; user-select: text;`;
 
               if (cleanSaved !== '' && cleanCorrect !== '' && cleanSaved === cleanCorrect) {
                   extraClasses = 'solved';
               }
 
+              // ДОДАНО: Щит від перемальовки React-ом при кліку
               const stopReact = "event.stopPropagation();";
               const safeCorrect = cleanCorrect.replace(/'/g, "\\'");
               
@@ -5669,7 +5672,8 @@ function renderContent(taskContent, currentTask = null) {
                   }
               `.replace(/\n/g, ' ');
 
-              return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
+              // ДОДАНО: onclick, onmousedown, onmouseup з викликом stopReact
+              return `<input type="text" class="inline-blank-input ${extraClasses}" placeholder="..." value="${savedVal}" ${extraAttrs} style="${inlineStyle}" onclick="${stopReact}" onmousedown="${stopReact}" onmouseup="${stopReact}" oninput="${stopReact} ${updateLogic}" onkeydown="${stopReact}" onkeyup="${stopReact}" />`;
             });
 
             const palettes = [
