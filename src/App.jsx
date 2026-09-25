@@ -2117,6 +2117,24 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
             }
             break;
 
+        case 'remove-columns':
+            const selRm = window.getSelection();
+            if (selRm.rangeCount && selRm.focusNode) {
+                let node = selRm.focusNode;
+                let colNode = node.nodeType === 3 ? node.parentNode?.closest('.editor-columns') : node.closest?.('.editor-columns');
+                
+                if (colNode) {
+                    const parent = colNode.parentNode;
+                    while (colNode.firstChild) {
+                        parent.insertBefore(colNode.firstChild, colNode);
+                    }
+                    parent.removeChild(colNode);
+                } else {
+                    alert("Поставте курсор всередині колонок, які хочете скасувати, і спробуйте знову!");
+                }
+            }
+            break;
+
         case 'spoiler':
             const sel = window.getSelection();
             if(sel.rangeCount && !sel.isCollapsed) {
@@ -2237,13 +2255,15 @@ const WYSIWYGEditor = ({ value, onChange, placeholder, style, theme }) => {
                 </div>
             </div>
 
-            {/* МЕНЮ: КОЛОНКИ */}
+            {/* МЕНЮ: КОЛОНКИ ТА ЇХ ВИДАЛЕННЯ */}
             <div className={`tg-menu-item tg-has-submenu ${contextMenu.align}`}>
                 <span><span style={{width:'20px',display:'inline-block',textAlign:'center'}}>◫</span> Розбити на колонки</span><span className="tg-menu-hotkey">▶</span>
-                <div className="tg-submenu" style={{ minWidth: '150px', ...submenuStyle }}>
+                <div className="tg-submenu" style={{ minWidth: '180px', ...submenuStyle }}>
                     <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 2)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 2 колонки</span></div>
                     <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 3)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 3 колонки</span></div>
                     <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('columns', e, 4)}><span><span style={{color: '#E0A345', marginRight: '5px'}}>◫</span> 4 колонки</span></div>
+                    <div className="tg-menu-divider"></div>
+                    <div className="tg-menu-item" onMouseDown={(e) => execMenuCommand('remove-columns', e)}><span><span style={{color: '#E53E3E', marginRight: '5px'}}>🗑</span> Прибрати колонки</span></div>
                 </div>
             </div>
             
