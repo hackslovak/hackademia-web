@@ -5708,6 +5708,9 @@ function renderContent(taskContent, currentTask = null) {
             let resultHtml = '';
             let inBubble = false;
             let inContainer = false;
+            
+            // ВІДНОВЛЕНО: Розбиваємо текст на рядки, щоб цикл міг їх прочитати
+            const lines = String(html).split('\n');
 
             for (let j = 0; j < lines.length; j++) {
               let line = lines[j].trim();
