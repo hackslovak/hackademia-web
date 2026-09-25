@@ -5381,30 +5381,37 @@ blankInputs.forEach((input, index) => {
       const normStudent = normalizeSlovak(studentAnswer);
       const normCorrect = normalizeSlovak(correctAnswer);
 
-      if (normStudent === normCorrect) {
-        showMotivation(); playUiSound('ding', isSoundEnabled);
-        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-        
-        const diff = difficultyConfig[task.difficulty || 'medium'];
-        await supabase.from('progress').upsert({
-          user_id: dbUserId,
-          task_id: task.id,
-          status: 'completed',
-          points: diff.points
-        }, { onConflict: 'user_id, task_id' });
-
-        setCompletedTasks([...new Set([...completedTasks, task.id])]); 
-
-        if (studentAnswer !== correctAnswer) {
-          alert(`✅ Зараховано! 🎉 +${diff.points} балів.\n\n⚠️ Правильно писати з діакритикою: "${correctAnswer}"`);
-        } else {
-          alert(`Правильно! 🎉 +${diff.points} балів.`);
-        }
-      } else {
-        playUiSound('buzz', isSoundEnabled);
-        if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
-        alert("Неправильно ❌ Спробуй ще раз!");
-      }
+      // Спершу перевіряємо, чи відповідь правильна
+	  if (normStudent === normCorrect) {
+                const diff = difficultyConfig[task.difficulty || 'medium'];
+                
+                // Якщо є помилка лише в діакритиці, все одно зараховуємо
+                if (studentAnswer !== correctAnswer) {
+                    alert(`✅ Зараховано! 🎉 +${diff.points} балів.\n\n⚠️ Правильно писати з діакритикою: "${correctAnswer}"`);
+                } else {
+                    alert(`Правильно! 🎉 +${diff.points} балів.`);
+                }
+                
+                // Звук успіху та збереження прогресу - ТІЛЬКИ ЯКЩО ПРАВИЛЬНО
+                showMotivation();
+                playUiSound('ding', isSoundEnabled);
+                if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+                
+                setCompletedTasks([...new Set([...completedTasks, task.id])]);
+                
+                await supabase.from('progress').upsert({
+                    user_id: dbUserId,
+                    task_id: task.id,
+                    status: 'completed',
+                    points: diff.points
+                }, { onConflict: 'user_id, task_id' });
+                
+            } else {
+                // ЯКЩО НЕПРАВИЛЬНО - тільки звук помилки
+                playUiSound('buzz', isSoundEnabled);
+                if (window.Telegram?.WebApp) window.Telegram.WebApp.HapticFeedback.notificationOccurred('error');
+                alert("Неправильно ❌ Спробуй ще раз!");
+            }
     }
   }
 
@@ -7162,6 +7169,74 @@ function renderContent(taskContent, currentTask = null) {
                                    </div>
                                );
                            })()}
+						   
+
+
+    {/* БЛОК НАЛАШТУВАНЬ ПРАВДА/НЕПРАВДА (ДЛЯ РЕДАГУВАННЯ) */}
+    {editTaskType === 'true_false' && (
+        <div style={{ marginTop: '15px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <label style={{ fontSize: '13px', fontWeight: 'bold', color: theme.textSecondary, textTransform: 'uppercase' }}>Налаштування тверджень (Правда / Неправда):</label>
+            {editTaskTrueFalse.map((item, index) => (
+                <div key={index} style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                    <input
+                        type="text"
+                        placeholder={`Твердження ${index + 1}...`}
+                        value={item.text}
+                        onChange={(e) => {
+                            const newArr = [...editTaskTrueFalse];
+                            newArr[index].text = e.target.value;
+                            setEditTaskTrueFalse(newArr);
+                        }}
+                        style={{ flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${theme.inputBorder}`, background: theme.inputBg, color: theme.text, fontSize: '14px', outline: 'none' }}
+                    />
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            const newArr = [...editTaskTrueFalse];
+                            newArr[index].isTrue = true;
+                            setEditTaskTrueFalse(newArr);
+                        }}
+                        style={{ padding: '10px 15px', borderRadius: '10px', border: 'none', background: item.isTrue ? '#38A169' : theme.inputBg, color: item.isTrue ? '#fff' : theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
+                    >
+                        Правда
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            const newArr = [...editTaskTrueFalse];
+                            newArr[index].isTrue = false;
+                            setEditTaskTrueFalse(newArr);
+                        }}
+                        style={{ padding: '10px 15px', borderRadius: '10px', border: 'none', background: !item.isTrue ? '#E53E3E' : theme.inputBg, color: !item.isTrue ? '#fff' : theme.textSecondary, cursor: 'pointer', fontWeight: 'bold', transition: '0.2s' }}
+                    >
+                        Неправда
+                    </button>
+                    <button
+                        onClick={(e) => {
+                            e.preventDefault();
+                            setEditTaskTrueFalse(editTaskTrueFalse.filter((_, i) => i !== index));
+                        }}
+                        style={{ background: 'transparent', border: 'none', color: '#E53E3E', cursor: 'pointer', fontSize: '18px', padding: '5px' }}
+                        title="Видалити"
+                    >
+                        🗑
+                    </button>
+                </div>
+            ))}
+            <button
+                onClick={(e) => {
+                    e.preventDefault();
+                    setEditTaskTrueFalse([...editTaskTrueFalse, { text: '', isTrue: true }]);
+                }}
+                style={{ background: 'rgba(56, 161, 105, 0.1)', color: '#38A169', border: '1px dashed #38A169', padding: '12px', borderRadius: '12px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: '0.2s' }}
+            >
+                <span>➕</span> Додати твердження
+            </button>
+        </div>
+    )}
+
+    {/* 5. МЕДІАБЛОК ТА КРОПЕР (Оновлений компактний) */}
+    {(() => {
 
                            {/* 5. МЕДІАБЛОК ТА КРОПЕР (Оновлений компактний) */}
                            {(() => {
