@@ -5714,6 +5714,7 @@ function renderContent(taskContent, currentTask = null) {
 
             for (let j = 0; j < lines.length; j++) {
               let line = lines[j].trim();
+			  
               
               if (!line) {
                 if (inBubble) { resultHtml += '</div></div>'; inBubble = false; }
