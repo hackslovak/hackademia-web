@@ -2799,6 +2799,54 @@ function Platform() {
   };
 
 
+  // === СТАН ТА ЛОГІКА ДЛЯ КАСТОМНОГО МЕНЮ КОЛОНОК (ПКМ) ===
+    const [colMenu, setColMenu] = React.useState({ show: false, x: 0, y: 0, target: null, start: 0, end: 0 });
+
+    React.useEffect(() => {
+        // Закриваємо меню при кліку будь-де
+        const handleClick = () => setColMenu(prev => ({ ...prev, show: false }));
+        document.addEventListener('click', handleClick);
+        return () => document.removeEventListener('click', handleClick);
+    }, []);
+
+    const handleTextareaContextMenu = (e) => {
+        const target = e.target;
+        const start = target.selectionStart;
+        const end = target.selectionEnd;
+
+        // Перехоплюємо правий клік ТІЛЬКИ якщо є виділений текст
+        if (start !== end) {
+            e.preventDefault();
+            setColMenu({
+                show: true,
+                x: e.clientX, // Використовуємо clientX для position: fixed
+                y: e.clientY,
+                target: target,
+                start: start,
+                end: end
+            });
+        }
+    };
+
+    const applyColumns = (cols) => {
+        const { target, start, end } = colMenu;
+        if (!target) return;
+        
+        const colTag = cols === 2 ? '[cols]' : `[cols:${cols}]`;
+        const selectedText = target.value.substring(start, end);
+        const replacement = `${colTag}\n${selectedText}\n[/cols]`;
+
+        target.focus();
+        // Ідеальний спосіб замінити текст у React без втрати історії скасувань (Undo)
+        target.setRangeText(replacement, start, end, 'select');
+        
+        // Штучно викликаємо подію input, щоб React зберіг зміни в стан
+        const event = new Event('input', { bubbles: true });
+        target.dispatchEvent(event);
+        
+        setColMenu(prev => ({ ...prev, show: false }));
+    };
+  
   const [newTaskType, setNewTaskType] = useState('text');
   const [editTaskType, setEditTaskType] = React.useState('text');
   const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
@@ -4259,7 +4307,8 @@ useEffect(() => {
                         return (
                             <textarea 
                                 placeholder={`Умова завдання (${sourceLang.toUpperCase()})...`} 
-                                value={cleanText} 
+                                value={cleanText}
+								onContextMenu={handleTextareaContextMenu} 
                                 onChange={e => {
                                     const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
                                     setNewTaskContentMulti({...newTaskContentMulti, [sourceLang]: combined});
@@ -5191,7 +5240,7 @@ function renderContent(taskContent, currentTask = null) {
       descText = taskContent || '';
     }
 
-const parseToElements = (text, prefixKey) => {
+    const parseToElements = (text, prefixKey) => {
       if (!text) return { texts: [], media: [] };
       const urlRegex = /(https?:\/\/[^\s]+)/g;
       
@@ -5386,6 +5435,10 @@ const parseToElements = (text, prefixKey) => {
               const cleanLineForMatch = line.replace(/<[^>]*>/g, '').trim();
               const speakerMatch = cleanLineForMatch.match(/^([A-ZÁÉÍÓÚÝČĎĽŇŠŤŽА-ЯІЇЄҐ]+[a-záéíóúýčďľňšťžа-яіїєґ]*):\s*(.*)$/);
               
+              // === НОВА ЛОГІКА ДЛЯ СПИСКІВ ===
+              // Ловить цифри (1., 2)), буліти (-, *), емоджі (✅) та спецсимволи. Прапор 'u' важливий!
+              const listMatch = cleanLineForMatch.match(/^(\d+[\.\)]|[-*•\+]|\p{Emoji}|\p{Extended_Pictographic})\s+(.*)/u);
+              
               if (speakerMatch) {
                 if (!inContainer) {
                     resultHtml += '<div class="chat-container">';
@@ -5411,11 +5464,35 @@ const parseToElements = (text, prefixKey) => {
                 resultHtml += `<div class="chat-wrapper ${sideClass}"><div class="chat-name">${name}</div><div class="chat-bubble" ${bubbleStyle}>${textAfterColon}`;
                 inBubble = true;
               } 
-              else if (line.includes('[cols]') || line.includes('[/cols]')) {
+              // === НОВА ЛОГІКА ДЛЯ КОЛОНОК (Підтримка будь-яких варіацій тегу) ===
+              else if (line.match(/\[\/?cols.*?\]/)) {
                 if (inBubble) { resultHtml += '</div></div>'; inBubble = false; }
                 if (inContainer) { resultHtml += '</div>'; inContainer = false; }
                 resultHtml += line;
               } 
+              // === НОВА ЛОГІКА ДЛЯ СПИСКІВ (Рендеринг "як у Word") ===
+              else if (listMatch && !inBubble) {
+                if (inContainer) {
+                   resultHtml += '</div>'; 
+                   inContainer = false;
+                   if (speakers.length > 0) {
+                     speakers = []; 
+                     currentPaletteIndex = (currentPaletteIndex + 1) % palettes.length; 
+                   }
+                }
+                
+                const rawMarker = listMatch[1];
+                // Екрануємо маркер, щоб вирізати його без поломки HTML всередині рядка
+                const escapedMarker = rawMarker.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+                const markerRegex = new RegExp('^(?:<[^>]*>\\s*)*' + escapedMarker + '\\s+');
+                const textWithoutMarker = line.replace(markerRegex, '');
+
+                resultHtml += `<div style="display: flex; gap: 12px; margin-bottom: 8px; padding-left: 5px;">
+                    <div style="flex-shrink: 0; font-weight: bold; min-width: 20px; text-align: right; color: inherit;">${rawMarker}</div>
+                    <div style="flex: 1;">${textWithoutMarker}</div>
+                </div>`;
+              } 
+              // ЗВИЧАЙНИЙ ТЕКСТ
               else {
                 if (!inBubble) {
                    if (inContainer) {
@@ -5436,7 +5513,11 @@ const parseToElements = (text, prefixKey) => {
             if (inBubble) resultHtml += '</div></div>';
             if (inContainer) resultHtml += '</div>';
 
-            resultHtml = resultHtml.replace(/\[cols\]([\s\S]*?)\[\/cols\]/g, '<div style="column-count: 2; column-gap: 30px; width: 100%; box-sizing: border-box;">$1</div>');
+            // === ОНОВЛЕНИЙ РЕПЛЕЙС ДЛЯ КОЛОНОК (Ловить [cols:3], [cols=4], або просто [cols] за замовчуванням 2) ===
+            resultHtml = resultHtml.replace(/\[cols(?:[:=](\d+))?\]([\s\S]*?)\[\/cols\]/gi, (match, cols, content) => {
+                const count = cols ? cols : 2;
+                return `<div style="column-count: ${count}; column-gap: 30px; width: 100%; box-sizing: border-box;">${content}</div>`;
+            });
 
             texts.push(<div key={`${prefixKey}-${i}`} dangerouslySetInnerHTML={{ __html: resultHtml }} style={{ width: '100%', maxWidth: '100%', boxSizing: 'border-box' }} />);
           }
@@ -5485,7 +5566,7 @@ const parseToElements = (text, prefixKey) => {
         )}
       </div>
     );
-  }
+}
 
   let clickTimeout = null;
   function handleBadgeClick() {
@@ -6636,7 +6717,8 @@ const parseToElements = (text, prefixKey) => {
                                        return (
                                            <textarea 
                                                placeholder={`Умова завдання (${editLang.toUpperCase()})...`} 
-                                               value={cleanText} 
+                                               value={cleanText}
+											   onContextMenu={handleTextareaContextMenu} 
                                                onChange={e => {
                                                    const combined = e.target.value + (urls.length > 0 ? '\n\n' + urls.join('\n') : '');
                                                    setEditContentMulti({...editContentMulti, [editLang]: combined});
@@ -8037,6 +8119,44 @@ const parseToElements = (text, prefixKey) => {
     </div>
   );
 }
+
+{/* КАСТОМНЕ МЕНЮ ДЛЯ КОЛОНОК (ПКМ) */}
+            {colMenu.show && (
+                <div style={{
+                    position: 'fixed',
+                    left: colMenu.x,
+                    top: colMenu.y,
+                    background: theme.cardBg || '#fff',
+                    border: `1px solid ${theme.inputBorder || '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                    padding: '8px',
+                    zIndex: 99999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    minWidth: '200px',
+                    animation: 'fadeInDown 0.15s ease'
+                }}>
+                    <button onClick={() => { document.execCommand('cut'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>✂️ Вирізати</button>
+                    <button onClick={() => { document.execCommand('copy'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>📋 Скопіювати</button>
+                    
+                    <div style={{ height: '1px', background: theme.inputBorder, margin: '4px 0' }}></div>
+                    
+                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Розбити на колонки</div>
+                    
+                    {[2, 3, 4].map(num => (
+                        <button
+                            key={num}
+                            onClick={() => applyColumns(num)}
+                            className="hover-card"
+                            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
+                            <span style={{ fontSize: '16px', color: '#E0A345' }}>◫</span> {num} колонки
+                        </button>
+                    ))}
+                </div>
+            )}
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
