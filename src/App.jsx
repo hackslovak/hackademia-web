@@ -4294,7 +4294,45 @@ useEffect(() => {
         {/* НОВИЙ КОМПАКТНИЙ РЯДОК ВВЕДЕННЯ */}
         <div style={{ background: theme.cardBg, borderRadius: '28px', padding: '10px 14px', boxShadow: isInline ? '0 15px 40px rgba(224,163,69,0.15)' : '0 15px 50px rgba(0,0,0,0.08)', border: isInline ? `2px solid #E0A345` : `1px solid ${theme.inputBorder}`, display: 'flex', flexDirection: 'column', gap: '10px', position: 'relative' }}>
             
-            {/* === ВЕРХНЯ ЧАСТИНА: ВІДКРИТІ ПОЛЯ ВВОДУ === */}
+            {/* КАСТОМНЕ МЕНЮ ДЛЯ КОЛОНОК (ПКМ) */}
+            {colMenu.show && (
+                <div style={{
+                    position: 'fixed',
+                    left: colMenu.x,
+                    top: colMenu.y,
+                    background: theme.cardBg || '#fff',
+                    border: `1px solid ${theme.inputBorder || '#e2e8f0'}`,
+                    borderRadius: '12px',
+                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
+                    padding: '8px',
+                    zIndex: 99999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    minWidth: '200px',
+                    animation: 'fadeInDown 0.15s ease'
+                }}>
+                    <button onClick={() => { document.execCommand('cut'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>✂️ Вирізати</button>
+                    <button onClick={() => { document.execCommand('copy'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>📋 Скопіювати</button>
+                    
+                    <div style={{ height: '1px', background: theme.inputBorder, margin: '4px 0' }}></div>
+                    
+                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Розбити на колонки</div>
+                    
+                    {[2, 3, 4].map(num => (
+                        <button
+                            key={num}
+                            onClick={() => applyColumns(num)}
+                            className="hover-card"
+                            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}
+                        >
+                            <span style={{ fontSize: '16px', color: '#E0A345' }}>◫</span> {num} колонки
+                        </button>
+                    ))}
+                </div>
+            )}
+			
+			{/* === ВЕРХНЯ ЧАСТИНА: ВІДКРИТІ ПОЛЯ ВВОДУ === */}
             {isComposerExpanded && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', paddingBottom: '10px', borderBottom: `1px dashed ${theme.inputBorder}`, animation: 'fadeIn 0.2s ease', position: 'relative' }}>
                     <button onClick={(e) => { e.stopPropagation(); setIsComposerExpanded(false); setActiveInsertIndex(null); }} title="Згорнути" style={{ position: 'absolute', top: '10px', right: '10px', background: 'transparent', border: 'none', color: theme.textSecondary, cursor: 'pointer', fontSize: '18px', zIndex: 10, padding: '4px' }}>✕</button>
@@ -8120,43 +8158,7 @@ function renderContent(taskContent, currentTask = null) {
   );
 }
 
-{/* КАСТОМНЕ МЕНЮ ДЛЯ КОЛОНОК (ПКМ) */}
-            {colMenu.show && (
-                <div style={{
-                    position: 'fixed',
-                    left: colMenu.x,
-                    top: colMenu.y,
-                    background: theme.cardBg || '#fff',
-                    border: `1px solid ${theme.inputBorder || '#e2e8f0'}`,
-                    borderRadius: '12px',
-                    boxShadow: '0 8px 30px rgba(0,0,0,0.2)',
-                    padding: '8px',
-                    zIndex: 99999,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '4px',
-                    minWidth: '200px',
-                    animation: 'fadeInDown 0.15s ease'
-                }}>
-                    <button onClick={() => { document.execCommand('cut'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>✂️ Вирізати</button>
-                    <button onClick={() => { document.execCommand('copy'); setColMenu(prev => ({...prev, show: false})); }} className="hover-card" style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>📋 Скопіювати</button>
-                    
-                    <div style={{ height: '1px', background: theme.inputBorder, margin: '4px 0' }}></div>
-                    
-                    <div style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, padding: '4px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Розбити на колонки</div>
-                    
-                    {[2, 3, 4].map(num => (
-                        <button
-                            key={num}
-                            onClick={() => applyColumns(num)}
-                            className="hover-card"
-                            style={{ background: 'transparent', border: 'none', padding: '10px 12px', textAlign: 'left', borderRadius: '8px', cursor: 'pointer', color: theme.text, fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}
-                        >
-                            <span style={{ fontSize: '16px', color: '#E0A345' }}>◫</span> {num} колонки
-                        </button>
-                    ))}
-                </div>
-            )}
+
 
 // --- ГОЛОВНИЙ РОУТЕР ДОДАТКУ ---
 function App() {
