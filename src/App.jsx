@@ -3106,6 +3106,7 @@ function Platform() {
   const [editTaskType, setEditTaskType] = React.useState('text');
   const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
   const [newTaskQuizFirst, setNewTaskQuizFirst] = useState(false);
+  const [editTaskQuizFirst, setEditTaskQuizFirst] = React.useState(false);
   const defaultQuizData = { options: ['', ''], correct: [], multiple: false, randomize: false, explanation: '' };
   const [newTaskQuiz, setNewTaskQuiz] = useState(defaultQuizData);
   const defaultTrueFalseData = [{ text: '', isTrue: true }, { text: '', isTrue: false }];
@@ -5892,27 +5893,26 @@ function renderContent(taskContent, currentTask = null) {
     );
 }
 
-  let clickTimeout = null;
-  function handleBadgeClick() {
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-      clickTimeout = null;
+  const clickTimerRef = React.useRef(null);
+
+  function handleBadgeClick(e) {
+    if (e) e.preventDefault();
+    
+    if (clickTimerRef.current) {
+      // Це подвійний клік! Спрацьовує одразу.
+      clearTimeout(clickTimerRef.current);
+      clickTimerRef.current = null;
+      setIsPreviewMode(prev => !prev);
+      if (window.Telegram?.WebApp) {
+        window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+      }
     } else {
-      clickTimeout = setTimeout(() => {
-        clickTimeout = null;
+      // Це перший клік. Чекаємо 300 мс...
+      clickTimerRef.current = setTimeout(() => {
+        // Якщо за 300 мс другого кліку не було - показуємо підказку.
+        clickTimerRef.current = null;
         alert("ℹ️ Ці інструменти редагування бачите лише ви (адмін).\n\n💡 Хочете побачити, як платформа виглядає для учня? Клікніть на цей значок двічі швидко!");
       }, 300);
-    }
-  }
-
-  function handleBadgeDoubleClick() {
-    if (clickTimeout) {
-      clearTimeout(clickTimeout);
-      clickTimeout = null;
-    }
-    setIsPreviewMode(prev => !prev);
-    if (window.Telegram?.WebApp) {
-      window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
     }
   }
 
@@ -8288,7 +8288,7 @@ function renderContent(taskContent, currentTask = null) {
               </div>
               <div>
                 {userName && <p style={{ color: theme.textSecondary, fontSize: '26px', margin: 0 }}>{t('greeting')}, <b style={{color: theme.text}}>{userProfile.first_name || userName}</b>! 👋</p>}
-                {isAdmin && <span onClick={handleBadgeClick} onDoubleClick={handleBadgeDoubleClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? t('studentPreview') : t('admin')}</span>}
+                {isAdmin && <span onClick={handleBadgeClick} style={{ background: isPreviewMode ? '#4A5568' : '#E0A345', color: isPreviewMode ? 'white' : '#ffffff', padding: '6px 16px', borderRadius: '20px', fontSize: '12px', cursor: 'pointer', userSelect: 'none', display: 'inline-block', marginTop: '10px', fontWeight: '900', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>{isPreviewMode ? t('studentPreview') : t('admin')}</span>}
               </div>
             </div>
           </div>
