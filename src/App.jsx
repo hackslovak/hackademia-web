@@ -2690,20 +2690,17 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 {tfData.map((item, idx) => {
                     const isCorrect = answers[idx] === item.isTrue;
                     
-                    let rowBg = theme.inputBg;
-                    let rowBorder = theme.inputBorder;
+                    // Смугастий фон (зебра) для табличного вигляду
+                    let rowBg = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.05)' : 'transparent';
+                    let rowBorder = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.1)' : 'transparent';
 
-                    // Логіка кольорів: при кліку стає теплим, після відповіді зеленим/червоним
                     if (isSubmitted) {
-                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.1)' : 'rgba(229, 62, 62, 0.1)';
-                        rowBorder = isCorrect ? '#38A169' : '#E53E3E';
-                    } else if (answers[idx] !== undefined) {
-                        rowBg = 'rgba(224, 163, 69, 0.1)';
-                        rowBorder = '#E0A345';
+                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.08)' : 'rgba(229, 62, 62, 0.08)';
+                        rowBorder = isCorrect ? 'rgba(56, 161, 105, 0.2)' : 'rgba(229, 62, 62, 0.2)';
                     }
 
                     return (
-                        <div key={idx} className={!isSubmitted ? "hover-card" : ""} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: '12px', background: rowBg, border: `2px solid ${rowBorder}`, transition: 'all 0.2s', marginBottom: '8px' }}>
+                        <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', borderRadius: '12px', background: rowBg, border: `1px solid ${rowBorder}`, transition: 'all 0.2s' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, paddingRight: '15px' }}>
                                 <span style={{ fontWeight: 'bold', color: theme.textSecondary, minWidth: '20px' }}>{idx + 1}.</span>
                                 <span style={{ fontSize: '15px', color: theme.text, lineHeight: '1.4' }}>{item.text}</span>
