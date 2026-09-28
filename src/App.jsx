@@ -6956,7 +6956,6 @@ function renderContent(taskContent, currentTask = null) {
                           {/* ІНДИВІДУАЛЬНИЙ БЕЙДЖ КАТЕГОРІЇ ДЛЯ КОЖНОГО ЗАВДАННЯ (ПАСХАЛКА АДМІНА) */}
                           <span 
                             onClick={isAdmin ? handleBadgeClick : undefined}
-                            onDoubleClick={isAdmin ? handleBadgeDoubleClick : undefined}
                             style={{ 
                               cursor: 'default', /* Ніякого вказівника, повна секретність */
                               userSelect: 'none', /* Щоб текст не виділявся синім при подвійному кліку */
