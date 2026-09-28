@@ -5223,7 +5223,7 @@ async function handleImageUpload(e) {
     const parsedAnswer = taskToEdit.type === 'quiz' ? finalAnswer.trim().toLowerCase() : (taskToEdit.type === 'flashcard' || finalAnswer ? finalAnswer.trim() : null);
     
     let baseContent = isEditSingleLang ? { [editLang]: editContentMulti[editLang] } : editContentMulti;
-    const contentToSave = { ...baseContent, exercise: editTaskExercise, requiresVoice: editRequiresVoice };
+    const contentToSave = { ...baseContent, exercise: editTaskExercise, requiresVoice: editRequiresVoice, quizFirst: editTaskQuizFirst };
 	if (editTaskType === 'quiz' || (taskToEdit && taskToEdit.type === 'quiz')) contentToSave.quizData = editTaskQuiz;
 	if (editTaskType === 'true_false' || (taskToEdit && taskToEdit.type === 'true_false')) contentToSave.trueFalseData = editTaskTrueFalse;
 
