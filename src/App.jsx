@@ -2637,12 +2637,14 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
     const tfData = task.content?.trueFalseData || [];
     if (!tfData || tfData.length === 0) return null;
 
+    // МАГІЯ: Читаємо налаштування порядку з бази
+    const isQuizFirst = task.content?.quizFirst === true; 
+
     const [answers, setAnswers] = React.useState({});
     const [isSubmitted, setIsSubmitted] = React.useState(false);
     const [isShaking, setIsShaking] = React.useState(false);
 
     const toggleAnswer = (idx, value) => {
-        // ПРИБРАНО ОБМЕЖЕННЯ ДЛЯ АДМІНА: Тепер адмін може "тицяти" для перевірки дизайну
         if (isSubmitted) return; 
         setAnswers(prev => ({ ...prev, [idx]: value }));
     };
@@ -2669,7 +2671,8 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
     return (
         <div className={isShaking ? 'shake-animation' : ''} style={{ background: theme.cardBg, borderRadius: '20px', border: `1px solid ${theme.inputBorder}`, padding: '20px 25px', marginTop: '20px', width: '100%', boxSizing: 'border-box', boxShadow: '0 4px 20px rgba(0,0,0,0.03)' }}>
             
-            {questionNode && (
+            {/* 1. ЯКЩО ТЕКСТ ЗВЕРХУ (СТАНДАРТ) */}
+            {!isQuizFirst && questionNode && (
                 <div style={{ fontWeight: 'bold', fontSize: '16px', color: theme.text, marginBottom: '20px' }}>
                     {questionNode}
                 </div>
@@ -2679,7 +2682,6 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 <span style={{ fontSize: '18px', fontWeight: '900', color: '#E0A345', textTransform: 'uppercase', letterSpacing: '1px' }}>
                     Pravda alebo nepravda?
                 </span>
-                {/* Ідеально вирівняний заголовок: задаємо фіксовану ширину колонок */}
                 <div style={{ display: 'flex', gap: '15px' }}>
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, width: '50px', textAlign: 'center' }}>pravda</span>
                     <span style={{ fontSize: '12px', fontWeight: 'bold', color: theme.textSecondary, width: '50px', textAlign: 'center' }}>nepravda</span>
@@ -2734,6 +2736,13 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 <button onClick={handleSubmit} disabled={!allAnswered} style={{ width: '100%', padding: '14px', marginTop: '25px', borderRadius: '12px', background: allAnswered ? '#E0A345' : theme.inputBg, color: allAnswered ? '#fff' : theme.textSecondary, border: 'none', fontWeight: 'bold', fontSize: '15px', cursor: allAnswered ? 'pointer' : 'not-allowed', transition: 'all 0.2s' }}>
                     ПЕРЕВІРИТИ ВІДПОВІДІ
                 </button>
+            )}
+
+            {/* 2. ЯКЩО КВІЗ ЗВЕРХУ, ТО ТЕКСТ МАЛЮЄМО ТУТ (ЗНИЗУ) */}
+            {isQuizFirst && questionNode && (
+                <div style={{ fontWeight: 'bold', fontSize: '16px', color: theme.text, marginTop: '25px', paddingTop: '20px', borderTop: `2px dashed ${theme.inputBorder}` }}>
+                    {questionNode}
+                </div>
             )}
         </div>
     );
@@ -3096,6 +3105,7 @@ function Platform() {
   const [newTaskType, setNewTaskType] = useState('text');
   const [editTaskType, setEditTaskType] = React.useState('text');
   const [newTaskRequiresVoice, setNewTaskRequiresVoice] = useState(false);
+  const [newTaskQuizFirst, setNewTaskQuizFirst] = useState(false);
   const defaultQuizData = { options: ['', ''], correct: [], multiple: false, randomize: false, explanation: '' };
   const [newTaskQuiz, setNewTaskQuiz] = useState(defaultQuizData);
   const defaultTrueFalseData = [{ text: '', isTrue: true }, { text: '', isTrue: false }];
@@ -4662,6 +4672,10 @@ useEffect(() => {
                                 <input type="checkbox" checked={newTaskRequiresVoice} onChange={e => setNewTaskRequiresVoice(e.target.checked)} style={{ accentColor: '#E53E3E', cursor: 'pointer', width: '16px', height: '16px', margin: 0 }} /> 
                                 🎤 Запит аудіо-відповіді
                             </label>
+							<label className="hover-card" style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: theme.text, cursor: 'pointer', fontWeight: 'bold', background: newTaskQuizFirst ? 'rgba(56, 161, 105, 0.1)' : theme.inputBg, border: `1px solid ${newTaskQuizFirst ? '#38A169' : 'transparent'}`, padding: '10px 12px', borderRadius: '10px', transition: 'all 0.2s ease', marginTop: '6px' }}>
+    <input type="checkbox" checked={newTaskQuizFirst} onChange={e => setNewTaskQuizFirst(e.target.checked)} style={{ accentColor: '#38A169', cursor: 'pointer', width: '16px', height: '16px', margin: 0 }} /> 
+    🔄 Спочатку квіз (текст знизу)
+</label>
                         </div>
                     </div>
 
@@ -4803,7 +4817,7 @@ async function handleAddTask() {
     let finalCorrectAnswer = newTaskCorrectAnswer;
     
     let baseContent = isSingleLang ? { [sourceLang]: newTaskContentMulti[sourceLang] } : newTaskContentMulti;
-    const contentToSave = { ...baseContent, exercise: newTaskExercise, requiresVoice: newTaskRequiresVoice }; // <--- ДОДАЛИ requiresVoice
+    const contentToSave = { ...baseContent, exercise: newTaskExercise, requiresVoice: newTaskRequiresVoice, quizFirst: newTaskQuizFirst }; // <--- ДОДАЛИ requiresVoice
 	if (newTaskType === 'quiz') contentToSave.quizData = newTaskQuiz;
 	if (newTaskType === 'true_false') contentToSave.trueFalseData = newTaskTrueFalse;
 
@@ -4831,6 +4845,7 @@ async function handleAddTask() {
             setIsSingleLang(false);
             setNewTaskCategory('grammar');
 			setNewTaskTrueFalse(defaultTrueFalseData)
+			setNewTaskQuizFirst(false);
             
             // ЗГОРТАННЯ РЕДАКТОРІВ
             setIsComposerExpanded(false); 
