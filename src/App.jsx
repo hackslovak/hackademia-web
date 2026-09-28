@@ -2690,17 +2690,20 @@ const TrueFalseViewer = ({ task, theme, onComplete, isSoundEnabled, isAdmin, que
                 {tfData.map((item, idx) => {
                     const isCorrect = answers[idx] === item.isTrue;
                     
-                    // Смугастий фон (зебра) для табличного вигляду
-                    let rowBg = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.05)' : 'transparent';
-                    let rowBorder = idx % 2 === 0 ? 'rgba(224, 163, 69, 0.1)' : 'transparent';
+                    let rowBg = theme.inputBg;
+                    let rowBorder = theme.inputBorder;
 
+                    // Логіка кольорів: при кліку стає теплим, після відповіді зеленим/червоним
                     if (isSubmitted) {
-                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.08)' : 'rgba(229, 62, 62, 0.08)';
-                        rowBorder = isCorrect ? 'rgba(56, 161, 105, 0.2)' : 'rgba(229, 62, 62, 0.2)';
+                        rowBg = isCorrect ? 'rgba(56, 161, 105, 0.1)' : 'rgba(229, 62, 62, 0.1)';
+                        rowBorder = isCorrect ? '#38A169' : '#E53E3E';
+                    } else if (answers[idx] !== undefined) {
+                        rowBg = 'rgba(224, 163, 69, 0.1)';
+                        rowBorder = '#E0A345';
                     }
 
                     return (
-                        <div key={idx} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 15px', borderRadius: '12px', background: rowBg, border: `1px solid ${rowBorder}`, transition: 'all 0.2s' }}>
+                        <div key={idx} className={!isSubmitted ? "hover-card" : ""} style={{ position: 'relative', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '14px 16px', borderRadius: '12px', background: rowBg, border: `2px solid ${rowBorder}`, transition: 'all 0.2s', marginBottom: '8px' }}>
                             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: 1, paddingRight: '15px' }}>
                                 <span style={{ fontWeight: 'bold', color: theme.textSecondary, minWidth: '20px' }}>{idx + 1}.</span>
                                 <span style={{ fontSize: '15px', color: theme.text, lineHeight: '1.4' }}>{item.text}</span>
@@ -5868,7 +5871,7 @@ function renderContent(taskContent, currentTask = null) {
 
         {/* 3. ТЕКСТ ВПРАВИ (Оцифрований словацький текст у сірому блоці) */}
         {(parsedEx.texts.length > 0 || parsedEx.media.length > 0) && (
-          <div style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, padding: '20px', borderRadius: '16px', fontSize: '20px', fontWeight: '600', color: theme.text, whiteSpace: 'pre-wrap', lineHeight: '1.5', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)' }}>
+          <div style={{ background: theme.inputBg, border: `1px solid ${theme.inputBorder}`, padding: '20px', borderRadius: '16px', fontSize: '16px', fontWeight: 'normal', color: theme.text, whiteSpace: 'pre-wrap', lineHeight: '1.6', boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.02)' }}>
             {parsedEx.texts.length > 0 && <div>{parsedEx.texts}</div>}
             {parsedEx.media.length > 0 && <div style={{ marginTop: parsedEx.texts.length > 0 ? '15px' : '0' }}>{parsedEx.media}</div>}
           </div>
